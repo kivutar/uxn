@@ -1,7 +1,7 @@
 ( dev/console )
 
-|0e @System/debug
-|18 @Console/write
+|00 @System $e &debug
+|10 @Console $8 &write
 
 ( init )
 
