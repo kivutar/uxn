@@ -97,9 +97,9 @@ BRK
 	#10 #00 
 	&loop
 		.adsr-view/x2 LDZ2 #003a -- .Screen/x DEO2
-		DUP #10 SWP - .Audio0/output DEI #0f AND < .Screen/pixel DEO
+		#10 OVR - .Audio0/output DEI #0f AND < .Screen/pixel DEO
 		.adsr-view/x2 LDZ2 #003a -- #0002 ++ .Screen/x DEO2
-		DUP #10 SWP - .Audio0/output DEI #04 SFT < .Screen/pixel DEO
+		#10 OVR - .Audio0/output DEI #04 SFT < .Screen/pixel DEO
 		.Screen/y DEI2 #0002 ++ .Screen/y DEO2
 		#01 + GTHk ,&loop JCN
 	POP2
