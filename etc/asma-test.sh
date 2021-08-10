@@ -6,8 +6,8 @@ mkdir asma-test
 cd asma-test
 
 build_asma() {
-    sed -ne '/^( devices )/,/^( vectors )/p' ../projects/software/asma.tal
-    cat <<EOD
+	sed -ne '/^( devices )/,/^( vectors )/p' ../projects/software/asma.tal
+	cat <<EOD
 |0100 @reset
 	;&source-file ;&dest-file ;asma-assemble-file JSR2
 	;asma/error LDA2 #0000 NEQ2 JMP BRK
@@ -21,12 +21,12 @@ EOD
 }
 
 expect_failure() {
-    cat > 'in.tal'
-    if ../bin/uxncli asma.rom > asma.log 2>/dev/null || ! grep -qF "${1}" asma.log; then
-        echo "error: asma didn't report error ${1} in faulty code"
+	cat > 'in.tal'
+	if ../bin/uxncli asma.rom > asma.log 2>/dev/null || ! grep -qF "${1}" asma.log; then
+		echo "error: asma didn't report error ${1} in faulty code"
 		tail asma.log
-        exit 1
-    fi
+		exit 1
+	fi
 }
 
 echo 'Assembling asma with uxnasm'
