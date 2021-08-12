@@ -45,7 +45,7 @@ Begin by building the assembler and emulator by running the build script. The as
 
 ### Assembler 
 
-The following command will create an Uxn-compatible rom from an [uxntal file](https://wiki.xxiivv.com/site/uxntal.html), point to a different .tal file in `/projects` to assemble a different rom. 
+The following command will create an Uxn-compatible rom from an [uxntal file](https://wiki.xxiivv.com/site/uxntal.html). Point the assembler to a .tal file in `/projects` to assemble a rom.
 
 ```
 bin/uxnasm projects/examples/demos/life.tal bin/life.rom
