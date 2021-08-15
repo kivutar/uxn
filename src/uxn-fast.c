@@ -139,19 +139,22 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0x06: /* NIP */
-			__asm__("evaluxn_06_NIP:");
+		case 0x06: /* OVR */
+			__asm__("evaluxn_06_OVR:");
 			{
-				Uint8 a;
-				u->wst.dat[u->wst.ptr - 1];
-				a = u->wst.dat[u->wst.ptr - 2];
+				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2];
+				u->wst.dat[u->wst.ptr] = b;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 2, 0)) {
 					u->wst.error = 1;
 					goto error;
 				}
+				if(__builtin_expect(u->wst.ptr > 254, 0)) {
+					u->wst.error = 2;
+					goto error;
+				}
 #endif
-				u->wst.ptr -= 1;
+				u->wst.ptr += 1;
 			}
 			break;
 		case 0x07: /* ROT */
@@ -591,21 +594,23 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0x26: /* NIP2 */
-			__asm__("evaluxn_26_NIP2:");
+		case 0x26: /* OVR2 */
+			__asm__("evaluxn_26_OVR2:");
 			{
-				Uint16 a;
-				(u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
-				a = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
-				u->wst.dat[u->wst.ptr - 4] = a >> 8;
-				u->wst.dat[u->wst.ptr - 3] = a & 0xff;
+				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
+				u->wst.dat[u->wst.ptr] = d;
+				u->wst.dat[u->wst.ptr + 1] = c;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 4, 0)) {
 					u->wst.error = 1;
 					goto error;
 				}
+				if(__builtin_expect(u->wst.ptr > 253, 0)) {
+					u->wst.error = 2;
+					goto error;
+				}
 #endif
-				u->wst.ptr -= 2;
+				u->wst.ptr += 2;
 			}
 			break;
 		case 0x27: /* ROT2 */
@@ -1071,19 +1076,22 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0x46: /* NIPr */
-			__asm__("evaluxn_46_NIPr:");
+		case 0x46: /* OVRr */
+			__asm__("evaluxn_46_OVRr:");
 			{
-				Uint8 a;
-				u->rst.dat[u->rst.ptr - 1];
-				a = u->rst.dat[u->rst.ptr - 2];
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 2, 0)) {
 					u->rst.error = 1;
 					goto error;
 				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
 #endif
-				u->rst.ptr -= 1;
+				u->rst.ptr += 1;
 			}
 			break;
 		case 0x47: /* ROTr */
@@ -1523,21 +1531,23 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0x66: /* NIP2r */
-			__asm__("evaluxn_66_NIP2r:");
+		case 0x66: /* OVR2r */
+			__asm__("evaluxn_66_OVR2r:");
 			{
-				Uint16 a;
-				(u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
-				a = (u->rst.dat[u->rst.ptr - 3] | (u->rst.dat[u->rst.ptr - 4] << 8));
-				u->rst.dat[u->rst.ptr - 4] = a >> 8;
-				u->rst.dat[u->rst.ptr - 3] = a & 0xff;
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2], c = u->rst.dat[u->rst.ptr - 3], d = u->rst.dat[u->rst.ptr - 4];
+				u->rst.dat[u->rst.ptr] = d;
+				u->rst.dat[u->rst.ptr + 1] = c;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 4, 0)) {
 					u->rst.error = 1;
 					goto error;
 				}
+				if(__builtin_expect(u->rst.ptr > 253, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
 #endif
-				u->rst.ptr -= 2;
+				u->rst.ptr += 2;
 			}
 			break;
 		case 0x67: /* ROT2r */
@@ -1994,24 +2004,24 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0x86: /* NIPk */
-			__asm__("evaluxn_86_NIPk:");
+		case 0x86: /* OVRk */
+			__asm__("evaluxn_86_OVRk:");
 			{
-				Uint8 a;
-				u->wst.dat[u->wst.ptr - 1];
-				a = u->wst.dat[u->wst.ptr - 2];
-				u->wst.dat[u->wst.ptr] = a;
+				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2];
+				u->wst.dat[u->wst.ptr] = b;
+				u->wst.dat[u->wst.ptr + 1] = a;
+				u->wst.dat[u->wst.ptr + 2] = b;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 2, 0)) {
 					u->wst.error = 1;
 					goto error;
 				}
-				if(__builtin_expect(u->wst.ptr > 254, 0)) {
+				if(__builtin_expect(u->wst.ptr > 252, 0)) {
 					u->wst.error = 2;
 					goto error;
 				}
 #endif
-				u->wst.ptr += 1;
+				u->wst.ptr += 3;
 			}
 			break;
 		case 0x87: /* ROTk */
@@ -2502,25 +2512,27 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 4;
 			}
 			break;
-		case 0xa6: /* NIP2k */
-			__asm__("evaluxn_a6_NIP2k:");
+		case 0xa6: /* OVR2k */
+			__asm__("evaluxn_a6_OVR2k:");
 			{
-				Uint16 a;
-				(u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
-				a = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
-				u->wst.dat[u->wst.ptr] = a >> 8;
-				u->wst.dat[u->wst.ptr + 1] = a & 0xff;
+				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
+				u->wst.dat[u->wst.ptr] = d;
+				u->wst.dat[u->wst.ptr + 1] = c;
+				u->wst.dat[u->wst.ptr + 2] = b;
+				u->wst.dat[u->wst.ptr + 3] = a;
+				u->wst.dat[u->wst.ptr + 4] = d;
+				u->wst.dat[u->wst.ptr + 5] = c;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 4, 0)) {
 					u->wst.error = 1;
 					goto error;
 				}
-				if(__builtin_expect(u->wst.ptr > 253, 0)) {
+				if(__builtin_expect(u->wst.ptr > 249, 0)) {
 					u->wst.error = 2;
 					goto error;
 				}
 #endif
-				u->wst.ptr += 2;
+				u->wst.ptr += 6;
 			}
 			break;
 		case 0xa7: /* ROT2k */
@@ -3023,24 +3035,24 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr += 2;
 			}
 			break;
-		case 0xc6: /* NIPkr */
-			__asm__("evaluxn_c6_NIPkr:");
+		case 0xc6: /* OVRkr */
+			__asm__("evaluxn_c6_OVRkr:");
 			{
-				Uint8 a;
-				u->rst.dat[u->rst.ptr - 1];
-				a = u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = a;
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b;
+				u->rst.dat[u->rst.ptr + 1] = a;
+				u->rst.dat[u->rst.ptr + 2] = b;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 2, 0)) {
 					u->rst.error = 1;
 					goto error;
 				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+				if(__builtin_expect(u->rst.ptr > 252, 0)) {
 					u->rst.error = 2;
 					goto error;
 				}
 #endif
-				u->rst.ptr += 1;
+				u->rst.ptr += 3;
 			}
 			break;
 		case 0xc7: /* ROTkr */
@@ -3531,25 +3543,27 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr += 4;
 			}
 			break;
-		case 0xe6: /* NIP2kr */
-			__asm__("evaluxn_e6_NIP2kr:");
+		case 0xe6: /* OVR2kr */
+			__asm__("evaluxn_e6_OVR2kr:");
 			{
-				Uint16 a;
-				(u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
-				a = (u->rst.dat[u->rst.ptr - 3] | (u->rst.dat[u->rst.ptr - 4] << 8));
-				u->rst.dat[u->rst.ptr] = a >> 8;
-				u->rst.dat[u->rst.ptr + 1] = a & 0xff;
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2], c = u->rst.dat[u->rst.ptr - 3], d = u->rst.dat[u->rst.ptr - 4];
+				u->rst.dat[u->rst.ptr] = d;
+				u->rst.dat[u->rst.ptr + 1] = c;
+				u->rst.dat[u->rst.ptr + 2] = b;
+				u->rst.dat[u->rst.ptr + 3] = a;
+				u->rst.dat[u->rst.ptr + 4] = d;
+				u->rst.dat[u->rst.ptr + 5] = c;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 4, 0)) {
 					u->rst.error = 1;
 					goto error;
 				}
-				if(__builtin_expect(u->rst.ptr > 253, 0)) {
+				if(__builtin_expect(u->rst.ptr > 249, 0)) {
 					u->rst.error = 2;
 					goto error;
 				}
 #endif
-				u->rst.ptr += 2;
+				u->rst.ptr += 6;
 			}
 			break;
 		case 0xe7: /* ROT2kr */
