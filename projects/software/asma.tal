@@ -917,9 +917,9 @@
 @asma-opcodes
 	&BRK        :&AND      :&DEI &_disasm "BRK 00
 	&_entry     :&EQU      :&ROT        "LIT 00
-	&NIP        :&MUL      :&OVR        "NIP 00
 	&POP         $2         $2          "POP 00
 	&DUP        :&DIV      :&EOR        "DUP 00
+	&NIP        :&MUL      :&OVR        "NIP 00
 	&SWP         $2         $2          "SWP 00
 	&OVR        :&ORA      :&POP        "OVR 00
 	&ROT        :&NIP      :&STR        "ROT 00

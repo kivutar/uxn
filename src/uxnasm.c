@@ -40,7 +40,7 @@ Program p;
 /* clang-format off */
 
 static char ops[][4] = {
-	"BRK", "LIT", "NIP", "POP", "DUP", "SWP", "OVR", "ROT",
+	"BRK", "LIT", "POP", "DUP", "NIP", "SWP", "OVR", "ROT",
 	"EQU", "NEQ", "GTH", "LTH", "JMP", "JCN", "JSR", "STH",
 	"LDZ", "STZ", "LDR", "STR", "LDA", "STA", "DEI", "DEO",
 	"ADD", "SUB", "MUL", "DIV", "AND", "ORA", "EOR", "SFT"
