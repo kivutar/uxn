@@ -123,7 +123,7 @@
 	.lines/x2 LDZ2 .lines/x1 LDZ2 DUP2 .neralie/x STZ2 SUB2 .neralie/w STZ2
 	.lines/y2 LDZ2 .lines/y1 LDZ2 DUP2 .neralie/y STZ2 SUB2 .neralie/h STZ2
 
-	;neralie/n4 SWP POP .neralie/n0123 LDZ2
+	;neralie/n4 NIP .neralie/n0123 LDZ2
 	DUP2 ;&h JSR2
 	;&next JSR2 #0001 .Screen/x DEO2 .neralie/y LDZ2 #0003 SUB2 .Screen/y DEO2 ,digit JSR
 	DUP2 ;&v JSR2

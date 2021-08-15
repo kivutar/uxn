@@ -75,7 +75,7 @@ RTN
 RTN
 
 	&digit
-	SWP POP
+	NIP
 	DUP .number/started LDZ ORA #02 JCN
 	POP JMP2r
 	LIT '0 ADD .Console/write DEO

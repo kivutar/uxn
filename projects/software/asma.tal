@@ -370,7 +370,7 @@
 
 	( tree-offset* token-routine-ptr* / end* )
 	STH2r ;asma/token STA2
-	SWP2 POP2 LDA2
+	NIP2 LDA2
 	JMP2 ( tail call )
 
 	&not-found ( tree-offset* dummy* / end* )
@@ -523,7 +523,7 @@
 	&flush ( ptr* -- start-of-buffer* )
 	;asma-write-buffer SUB2k ( ptr* start* len* )
 	;asma/flush-fn LDA2 JSR2
-	SWP2 POP2 ( start* )
+	NIP2 ( start* )
 	,&after-flush JMP
 
 @asma-output [ &ptr $2 &offset $2 &filename $2 ]

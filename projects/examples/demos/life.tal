@@ -9,7 +9,7 @@
 %++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
-%TOS  { #00 SWP } %TOB  { SWP POP }
+%TOS  { #00 SWP } %TOB  { NIP }
 %RTN  { JMP2r }   %MOD  { DUP2 / * - }
 %MOD8 { #07 AND } %MOD2 { #01 AND }
 %SFL  { #40 SFT SFT }
@@ -20,8 +20,8 @@
 %BANK1 { #8000 } %BANK2 { #a000 }
 
 %GET-SIZE { WIDTH TOS 8// HEIGHT TOS ** }
-%GET-ITERATORS { SWP2k POP SWP POP }
-%GET-ITER { OVR2 SWP POP OVR SWP }
+%GET-ITERATORS { SWP2k POP NIP }
+%GET-ITER { OVR2 NIP OVR SWP }
 
 ( devices )
 
@@ -226,7 +226,7 @@ RTN
 @get-cell ( x y -- cell )
 	
 	DUP2 ,get-index JSR LDA 
-	SWP POP SWP
+	NIP SWP
 	MOD8
 	SFT MOD2
 

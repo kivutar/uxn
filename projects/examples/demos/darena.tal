@@ -261,7 +261,7 @@ JMP2r
 		#ff
 		JMP2r
 	&found
-		SWP POP ( remove loop limit )
+		NIP ( remove loop limit )
 		DUP ;&src_i LDA NEQ ,&end JCN ( check if result is the same as index )
 		POP #ff
 		JMP2r

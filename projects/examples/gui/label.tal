@@ -94,7 +94,7 @@ RTN
 	&loop
 		( incr ) #0001 ADD2 OVR2 OVR2 ADD2
 		LDA ,&loop JCN
-	SWP2 POP2
+	NIP2
 
 RTN
 

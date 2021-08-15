@@ -79,22 +79,22 @@ BRK
 	DUP2 #0010 NEQ2 ,&no-touch-red JCN
 		.Mouse/x DEI2 .window/x1 LDZ2 #0060 ADD2 LTH2 ,&no-touch-red JCN
 		.Mouse/x DEI2 .window/x1 LDZ2 #009c ADD2 GTH2 ,&no-touch-red JCN
-		( get new value ) .Mouse/x DEI2 .window/x1 LDZ2 SUB2 #0060 SUB2 4// SWP POP ;theme/r1 #00 .selection LDZ ADD2 STA
+		( get new value ) .Mouse/x DEI2 .window/x1 LDZ2 SUB2 #0060 SUB2 4// NIP ;theme/r1 #00 .selection LDZ ADD2 STA
 	&no-touch-red
 	DUP2 #0020 NEQ2 ,&no-touch-green JCN
 		.Mouse/x DEI2 .window/x1 LDZ2 #0060 ADD2 LTH2 ,&no-touch-green JCN
 		.Mouse/x DEI2 .window/x1 LDZ2 #009c ADD2 GTH2 ,&no-touch-green JCN
-		( get new value ) .Mouse/x DEI2 .window/x1 LDZ2 SUB2 #0060 SUB2 4// SWP POP ;theme/g1 #00 .selection LDZ ADD2 STA
+		( get new value ) .Mouse/x DEI2 .window/x1 LDZ2 SUB2 #0060 SUB2 4// NIP ;theme/g1 #00 .selection LDZ ADD2 STA
 	&no-touch-green
 	DUP2 #0030 NEQ2 ,&no-touch-blue JCN
 		.Mouse/x DEI2 .window/x1 LDZ2 #0060 ADD2 LTH2 ,&no-touch-blue JCN
 		.Mouse/x DEI2 .window/x1 LDZ2 #009c ADD2 GTH2 ,&no-touch-blue JCN
-		( get new value ) .Mouse/x DEI2 .window/x1 LDZ2 SUB2 #0060 SUB2 4// SWP POP ;theme/b1 #00 .selection LDZ ADD2 STA
+		( get new value ) .Mouse/x DEI2 .window/x1 LDZ2 SUB2 #0060 SUB2 4// NIP ;theme/b1 #00 .selection LDZ ADD2 STA
 	&no-touch-blue
 	DUP2 #0040 NEQ2 ,&no-touch-radio JCN
 		.Mouse/x DEI2 .window/x1 LDZ2 #0050 ADD2 LTH2 ,&no-touch-radio JCN
 		.Mouse/x DEI2 .window/x1 LDZ2 #008c ADD2 GTH2 ,&no-touch-radio JCN
-		.Mouse/x DEI2 .window/x1 LDZ2 SUB2 #0050 SUB2 STEP8 2// #0008 DIV2 SWP POP .selection STZ
+		.Mouse/x DEI2 .window/x1 LDZ2 SUB2 #0050 SUB2 STEP8 2// #0008 DIV2 NIP .selection STZ
 	&no-touch-radio
 	POP2
 
