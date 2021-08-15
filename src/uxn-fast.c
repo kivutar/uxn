@@ -81,17 +81,19 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 1;
 			}
 			break;
-		case 0x02: /* NOP */
-		case 0x22: /* NOP2 */
-		case 0x42: /* NOPr */
-		case 0x62: /* NOP2r */
-		case 0x82: /* NOPk */
-		case 0xa2: /* NOP2k */
-		case 0xc2: /* NOPkr */
-		case 0xe2: /* NOP2kr */
-			__asm__("evaluxn_02_NOP:");
+		case 0x02: /* NIP */
+			__asm__("evaluxn_02_NIP:");
 			{
-				(void)u;
+				Uint8 a = u->wst.dat[u->wst.ptr - 1];
+				u->wst.dat[u->wst.ptr - 2];
+				u->wst.dat[u->wst.ptr - 2] = a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 2, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 1;
 			}
 			break;
 		case 0x03: /* POP */
@@ -544,6 +546,22 @@ uxn_eval(Uxn *u, Uint16 vec)
 				}
 #endif
 				u->wst.ptr += 2;
+			}
+			break;
+		case 0x22: /* NIP2 */
+			__asm__("evaluxn_22_NIP2:");
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
+				(u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
+				u->wst.dat[u->wst.ptr - 4] = a >> 8;
+				u->wst.dat[u->wst.ptr - 3] = a & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 2;
 			}
 			break;
 		case 0x23: /* POP2 */
@@ -1031,6 +1049,21 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr += 1;
 			}
 			break;
+		case 0x42: /* NIPr */
+			__asm__("evaluxn_42_NIPr:");
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr - 2] = a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+#endif
+				u->rst.ptr -= 1;
+			}
+			break;
 		case 0x43: /* POPr */
 			__asm__("evaluxn_43_POPr:");
 			{
@@ -1481,6 +1514,22 @@ uxn_eval(Uxn *u, Uint16 vec)
 				}
 #endif
 				u->rst.ptr += 2;
+			}
+			break;
+		case 0x62: /* NIP2r */
+			__asm__("evaluxn_62_NIP2r:");
+			{
+				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
+				(u->rst.dat[u->rst.ptr - 3] | (u->rst.dat[u->rst.ptr - 4] << 8));
+				u->rst.dat[u->rst.ptr - 4] = a >> 8;
+				u->rst.dat[u->rst.ptr - 3] = a & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 4, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+#endif
+				u->rst.ptr -= 2;
 			}
 			break;
 		case 0x63: /* POP2r */
@@ -1952,6 +2001,25 @@ uxn_eval(Uxn *u, Uint16 vec)
 				}
 #endif
 				u->rst.ptr -= 1;
+			}
+			break;
+		case 0x82: /* NIPk */
+			__asm__("evaluxn_82_NIPk:");
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1];
+				u->wst.dat[u->wst.ptr - 2];
+				u->wst.dat[u->wst.ptr] = a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 2, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->wst.ptr > 254, 0)) {
+					u->wst.error = 2;
+					goto error;
+				}
+#endif
+				u->wst.ptr += 1;
 			}
 			break;
 		case 0x83: /* POPk */
@@ -2456,6 +2524,26 @@ uxn_eval(Uxn *u, Uint16 vec)
 				}
 #endif
 				u->wst.ptr += 1;
+			}
+			break;
+		case 0xa2: /* NIP2k */
+			__asm__("evaluxn_a2_NIP2k:");
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
+				(u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
+				u->wst.dat[u->wst.ptr] = a >> 8;
+				u->wst.dat[u->wst.ptr + 1] = a & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->wst.ptr > 253, 0)) {
+					u->wst.error = 2;
+					goto error;
+				}
+#endif
+				u->wst.ptr += 2;
 			}
 			break;
 		case 0xa3: /* POP2k */
@@ -2985,6 +3073,25 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
+		case 0xc2: /* NIPkr */
+			__asm__("evaluxn_c2_NIPkr:");
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
 		case 0xc3: /* POPkr */
 			__asm__("evaluxn_c3_POPkr:");
 			{
@@ -3487,6 +3594,26 @@ uxn_eval(Uxn *u, Uint16 vec)
 				}
 #endif
 				u->rst.ptr += 1;
+			}
+			break;
+		case 0xe2: /* NIP2kr */
+			__asm__("evaluxn_e2_NIP2kr:");
+			{
+				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
+				(u->rst.dat[u->rst.ptr - 3] | (u->rst.dat[u->rst.ptr - 4] << 8));
+				u->rst.dat[u->rst.ptr] = a >> 8;
+				u->rst.dat[u->rst.ptr + 1] = a & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 4, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 253, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 2;
 			}
 			break;
 		case 0xe3: /* POP2kr */
