@@ -268,32 +268,44 @@ doctrl(Uxn *u, SDL_Event *event, int z)
 	} else
 		devctrl->dat[2] &= ~flag;
 }
+static void
+docolors(Device *d)
+{
+	SDL_Color pal[16];
+	int i;
+	for(i = 0; i < 4; ++i) {
+		pal[i].r = ((d->dat[0x8 + i / 2] >> (!(i % 2) << 2)) & 0x0f) * 0x11;
+		pal[i].g = ((d->dat[0xa + i / 2] >> (!(i % 2) << 2)) & 0x0f) * 0x11;
+		pal[i].b = ((d->dat[0xc + i / 2] >> (!(i % 2) << 2)) & 0x0f) * 0x11;
+	}
+	for(i = 4; i < 16; ++i) {
+		pal[i].r = pal[i / 4].r;
+		pal[i].g = pal[i / 4].g;
+		pal[i].b = pal[i / 4].b;
+	}
+	SDL_SetPaletteColors(idxSurface->format->palette, pal, 0, 16);
+	reqdraw = 1;
+}
 
 #pragma mark - Devices
 
 static void
 system_talk(Device *d, Uint8 b0, Uint8 w)
 {
-	if(!w) {
-		d->dat[0x2] = d->u->wst.ptr;
-		d->dat[0x3] = d->u->rst.ptr;
-	} else if(b0 > 0x7 && b0 < 0xe) {
-		SDL_Color pal[16];
-		int i;
-		for(i = 0; i < 4; ++i) {
-			pal[i].r = ((d->dat[0x8 + i / 2] >> (!(i % 2) << 2)) & 0x0f) * 0x11;
-			pal[i].g = ((d->dat[0xa + i / 2] >> (!(i % 2) << 2)) & 0x0f) * 0x11;
-			pal[i].b = ((d->dat[0xc + i / 2] >> (!(i % 2) << 2)) & 0x0f) * 0x11;
+	if(!w) { /* read */
+		switch(b0) {
+		case 0x2: d->dat[0x2] = d->u->wst.ptr; break;
+		case 0x3: d->dat[0x3] = d->u->rst.ptr; break;
 		}
-		for(i = 4; i < 16; ++i) {
-			pal[i].r = pal[i / 4].r;
-			pal[i].g = pal[i / 4].g;
-			pal[i].b = pal[i / 4].b;
+	} else { /* write */
+		switch(b0) {
+		case 0x2: d->u->wst.ptr = d->dat[0x2]; break;
+		case 0x3: d->u->rst.ptr = d->dat[0x3]; break;
+		case 0xf: d->u->ram.ptr = 0x0000; break;
 		}
-		SDL_SetPaletteColors(idxSurface->format->palette, pal, 0, 16);
-		reqdraw = 1;
-	} else if(b0 == 0xf)
-		d->u->ram.ptr = 0x0000;
+		if(b0 > 0x7 && b0 < 0xe)
+			docolors(d);
+	}
 }
 
 static void
@@ -422,7 +434,7 @@ uxn_halt(Uxn *u, Uint8 error, char *name, int id)
 static void
 run(Uxn *u)
 {
-	uxn_eval(u, 0x0100);
+	uxn_eval(u, PAGE_PROGRAM);
 	redraw(u);
 	while(1) {
 		SDL_Event event;
