@@ -4,6 +4,7 @@
 %<  { LTH } %>   { GTH }  %=  { EQU } %!   { NEQ }
 %++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
+%!~ { NEQk NIP }
 
 %RTN  { JMP2r }
 %TOS  { #00 SWP }
@@ -114,21 +115,21 @@ BRK
 	#40 .Screen/sprite DEO
 
 	.Controller/key DEI
-	DUP #61 ! ,&no-c JCN
+	[ LIT 'a ] !~ ,&no-c JCN
 		#30 .octave LDZ #0c * + ;play JSR2 &no-c
-	DUP #73 ! ,&no-d JCN
+	[ LIT 's ] !~ ,&no-d JCN
 		#32 .octave LDZ #0c * + ;play JSR2 &no-d
-	DUP #64 ! ,&no-e JCN
+	[ LIT 'd ] !~ ,&no-e JCN
 		#34 .octave LDZ #0c * + ;play JSR2 &no-e
-	DUP #66 ! ,&no-f JCN
+	[ LIT 'f ] !~ ,&no-f JCN
 		#35 .octave LDZ #0c * + ;play JSR2 &no-f
-	DUP #67 ! ,&no-g JCN
+	[ LIT 'g ] !~ ,&no-g JCN
 		#37 .octave LDZ #0c * + ;play JSR2 &no-g
-	DUP #68 ! ,&no-a JCN
+	[ LIT 'h ] !~ ,&no-a JCN
 		#39 .octave LDZ #0c * + ;play JSR2 &no-a
-	DUP #6a ! ,&no-b JCN
+	[ LIT 'j ] !~ ,&no-b JCN
 		#3b .octave LDZ #0c * + ;play JSR2 &no-b
-	DUP #6b ! ,&no-c2 JCN
+	[ LIT 'k ] !~ ,&no-c2 JCN
 		#3c .octave LDZ #0c * + ;play JSR2 &no-c2
 	POP
 
@@ -185,10 +186,10 @@ BRK
 
 	.Mouse/x DEI2 .octave-view/x1 LDZ2 -- 8// NIP #09 ! ,&no-mod JCN
 		.Mouse/y DEI2 .octave-view/y1 LDZ2 -- 8// NIP 
-		DUP #00 ! ,&no-incr JCN
+		[ #00 ] !~ ,&no-incr JCN
 			.octave LDZ #03 = ,&no-incr JCN
 			.octave LDZ #01 + .octave STZ &no-incr
-		DUP #02 ! ,&no-decr JCN
+		[ #02 ] !~ ,&no-decr JCN
 			.octave LDZ #ff = ,&no-decr JCN
 			.octave LDZ #01 - .octave STZ &no-decr
 		POP
@@ -208,27 +209,27 @@ BRK
 @on-touch-adsr-view ( -> )
 
 	.Mouse/x DEI2 .adsr-view/x1 LDZ2 -- 8// NIP #03 /
-	DUP #00 ! ,&no-a JCN
+	[ #00 ] !~ ,&no-a JCN
 		.Audio0/adsr DEI
 		#10 .Mouse/state DEI #10 = #e0 * + +
 		.Audio0/adsr DEO &no-a
-	DUP #01 ! ,&no-d JCN
+	[ #01 ] !~ ,&no-d JCN
 		.Audio0/adsr DEI
 		DUP #f0 AND STH #01 .Mouse/state DEI #10 = #0e * + + #0f AND STHr +
 		.Audio0/adsr DEO &no-d
-	DUP #02 ! ,&no-s JCN
+	[ #02 ] !~ ,&no-s JCN
 		.Audio0/adsr #01 + DEI
 		#10 .Mouse/state DEI #10 = #e0 * + +
 		.Audio0/adsr #01 + DEO &no-s
-	DUP #03 ! ,&no-r JCN
+	[ #03 ] !~ ,&no-r JCN
 		.Audio0/adsr #01 + DEI
 		DUP #f0 AND STH #01 .Mouse/state DEI #10 = #0e * + + #0f AND STHr +
 		.Audio0/adsr #01 + DEO &no-r
-	DUP #05 ! ,&no-left JCN
+	[ #05 ] !~ ,&no-left JCN
 		.Audio0/volume DEI 
 		#10 .Mouse/state DEI #10 = #e0 * + +
 		.Audio0/volume DEO &no-left
-	DUP #06 ! ,&no-right JCN
+	[ #06 ] !~ ,&no-right JCN
 		.Audio0/volume DEI
 		DUP #f0 AND STH #01 .Mouse/state DEI #10 = #0e * + + #0f AND STHr +
 		.Audio0/volume DEO &no-right
