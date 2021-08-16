@@ -59,7 +59,12 @@ To start the rom, point the emulator to the newly created rom:
 bin/uxnemu bin/life.rom
 ```
 
-You can also use the emulator without graphics by using `uxncli`. You can find additional roms [here](https://sr.ht/~rabbits/uxn/sources).
+You can also use the emulator without graphics by using `uxncli`. You can find additional roms [here](https://sr.ht/~rabbits/uxn/sources). If you only wish to build `uxncli`
+
+```
+cc src/uxn.c -DNDEBUG -Os -g0 -s src/uxncli.c -o bin/uxncli
+
+```
 
 ### I/O
 

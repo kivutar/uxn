@@ -27,7 +27,7 @@ error(char *msg, const char *err)
 }
 
 static void
-inspect(Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
+inspect(Stack *wst)
 {
 	Uint8 x, y;
 	fprintf(stderr, "\n\n");
@@ -35,8 +35,8 @@ inspect(Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
 		for(x = 0; x < 0x08; ++x) {
 			Uint8 p = y * 0x08 + x;
 			fprintf(stderr,
-				p == wptr ? "[%02x]" : " %02x ",
-				stack[p]);
+				p == wst->ptr ? "[%02x]" : " %02x ",
+				wst->dat[p]);
 		}
 		fprintf(stderr, "\n");
 	}
@@ -56,6 +56,7 @@ system_talk(Device *d, Uint8 b0, Uint8 w)
 		switch(b0) {
 		case 0x2: d->u->wst.ptr = d->dat[0x2]; break;
 		case 0x3: d->u->rst.ptr = d->dat[0x3]; break;
+		case 0xe: inspect(&d->u->wst); break;
 		case 0xf: d->u->ram.ptr = 0x0000; break;
 		}
 	}
@@ -132,11 +133,8 @@ static void
 run(Uxn *u)
 {
 	uxn_eval(u, PAGE_PROGRAM);
-	while(read(0, &devconsole->dat[0x2], 1) > 0) {
-		if(devsystem->dat[0xe])
-			inspect(u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
+	while(read(0, &devconsole->dat[0x2], 1) > 0) 
 		uxn_eval(u, mempeek16(devconsole->dat, 0));
-	}
 }
 
 static int
