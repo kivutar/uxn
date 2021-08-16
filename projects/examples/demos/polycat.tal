@@ -3,6 +3,7 @@
 %RTN { JMP2r }
 %2// { #01 SFT2 }
 %4// { #02 SFT2 }
+%!~ { NEQk NIP }
 
 ( devices )
 
@@ -53,11 +54,11 @@ BRK
 
 	.cat/timer LDZ #01 ADD [ DUP ] .cat/timer STZ
 		DUP ,&skip0 JCN #0000 ;draw-tail JSR2 &skip0
-		DUP #10 NEQ ,&skip1 JCN #0001 ;draw-tail JSR2 &skip1
-		DUP #20 NEQ ,&skip2 JCN #0002 ;draw-tail JSR2 &skip2
-		DUP #30 NEQ ,&skip3 JCN #0003 ;draw-tail JSR2 &skip3
-		DUP #40 NEQ ,&skip4 JCN #0002 ;draw-tail JSR2 &skip4
-		DUP #50 NEQ ,&skip5 JCN #0001 ;draw-tail JSR2 &skip5
+		[ #10 ] !~ ,&skip1 JCN #0001 ;draw-tail JSR2 &skip1
+		[ #20 ] !~ ,&skip2 JCN #0002 ;draw-tail JSR2 &skip2
+		[ #30 ] !~ ,&skip3 JCN #0003 ;draw-tail JSR2 &skip3
+		[ #40 ] !~ ,&skip4 JCN #0002 ;draw-tail JSR2 &skip4
+		[ #50 ] !~ ,&skip5 JCN #0001 ;draw-tail JSR2 &skip5
 	POP
 
 BRK
