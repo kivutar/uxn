@@ -133,7 +133,7 @@ static void
 run(Uxn *u)
 {
 	uxn_eval(u, PAGE_PROGRAM);
-	while(read(0, &devconsole->dat[0x2], 1) > 0) 
+	while(read(0, &devconsole->dat[0x2], 1) > 0)
 		uxn_eval(u, mempeek16(devconsole->dat, 0));
 }
 
