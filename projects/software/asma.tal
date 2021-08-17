@@ -412,7 +412,7 @@
 	LDAk
 	DUP ,&not-end JCN
 	POP POP2
-	STH2r ROT #01 ADD #03 MUL
+	STH2r ROT #01 ADD DUPk ADD ADD
 	JMP2r
 
 	&not-end

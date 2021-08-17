@@ -1,7 +1,7 @@
 ( dev/mouse )
 
 %RTN   { JMP2r }
-%ABS2  { DUP2 #0f SFT2 EQU #04 JCN #ffff MUL2 }
+%ABS2  { DUP2 #0f SFT2 EQU #05 JCN #0000 SWP2 SUB2 }
 %LTS2  { #8000 ADD2 SWP2 #8000 ADD2 GTH2 }
 %GTS2  { #8000 ADD2 SWP2 #8000 ADD2 LTH2 }
 %2** { #10 SFT2 }
@@ -61,7 +61,7 @@ BRK
 	.pointer/lasty LDZ2 
 	.pointer/x LDZ2 
 	.pointer/y LDZ2 
-	#01 [ .Mouse/state DEI #10 EQU #02 MUL ADD ] 
+	#01 [ .Mouse/state DEI #10 EQU DUP ADD ADD ] 
 	;draw-line JSR2
 
 	( record last position )
@@ -86,7 +86,7 @@ BRK
 	( draw new cursor )
 	.pointer/x LDZ2 .Screen/x DEO2
 	.pointer/y LDZ2 .Screen/y DEO2
-	#43 .Mouse/state DEI #00 NEQ #02 MUL SUB .Screen/sprite DEO
+	#43 .Mouse/state DEI #00 NEQ DUP ADD SUB .Screen/sprite DEO
 
 RTN
 

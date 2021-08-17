@@ -42,8 +42,8 @@ BRK
 	( case: hit-top ) .dvd/y LDZ2 #0000 EQU2 
 	#0000 EQU2 ,&no-flipy JCN 
 		.dvd/dy LDZ #00 EQU .dvd/dy STZ &no-flipy
-	( incr ) .dvd/x LDZ2 #0001 #00 .dvd/dx LDZ #00 EQU #fffe MUL2 ADD2 ADD2 .dvd/x STZ2
-	( incr ) .dvd/y LDZ2 #0001 #00 .dvd/dy LDZ #00 EQU #fffe MUL2 ADD2 ADD2 .dvd/y STZ2
+	( incr ) .dvd/x LDZ2 #0001 #00 .dvd/dx LDZ #00 EQU DUP2 ADD2 SUB2 ADD2 .dvd/x STZ2
+	( incr ) .dvd/y LDZ2 #0001 #00 .dvd/dy LDZ #00 EQU DUP2 ADD2 SUB2 ADD2 .dvd/y STZ2
 	( draw ) #01 ;draw-dvd JSR2
 
 BRK

@@ -1,8 +1,8 @@
 ( a blank file )
 
-%+  { ADD } %-   { SUB }  %*  { MUL } %/   { DIV }  
+%+  { ADD } %-   { SUB }              %/   { DIV }  
 %<  { LTH } %>   { GTH }  %=  { EQU } %!   { NEQ } 
-%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 } 
+%++ { ADD2 } %-- { SUB2 }              %// { DIV2 } 
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }  
 
 %DEBUG  { ;print-hex JSR2 #0a .Console/write DEO }

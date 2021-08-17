@@ -68,14 +68,14 @@ BRK
 	
 	#10 #00
 	&loop
-		DUP #08 MUL #00 SWP ;font-hex ADD2 .Screen/addr DEO2
+		DUP #30 SFT #00 SWP ;font-hex ADD2 .Screen/addr DEO2
 		( x-axis ) 
-		DUP #08 MUL #00 SWP 
+		DUP #30 SFT #00 SWP 
 		.center/x LDZ2 #0040 SUB2 ADD2 .Screen/x DEO2
 		.center/y LDZ2 #0050 SUB2 .Screen/y DEO2
 		( draw ) #01 .Screen/sprite DEO
 		( y-axis )
-		DUP #08 MUL #00 SWP 
+		DUP #30 SFT #00 SWP 
 		.center/y LDZ2 #0040 SUB2 ADD2 .Screen/y DEO2
 		.center/x LDZ2 #0050 SUB2 .Screen/x DEO2
 		( draw ) #01 .Screen/sprite DEO
@@ -104,9 +104,9 @@ RTN
 	#10 #00
 	&loop
 		( color ) STHk
-		( y ) DUP #04 DIV [ #00 SWP ] #0010 MUL2 
+		( y ) DUP #04 DIV [ #00 SWP ] #40 SFT2
 			[ .center/y LDZ2 #0040 SUB2 ADD2 ] STH2
-		( x ) DUP #03 AND [ #00 SWP ] #0010 MUL2 #0040 ADD2 
+		( x ) DUP #03 AND [ #00 SWP ] #40 SFT2 #0040 ADD2 
 			[ .center/x LDZ2 #0008 ADD2 ADD2 ]
 		STH2r STHr #00 ;draw-circle JSR2
 		#01 ADD GTHk ,&loop JCN
@@ -119,9 +119,9 @@ RTN
 	#10 #00
 	&loop
 		( color ) STHk
-		( y ) DUP #04 DIV [ #00 SWP ] #0010 MUL2 
+		( y ) DUP #04 DIV [ #00 SWP ] #40 SFT2
 			[ .center/y LDZ2 ADD2 ] STH2
-		( x ) DUP #03 AND [ #00 SWP ] #0010 MUL2 #0040 ADD2 
+		( x ) DUP #03 AND [ #00 SWP ] #40 SFT2 #0040 ADD2 
 			[ .center/x LDZ2 #0008 ADD2 ADD2 ]
 		STH2r STHr #80 ;draw-circle JSR2
 		#01 ADD GTHk ,&loop JCN

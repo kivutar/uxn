@@ -62,7 +62,7 @@ BRK
 			( move down ) STH OVR2 .Screen/x DEO2 STHr
 			( incr y ) .Screen/y DEI2 #0010 ++ .Screen/y DEO2 
 			POP ,&continue JMP &no-linebreak
-		( get addr ) STHk TOS #0008 ** ;font-data #0100 ++ ++ .Screen/addr DEO2
+		( get addr ) STHk TOS #30 SFT2 ;font-data #0100 ++ ++ .Screen/addr DEO2
 		( get width ) STHr TOS ;font-data ++ LDA TOS
 		( draw ) STHkr .Screen/sprite DEO
 		( use width ) .Screen/x DEI2 ++ .Screen/x DEO2
@@ -93,7 +93,7 @@ RTN
 
 	&sprite ( char color -- )
 		STH
-		( get addr ) STHk TOS #0020 ** ;font-data #0100 ++ ++ .Screen/addr DEO2
+		( get addr ) STHk TOS #50 SFT2 ;font-data #0100 ++ ++ .Screen/addr DEO2
 		( get width ) STHkr TOS ;font-data ++ LDA TOS
 		SWPr
 			( left-top ) STHkr .Screen/sprite DEO

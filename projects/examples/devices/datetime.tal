@@ -6,7 +6,7 @@
 
 %RTN     { JMP2r }
 %MOD     { DUP2 DIV MUL SUB }
-%ABS2    { DUP2 #0f SFT2 EQU #04 JCN #ffff MUL2 }
+%ABS2    { DUP2 #0f SFT2 EQU #05 JCN #0000 SWP2 SUB2 }
 %SCALEX  { 2// .Screen/width DEI2 2// ADD2 #0040 SUB2 }
 %SCALEY  { 2// .Screen/height DEI2 2// ADD2 #0040 SUB2 }
 %12HOURS { DUP #0c GTH #0c MUL SUB }
@@ -59,8 +59,8 @@ BRK
 		#00 SWP SCALEY .needles/sy STZ2
 		#00 SWP SCALEX .needles/sx STZ2
 	#00 .DateTime/minute DEI 2** ;table ADD2 LDA2
-		#00 SWP 4// #0003 MUL2 #0020 ADD2 SCALEY .needles/my STZ2
-		#00 SWP 4// #0003 MUL2 #0020 ADD2 SCALEX .needles/mx STZ2
+		#00 SWP 4// DUP2k ADD2 ADD2 #0020 ADD2 SCALEY .needles/my STZ2
+		#00 SWP 4// DUP2k ADD2 ADD2 #0020 ADD2 SCALEX .needles/mx STZ2
 	#00 .DateTime/hour DEI 12HOURS #05 MUL 2** ;table ADD2 LDA2
 		#00 SWP 2// #0040 ADD2 SCALEY .needles/hy STZ2
 		#00 SWP 2// #0040 ADD2 SCALEX .needles/hx STZ2
@@ -90,22 +90,22 @@ BRK
 	.Screen/height DEI2 2// #0048 ADD2 .Screen/y DEO2
 	.Screen/width DEI2 2//
 	DUP2 #0020 SUB2 .Screen/x DEO2
-		;font-hex #00 .DateTime/hour DEI #0a DIV #08 MUL ADD2 .Screen/addr DEO2
+		;font-hex #00 .DateTime/hour DEI #0a DIV #30 SFT ADD2 .Screen/addr DEO2
 		#02 .Screen/sprite DEO
 	DUP2 #0018 SUB2 .Screen/x DEO2
-		;font-hex #00 .DateTime/hour DEI #0a MOD #08 MUL ADD2 .Screen/addr DEO2
+		;font-hex #00 .DateTime/hour DEI #0a MOD #30 SFT ADD2 .Screen/addr DEO2
 		#02 .Screen/sprite DEO
 	DUP2 #0008 SUB2 .Screen/x DEO2
-		;font-hex #00 .DateTime/minute DEI #0a DIV #08 MUL ADD2 .Screen/addr DEO2
+		;font-hex #00 .DateTime/minute DEI #0a DIV #30 SFT ADD2 .Screen/addr DEO2
 		#02 .Screen/sprite DEO
 	DUP2 .Screen/x DEO2
-		;font-hex #00 .DateTime/minute DEI #0a MOD #08 MUL ADD2 .Screen/addr DEO2
+		;font-hex #00 .DateTime/minute DEI #0a MOD #30 SFT ADD2 .Screen/addr DEO2
 		#02 .Screen/sprite DEO
 	DUP2 #0010 ADD2 .Screen/x DEO2
-		;font-hex #00 .DateTime/second DEI #0a DIV #08 MUL ADD2 .Screen/addr DEO2
+		;font-hex #00 .DateTime/second DEI #0a DIV #30 SFT ADD2 .Screen/addr DEO2
 		#02 .Screen/sprite DEO
 	DUP2 #0018 ADD2 .Screen/x DEO2
-		;font-hex #00 .DateTime/second DEI #0a MOD #08 MUL ADD2 .Screen/addr DEO2
+		;font-hex #00 .DateTime/second DEI #0a MOD #30 SFT ADD2 .Screen/addr DEO2
 		#02 .Screen/sprite DEO
 	POP2
 

@@ -160,8 +160,8 @@ RTN
 
 	.Mouse/state DEI #00 ! #01 JCN [ BRK ]
 
-	.Mouse/x DEI2 DUP2 .anchor/x LDZ2 >> ROT ROT .anchor/x LDZ2 WIDTH #02 * TOS ++ #0001 ++ << #0101 ==
-	.Mouse/y DEI2 DUP2 .anchor/y LDZ2 >> ROT ROT .anchor/y LDZ2 HEIGHT #02 * TOS ++ << #0101 ==
+	.Mouse/x DEI2 DUP2 .anchor/x LDZ2 >> ROT ROT .anchor/x LDZ2 WIDTH DUP ADD TOS ++ #0001 ++ << #0101 ==
+	.Mouse/y DEI2 DUP2 .anchor/y LDZ2 >> ROT ROT .anchor/y LDZ2 HEIGHT DUP ADD TOS ++ << #0101 ==
 	#0101 == #01 JCN [ BRK ]
 
 	.Mouse/x DEI2 .anchor/x LDZ2 SUB2 #02 / TOB
@@ -190,7 +190,7 @@ BRK
 	
 	( draw cell count )
 	.anchor/x LDZ2 .Screen/x DEO2
-	.anchor/y LDZ2 HEIGHT #02 * TOS ++ .Screen/y DEO2
+	.anchor/y LDZ2 HEIGHT DUP ADD TOS ++ .Screen/y DEO2
 	.world/count LDZ2 #03 ;draw-short JSR2
 
 	HEIGHT #00

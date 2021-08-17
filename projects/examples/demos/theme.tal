@@ -147,7 +147,7 @@ RTN
 	#0010 .Screen/y DEO2
 	#00 #08
 	&draw-pixel1
-		( move ) OVR #08 MUL #00 SWP #0010 ADD2 .Screen/x DEO2
+		( move ) OVR #30 SFT #00 SWP #0010 ADD2 .Screen/x DEO2
 		( draw ) OVR .Screen/pixel DEO
 		( incr ) SWP #01 ADD SWP
 		LTHk ,&draw-pixel1 JCN
@@ -155,7 +155,7 @@ RTN
 	#0018 .Screen/y DEO2
 	#00 #08
 	&draw-pixel2
-		( move ) OVR #08 MUL #00 SWP #0010 ADD2 .Screen/x DEO2
+		( move ) OVR #30 SFT #00 SWP #0010 ADD2 .Screen/x DEO2
 		( draw ) OVR #08 ADD .Screen/pixel DEO
 		( incr ) SWP #01 ADD SWP
 		LTHk ,&draw-pixel2 JCN
@@ -163,7 +163,7 @@ RTN
 	#0020 .Screen/y DEO2
 	#00 #08
 	&draw-icn1
-		( move ) OVR #08 MUL #00 SWP #0010 ADD2 .Screen/x DEO2
+		( move ) OVR #30 SFT #00 SWP #0010 ADD2 .Screen/x DEO2
 		( draw ) OVR #00 ADD .Screen/sprite DEO
 		( incr ) SWP #01 ADD SWP
 		LTHk ,&draw-icn1 JCN
@@ -171,7 +171,7 @@ RTN
 	#0028 .Screen/y DEO2
 	#00 #08
 	&draw-icn2
-		( move ) OVR #08 MUL #00 SWP #0010 ADD2 .Screen/x DEO2
+		( move ) OVR #30 SFT #00 SWP #0010 ADD2 .Screen/x DEO2
 		( draw ) OVR #08 ADD .Screen/sprite DEO
 		( incr ) SWP #01 ADD SWP
 		LTHk ,&draw-icn2 JCN
@@ -179,7 +179,7 @@ RTN
 	#0030 .Screen/y DEO2
 	#00 #08
 	&draw-chr1
-		( move ) OVR #08 MUL #00 SWP #0010 ADD2 .Screen/x DEO2
+		( move ) OVR #30 SFT #00 SWP #0010 ADD2 .Screen/x DEO2
 		( draw ) OVR #80 ADD .Screen/sprite DEO
 		( incr ) SWP #01 ADD SWP
 		LTHk ,&draw-chr1 JCN
@@ -187,7 +187,7 @@ RTN
 	#0038 .Screen/y DEO2
 	#00 #08
 	&draw-chr2
-		( move ) OVR #08 MUL #00 SWP #0010 ADD2 .Screen/x DEO2
+		( move ) OVR #30 SFT #00 SWP #0010 ADD2 .Screen/x DEO2
 		( draw ) OVR #88 ADD .Screen/sprite DEO
 		( incr ) SWP #01 ADD SWP
 		LTHk ,&draw-chr2 JCN
@@ -253,7 +253,7 @@ RTN
 	.Mouse/x DEI2 DUP2 .pointer/x STZ2 .Screen/x DEO2 
 	.Mouse/y DEI2 DUP2 .pointer/y STZ2 .Screen/y DEO2
 
-	#43 .Mouse/state DEI #00 NEQ #02 MUL SUB .Screen/sprite DEO
+	#43 .Mouse/state DEI #00 NEQ DUP ADD SUB .Screen/sprite DEO
 
 RTN
 

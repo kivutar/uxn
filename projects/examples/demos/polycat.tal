@@ -29,7 +29,7 @@
 
 	( find center )
 	.Screen/width DEI2 2// #0008 SUB2 .cat/x STZ2
-	.Screen/height DEI2 4// #0003 MUL2 #0018 SUB2 .cat/y STZ2
+	.Screen/height DEI2 4// DUP2k ADD2 ADD2 #0018 SUB2 .cat/y STZ2
 
 	( vectors )
 	;on-mouse .Mouse/vector DEO2
@@ -44,8 +44,8 @@ BRK
 	
 	;draw-cursor JSR2
 
-	.Mouse/x DEI2 .cat/x LDZ2 GTH2 #20 MUL
-	.Mouse/y DEI2 .cat/y LDZ2 GTH2 #40 MUL
+	.Mouse/x DEI2 .cat/x LDZ2 GTH2 #50 SFT
+	.Mouse/y DEI2 .cat/y LDZ2 GTH2 #60 SFT
 		ADD #00 SWP ;draw-eye JSR2
 
 BRK
@@ -98,7 +98,7 @@ RTN
 	;body .Screen/addr DEO2
 	( draw ) #81 .Screen/sprite DEO
 	STH2r .Screen/x DEO2
-	#0010 MUL2 ;body #0010 ADD2 ADD2 .Screen/addr DEO2
+	#40 SFT2 ;body #0010 ADD2 ADD2 .Screen/addr DEO2
 	( draw ) #81 .Screen/sprite DEO
 
 RTN

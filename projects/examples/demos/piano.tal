@@ -359,7 +359,7 @@ RTN
 		.Screen/x DEI2 #0001 ++ .Screen/x DEO2
 		( draw ) DUP 
 			.Audio0/length DEI2 NIP > 
-			.Audio0/length DEI2 #0100 !! #0101 == #02 * #01 + .Screen/pixel DEO
+			.Audio0/length DEI2 #0100 !! #0101 == DUP ADD #01 + .Screen/pixel DEO
 		#01 + GTHk ,&loop JCN
 	POP2
 
@@ -402,7 +402,7 @@ RTN
 		( draw ) #01 .Screen/sprite DEO
 	.Screen/x DEI2 #0004 ++ .Screen/x DEO2
 	.Screen/y DEI2 #0008 ++ .Screen/y DEO2
-	;font-hex #00 STHkr #08 * ++ .Screen/addr DEO2
+	;font-hex #00 STHkr #30 SFT ++ .Screen/addr DEO2
 		( draw ) #01 .Screen/sprite DEO
 	.Screen/x DEI2 #0004 -- #00 #00 STHkr ;knob-offsetx ++ LDA ++ .Screen/x DEO2
 	.Screen/y DEI2 #0010 -- #00 #00 STHr ;knob-offsety ++ LDA ++ .Screen/y DEO2

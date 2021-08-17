@@ -159,29 +159,29 @@ BRK
 	
 	.Mouse/x DEI2 .ctlframe/x1 LDZ2 SUB2 8-- 8// NIP #02 DIV
 	DUP ,&no-a JCN
-		.Audio0/adsr .track/active LDZ #10 MUL ADD DEI
+		.Audio0/adsr .track/active LDZ #40 SFT ADD DEI
 		#10 .Mouse/state DEI #10 EQU #e0 MUL ADD ADD
-		.Audio0/adsr .track/active LDZ #10 MUL ADD DEO &no-a
+		.Audio0/adsr .track/active LDZ #40 SFT ADD DEO &no-a
 	DUP #01 NEQ ,&no-d JCN
-		.Audio0/adsr .track/active LDZ #10 MUL ADD DEI
+		.Audio0/adsr .track/active LDZ #40 SFT ADD DEI
 		DUP #f0 AND STH #01 .Mouse/state DEI #10 EQU #0e MUL ADD ADD #0f AND STHr ADD
-		.Audio0/adsr .track/active LDZ #10 MUL ADD DEO &no-d
+		.Audio0/adsr .track/active LDZ #40 SFT ADD DEO &no-d
 	DUP #02 NEQ ,&no-s JCN
-		.Audio0/adsr .track/active LDZ #10 MUL ADD #01 ADD DEI
+		.Audio0/adsr .track/active LDZ #40 SFT ADD #01 ADD DEI
 		#10 .Mouse/state DEI #10 EQU #e0 MUL ADD ADD
-		.Audio0/adsr .track/active LDZ #10 MUL ADD #01 ADD DEO &no-s
+		.Audio0/adsr .track/active LDZ #40 SFT ADD #01 ADD DEO &no-s
 	DUP #03 NEQ ,&no-r JCN
-		.Audio0/adsr .track/active LDZ #10 MUL ADD #01 ADD DEI
+		.Audio0/adsr .track/active LDZ #40 SFT ADD #01 ADD DEI
 		DUP #f0 AND STH #01 .Mouse/state DEI #10 EQU #0e MUL ADD ADD #0f AND STHr ADD
-		.Audio0/adsr .track/active LDZ #10 MUL ADD #01 ADD DEO &no-r
+		.Audio0/adsr .track/active LDZ #40 SFT ADD #01 ADD DEO &no-r
 	DUP #05 NEQ ,&no-left JCN
-		.Audio0/volume .track/active LDZ #10 MUL ADD DEI
+		.Audio0/volume .track/active LDZ #40 SFT ADD DEI
 		#10 .Mouse/state DEI #10 EQU #e0 MUL ADD ADD
-		.Audio0/volume .track/active LDZ #10 MUL ADD DEO &no-left
+		.Audio0/volume .track/active LDZ #40 SFT ADD DEO &no-left
 	DUP #06 NEQ ,&no-right JCN
-		.Audio0/volume .track/active LDZ #10 MUL ADD DEI
+		.Audio0/volume .track/active LDZ #40 SFT ADD DEI
 		DUP #f0 AND STH #01 .Mouse/state DEI #10 EQU #0e MUL ADD ADD #0f AND STHr ADD
-		.Audio0/volume .track/active LDZ #10 MUL ADD DEO &no-right
+		.Audio0/volume .track/active LDZ #40 SFT ADD DEO &no-right
 	POP
 	( release ) #00 .Mouse/state DEO
 	;draw-controls JSR2
@@ -361,7 +361,7 @@ RTN
 	#05 .Screen/sprite DEO
 	.knob/x LDZ2 #0004 ADD2 .Screen/x DEO2
 	.knob/y LDZ2 #0010 ADD2 .Screen/y DEO2
-	;font_hex #00 .knob/value LDZ #08 MUL ADD2 .Screen/addr DEO2
+	;font_hex #00 .knob/value LDZ #30 SFT ADD2 .Screen/addr DEO2
 	#01 .Screen/sprite DEO
 
 RTN
@@ -386,31 +386,31 @@ RTN
 	( env )
 	.ctlframe/x1 LDZ2 8++ .ctlframe/y1 LDZ2 8++ #02 ;env_txt ;draw-label JSR2
 	.ctlframe/x1 LDZ2 8++ .ctlframe/y1 LDZ2 #0010 ADD2
-		.Audio0/adsr .track/active LDZ #10 MUL ADD DEI #04 SFT
+		.Audio0/adsr .track/active LDZ #40 SFT ADD DEI #04 SFT
 		;draw-knob JSR2
 	.ctlframe/x1 LDZ2 #0018 ADD2 .ctlframe/y1 LDZ2 #0010 ADD2
-		.Audio0/adsr .track/active LDZ #10 MUL ADD DEI #0f AND
+		.Audio0/adsr .track/active LDZ #40 SFT ADD DEI #0f AND
 		;draw-knob JSR2
 	.ctlframe/x1 LDZ2 #0028 ADD2 .ctlframe/y1 LDZ2 #0010 ADD2
-		.Audio0/adsr .track/active LDZ #10 MUL ADD #01 ADD DEI #04 SFT
+		.Audio0/adsr .track/active LDZ #40 SFT ADD #01 ADD DEI #04 SFT
 		;draw-knob JSR2
 	.ctlframe/x1 LDZ2 #0038 ADD2 .ctlframe/y1 LDZ2 #0010 ADD2
-		.Audio0/adsr .track/active LDZ #10 MUL ADD #01 ADD DEI #0f AND
+		.Audio0/adsr .track/active LDZ #40 SFT ADD #01 ADD DEI #0f AND
 		;draw-knob JSR2
 	( vol )
 	.ctlframe/x1 LDZ2 #0058 ADD2 .ctlframe/y1 LDZ2 8++ #02 ;vol_txt ;draw-label JSR2
 	.ctlframe/x1 LDZ2 #0058 ADD2 .ctlframe/y1 LDZ2 #0010 ADD2
-		.Audio0/volume .track/active LDZ #10 MUL ADD DEI #04 SFT
+		.Audio0/volume .track/active LDZ #40 SFT ADD DEI #04 SFT
 	;draw-knob/force JSR2
 	.ctlframe/x1 LDZ2 #0068 ADD2 .ctlframe/y1 LDZ2 #0010 ADD2
-		.Audio0/volume .track/active LDZ #10 MUL ADD DEI #0f AND
+		.Audio0/volume .track/active LDZ #40 SFT ADD DEI #0f AND
 	;draw-knob/force JSR2
 
 RTN
 
 @draw-vu ( -- )
 	.ctlframe/x1 LDZ2 #0088 ADD2 .ctlframe/y1 LDZ2 #0010 ADD2
-		.Audio0/output .track/active LDZ #10 MUL ADD DEI DUP STH #04 SFT
+		.Audio0/output .track/active LDZ #40 SFT ADD DEI DUP STH #04 SFT
 	;draw-knob/force JSR2
 	.ctlframe/x1 LDZ2 #0098 ADD2 .ctlframe/y1 LDZ2 #0010 ADD2
 		STHr #0f AND

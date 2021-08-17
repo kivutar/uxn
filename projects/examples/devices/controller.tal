@@ -1,8 +1,8 @@
 ( dev/controller/keys )
 
-%+  { ADD } %-   { SUB }  %*  { MUL }  %/  { DIV }
+%+  { ADD } %-   { SUB }               %/  { DIV }
 %<  { LTH } %>   { GTH }  %=  { EQU }  %!  { NEQ }
-%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
+%++ { ADD2 } %-- { SUB2 }              %// { DIV2 }
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
 %RTN { JMP2r }
@@ -77,17 +77,17 @@ BRK
 	.frame/x0 LDZ2 #0010 ++ .Screen/x DEO2
 	.frame/y0 LDZ2 #0010 ++ .Screen/y DEO2
 	;controller-icn/dpad-up .Screen/addr DEO2
-	#03 [ STHkr #04 SFT #01 AND #02 * - ] .Screen/sprite DEO
+	#03 [ STHkr #04 SFT #01 AND DUP + - ] .Screen/sprite DEO
 	.Screen/y DEI2 #0010 ++ .Screen/y DEO2
 	;controller-icn/dpad-down .Screen/addr DEO2
-	#03 [ STHkr #05 SFT #01 AND #02 * - ] .Screen/sprite DEO
+	#03 [ STHkr #05 SFT #01 AND DUP + - ] .Screen/sprite DEO
 	.Screen/y DEI2 #0008 -- .Screen/y DEO2
 	.Screen/x DEI2 #0008 -- .Screen/x DEO2
 	;controller-icn/dpad-left .Screen/addr DEO2
-	#03 [ STHkr #06 SFT #01 AND #02 * - ] .Screen/sprite DEO
+	#03 [ STHkr #06 SFT #01 AND DUP + - ] .Screen/sprite DEO
 	.Screen/x DEI2 #0010 ++ .Screen/x DEO2
 	;controller-icn/dpad-right .Screen/addr DEO2
-	#03 [ STHkr #07 SFT #01 AND #02 * - ] .Screen/sprite DEO
+	#03 [ STHkr #07 SFT #01 AND DUP + - ] .Screen/sprite DEO
 	.Screen/x DEI2 #0008 -- .Screen/x DEO2
 	;controller-icn/dpad .Screen/addr DEO2
 	#03 .Screen/sprite DEO
@@ -96,10 +96,10 @@ BRK
 	.center/y LDZ2 #0009 ++ .Screen/y DEO2
 	.center/x LDZ2 #0009 -- .Screen/x DEO2
 	;controller-icn/option .Screen/addr DEO2
-	#03 [ STHkr #02 SFT #01 AND  #02 * - ] .Screen/sprite DEO
+	#03 [ STHkr #02 SFT #01 AND DUP + - ] .Screen/sprite DEO
 	.center/x LDZ2 #0004 ++ .Screen/x DEO2
 	;controller-icn/option .Screen/addr DEO2
-	#03 [ STHkr #03 SFT #01 AND  #02 * - ] .Screen/sprite DEO
+	#03 [ STHkr #03 SFT #01 AND DUP + - ] .Screen/sprite DEO
 
 	( buttons )
 	.center/y LDZ2 #0000 ++ .Screen/y DEO2
@@ -107,7 +107,7 @@ BRK
 	;controller-icn/button .Screen/addr DEO2
 	#03 [ STHkr #01 SFT #01 AND - ] .Screen/sprite DEO
 		.Screen/y DEI2 #000a ++ .Screen/y DEO2
-		;font-hex #000b #0008 ** ++ .Screen/addr DEO2
+		;font-hex #000b #30 SFT2 ++ .Screen/addr DEO2
 		#03 .Screen/sprite DEO
 
 	.center/y LDZ2 #0000 ++ .Screen/y DEO2
@@ -115,7 +115,7 @@ BRK
 	;controller-icn/button .Screen/addr DEO2
 	#03 [ STHr #01 AND - ] .Screen/sprite DEO
 		.Screen/y DEI2 #000a ++ .Screen/y DEO2
-		;font-hex #000a #0008 ** ++ .Screen/addr DEO2
+		;font-hex #000a #30 SFT2 ++ .Screen/addr DEO2
 		#03 .Screen/sprite DEO
 
 	.center/x LDZ2 #0010 -- .Screen/x DEO2
@@ -129,15 +129,15 @@ RTN
 @draw-short ( short* color -- )
 
 	STH SWP 
-	DUP #04 SFT TOS #0008 ** ;font-hex ++ .Screen/addr DEO2
+	DUP #04 SFT TOS #30 SFT2 ;font-hex ++ .Screen/addr DEO2
 	( draw ) STHkr .Screen/sprite DEO
-	#0f AND TOS #0008 ** ;font-hex ++ .Screen/addr DEO2
+	#0f AND TOS #30 SFT2 ;font-hex ++ .Screen/addr DEO2
 	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
 	( draw ) STHkr .Screen/sprite DEO
-	DUP #04 SFT TOS #0008 ** ;font-hex ++ .Screen/addr DEO2
+	DUP #04 SFT TOS #30 SFT2 ;font-hex ++ .Screen/addr DEO2
 	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
 	( draw ) STHkr .Screen/sprite DEO
-	#0f AND TOS #0008 ** ;font-hex ++ .Screen/addr DEO2
+	#0f AND TOS #30 SFT2 ;font-hex ++ .Screen/addr DEO2
 	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
 	( draw ) STHr .Screen/sprite DEO
 
