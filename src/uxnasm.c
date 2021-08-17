@@ -40,7 +40,7 @@ Program p;
 /* clang-format off */
 
 static char ops[][4] = {
-	"BRK", "LIT", "POP", "DUP", "NIP", "SWP", "OVR", "ROT",
+	"LIT", "INC", "POP", "DUP", "NIP", "SWP", "OVR", "ROT",
 	"EQU", "NEQ", "GTH", "LTH", "JMP", "JCN", "JSR", "STH",
 	"LDZ", "STZ", "LDR", "STR", "LDA", "STA", "DEI", "DEO",
 	"ADD", "SUB", "MUL", "DIV", "AND", "ORA", "EOR", "SFT"
@@ -62,7 +62,7 @@ static char *scat(char *dst, const char *src) { char *ptr = dst + slen(dst); whi
 static void
 pushbyte(Uint8 b, int lit)
 {
-	if(lit) pushbyte(0x01, 0);
+	if(lit) pushbyte(0x80, 0);
 	p.data[p.ptr++] = b;
 	p.length = p.ptr;
 }
@@ -70,7 +70,7 @@ pushbyte(Uint8 b, int lit)
 static void
 pushshort(Uint16 s, int lit)
 {
-	if(lit) pushbyte(0x21, 0);
+	if(lit) pushbyte(0x20, 0);
 	pushbyte((s >> 8) & 0xff, 0);
 	pushbyte(s & 0xff, 0);
 }
@@ -123,6 +123,7 @@ findopcode(char *s)
 				return 0; /* failed to match */
 			m++;
 		}
+		if(!i) i |= (1 << 7); /* force LIT nonzero (keep is ignored) */
 		return i;
 	}
 	return 0;
@@ -152,7 +153,7 @@ makemacro(char *name, FILE *f)
 		return error("Macro duplicate", name);
 	if(sihx(name) && slen(name) % 2 == 0)
 		return error("Macro name is hex number", name);
-	if(findopcode(name) || !slen(name))
+	if(findopcode(name) || scmp(name, "BRK", 4) || !slen(name))
 		return error("Macro name is invalid", name);
 	m = &p.macros[p.mlen++];
 	scpy(name, m->name, 64);
@@ -176,7 +177,7 @@ makelabel(char *name, Uint16 addr)
 		return error("Label duplicate", name);
 	if(sihx(name) && slen(name) % 2 == 0)
 		return error("Label name is hex number", name);
-	if(findopcode(name) || !slen(name))
+	if(findopcode(name) || scmp(name, "BRK", 4) || !slen(name))
 		return error("Label name is invalid", name);
 	l = &p.labels[p.llen++];
 	l->addr = addr;
@@ -246,7 +247,10 @@ parsetoken(char *w)
 	} else if(w[0] == ';' && (l = findlabel(w + 1))) { /* absolute */
 		pushshort(l->addr, 1);
 		return ++l->refs;
-	} else if(findopcode(w) || scmp(w, "BRK", 4)) { /* opcode */
+	} else if(scmp(w, "BRK", 4)) { /* special BRK opcode */
+		pushbyte(0, 0);
+		return 1;
+	} else if(findopcode(w)) { /* opcode */
 		pushbyte(findopcode(w), 0);
 		return 1;
 	} else if(w[0] == '"') { /* string */

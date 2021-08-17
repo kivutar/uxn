@@ -48,28 +48,14 @@ uxn_eval(Uxn *u, Uint16 vec)
 		return 0;
 	u->ram.ptr = vec;
 	if(u->wst.ptr > 0xf8) u->wst.ptr = 0xf8;
-	while(u->ram.ptr) {
-		instr = u->ram.dat[u->ram.ptr++];
+	while((instr = u->ram.dat[u->ram.ptr++])) {
 		switch(instr) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-value"
 #pragma GCC diagnostic ignored "-Wunused-variable"
-		case 0x00: /* BRK */
-		case 0x20: /* BRK2 */
-		case 0x40: /* BRKr */
-		case 0x60: /* BRK2r */
-		case 0x80: /* BRKk */
-		case 0xa0: /* BRK2k */
-		case 0xc0: /* BRKkr */
-		case 0xe0: /* BRK2kr */
-			__asm__("evaluxn_00_BRK:");
-			{
-				u->ram.ptr = 0;
-			}
-			break;
-		case 0x01: /* LIT */
-		case 0x81: /* LITk */
-			__asm__("evaluxn_01_LIT:");
+		case 0x00: /* LIT */
+		case 0x80: /* LITk */
+			__asm__("evaluxn_00_LIT:");
 			{
 				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, u->ram.ptr++);
 #ifndef NO_STACK_CHECKS
@@ -79,6 +65,19 @@ uxn_eval(Uxn *u, Uint16 vec)
 				}
 #endif
 				u->wst.ptr += 1;
+			}
+			break;
+		case 0x01: /* INC */
+			__asm__("evaluxn_01_INC:");
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1];
+				u->wst.dat[u->wst.ptr - 1] = a + 1;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 1, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
 			}
 			break;
 		case 0x02: /* POP */
@@ -533,9 +532,9 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr -= 1;
 			}
 			break;
-		case 0x21: /* LIT2 */
-		case 0xa1: /* LIT2k */
-			__asm__("evaluxn_21_LIT2:");
+		case 0x20: /* LIT2 */
+		case 0xa0: /* LIT2k */
+			__asm__("evaluxn_20_LIT2:");
 			{
 				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, u->ram.ptr++);
 				u->wst.dat[u->wst.ptr + 1] = mempeek8(u->ram.dat, u->ram.ptr++);
@@ -546,6 +545,20 @@ uxn_eval(Uxn *u, Uint16 vec)
 				}
 #endif
 				u->wst.ptr += 2;
+			}
+			break;
+		case 0x21: /* INC2 */
+			__asm__("evaluxn_21_INC2:");
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
+				u->wst.dat[u->wst.ptr - 2] = (a + 1) >> 8;
+				u->wst.dat[u->wst.ptr - 1] = (a + 1) & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 2, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
 			}
 			break;
 		case 0x22: /* POP2 */
@@ -1035,9 +1048,9 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr -= 1;
 			}
 			break;
-		case 0x41: /* LITr */
-		case 0xc1: /* LITkr */
-			__asm__("evaluxn_41_LITr:");
+		case 0x40: /* LITr */
+		case 0xc0: /* LITkr */
+			__asm__("evaluxn_40_LITr:");
 			{
 				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, u->ram.ptr++);
 #ifndef NO_STACK_CHECKS
@@ -1047,6 +1060,19 @@ uxn_eval(Uxn *u, Uint16 vec)
 				}
 #endif
 				u->rst.ptr += 1;
+			}
+			break;
+		case 0x41: /* INCr */
+			__asm__("evaluxn_41_INCr:");
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				u->rst.dat[u->rst.ptr - 1] = a + 1;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 1, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+#endif
 			}
 			break;
 		case 0x42: /* POPr */
@@ -1501,9 +1527,9 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x61: /* LIT2r */
-		case 0xe1: /* LIT2kr */
-			__asm__("evaluxn_61_LIT2r:");
+		case 0x60: /* LIT2r */
+		case 0xe0: /* LIT2kr */
+			__asm__("evaluxn_60_LIT2r:");
 			{
 				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, u->ram.ptr++);
 				u->rst.dat[u->rst.ptr + 1] = mempeek8(u->ram.dat, u->ram.ptr++);
@@ -1514,6 +1540,20 @@ uxn_eval(Uxn *u, Uint16 vec)
 				}
 #endif
 				u->rst.ptr += 2;
+			}
+			break;
+		case 0x61: /* INC2r */
+			__asm__("evaluxn_61_INC2r:");
+			{
+				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
+				u->rst.dat[u->rst.ptr - 2] = (a + 1) >> 8;
+				u->rst.dat[u->rst.ptr - 1] = (a + 1) & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+#endif
 			}
 			break;
 		case 0x62: /* POP2r */
@@ -2001,6 +2041,24 @@ uxn_eval(Uxn *u, Uint16 vec)
 				}
 #endif
 				u->rst.ptr -= 1;
+			}
+			break;
+		case 0x81: /* INCk */
+			__asm__("evaluxn_81_INCk:");
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1];
+				u->wst.dat[u->wst.ptr] = a + 1;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 1, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->wst.ptr > 254, 0)) {
+					u->wst.error = 2;
+					goto error;
+				}
+#endif
+				u->wst.ptr += 1;
 			}
 			break;
 		case 0x82: /* POPk */
@@ -2524,6 +2582,25 @@ uxn_eval(Uxn *u, Uint16 vec)
 				}
 #endif
 				u->wst.ptr += 1;
+			}
+			break;
+		case 0xa1: /* INC2k */
+			__asm__("evaluxn_a1_INC2k:");
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
+				u->wst.dat[u->wst.ptr] = (a + 1) >> 8;
+				u->wst.dat[u->wst.ptr + 1] = (a + 1) & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 2, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->wst.ptr > 253, 0)) {
+					u->wst.error = 2;
+					goto error;
+				}
+#endif
+				u->wst.ptr += 2;
 			}
 			break;
 		case 0xa2: /* POP2k */
@@ -3073,6 +3150,24 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
+		case 0xc1: /* INCkr */
+			__asm__("evaluxn_c1_INCkr:");
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				u->rst.dat[u->rst.ptr] = a + 1;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 1, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
 		case 0xc2: /* POPkr */
 			__asm__("evaluxn_c2_POPkr:");
 			{
@@ -3594,6 +3689,25 @@ uxn_eval(Uxn *u, Uint16 vec)
 				}
 #endif
 				u->rst.ptr += 1;
+			}
+			break;
+		case 0xe1: /* INC2kr */
+			__asm__("evaluxn_e1_INC2kr:");
+			{
+				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
+				u->rst.dat[u->rst.ptr] = (a + 1) >> 8;
+				u->rst.dat[u->rst.ptr + 1] = (a + 1) & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 253, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 2;
 			}
 			break;
 		case 0xe2: /* POP2kr */
