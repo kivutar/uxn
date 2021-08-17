@@ -60,7 +60,7 @@ BRK
 
 	( get note )
 	.counter LDZ #18 MOD #30 ADD 
-		.Audio0/pitch .counter LDZ #04 MOD #40 SFT ADD DEO
+		.Audio0/pitch .counter LDZ #03 AND #40 SFT ADD DEO
 
 	.counter LDZ #01 ADD .counter STZ
 	#00 .timer STZ

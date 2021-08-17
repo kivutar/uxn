@@ -136,7 +136,7 @@ RTN
 
 	&sprite ( char color -- )
 		STH 
-		( get addr ) DUP TOS #0048 ** ;font-data #0100 ++ ++ .Screen/addr DEO2
+		( get addr ) DUP TOS #30 SFT2 #30 SFT2k ROT POP ADD2 ;font-data #0100 ++ ++ .Screen/addr DEO2
 		( get width ) TOS ;font-data ++ LDA TOS
 		#00 #03
 		&ver

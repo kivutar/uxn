@@ -61,7 +61,7 @@ BRK
 	#00 .DateTime/minute DEI 2** ;table ADD2 LDA2
 		#00 SWP 4// DUP2k ADD2 ADD2 #0020 ADD2 SCALEY .needles/my STZ2
 		#00 SWP 4// DUP2k ADD2 ADD2 #0020 ADD2 SCALEX .needles/mx STZ2
-	#00 .DateTime/hour DEI 12HOURS #05 MUL 2** ;table ADD2 LDA2
+	#00 .DateTime/hour DEI 12HOURS #20 SFTk NIP ADD 2** ;table ADD2 LDA2
 		#00 SWP 2// #0040 ADD2 SCALEY .needles/hy STZ2
 		#00 SWP 2// #0040 ADD2 SCALEX .needles/hx STZ2
 

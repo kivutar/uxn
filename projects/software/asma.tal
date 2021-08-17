@@ -223,7 +223,10 @@
 	    #0f AND ,&hex JMP
 
 	&hex
-	#30 ADD DUP #39 GTH #27 MUL ADD .Console/write DEO
+	#30 ADD DUP #3a LTH ,&not-alpha JCN
+	#27 ADD
+	&not-alpha
+	.Console/write DEO
 	JMP2r
 
 (

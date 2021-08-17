@@ -152,7 +152,7 @@ BRK
 
 @on-message ( -> )
 	
-	.Console/read DEI #10 MOD ;play-pad JSR2
+	.Console/read DEI #0f AND ;play-pad JSR2
 
 BRK
 
@@ -387,7 +387,7 @@ RTN
 
 	STHkr 
 
-	DUP #04 / SWP #04 MOD TOS PAD-WIDTH ** ( center ) .pad-view/x1 LDZ2 ++ 
+	DUP #04 / SWP #03 AND TOS PAD-WIDTH ** ( center ) .pad-view/x1 LDZ2 ++ 
 	ROT TOS PAD-HEIGHT ** ( center ) .pad-view/y1 LDZ2 ++ 
 
 	( draw outline )
