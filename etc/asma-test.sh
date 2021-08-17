@@ -10,8 +10,8 @@ build_asma() {
 	cat <<EOD
 |0100 @reset
 	;&source-file ;&dest-file ;asma-assemble-file JSR2
-	;asma/error LDA2 #0000 NEQ2 JMP BRK
-	#0000 DIV
+	#01 .System/halt DEO
+	BRK
 
 	&source-file "in.tal 00
 	&dest-file "out.rom 00
@@ -33,7 +33,7 @@ expect_failure() {
 echo 'Assembling asma with uxnasm'
 build_asma > asma.tal
 ../bin/uxnasm asma.tal asma.rom > uxnasm.log
-find ../projects -type f -name '*.tal' -not -name 'blank.tal' | sort | while read F; do
+for F in $(find ../projects -type f -name '*.tal' -not -name 'blank.tal'); do
 	echo "Comparing assembly of ${F}"
 	BN="$(basename "${F%.tal}")"
 
