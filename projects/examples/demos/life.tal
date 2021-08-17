@@ -4,22 +4,28 @@
 	Any live cell with more than three live neighbours dies, as if by overpopulation.
 	Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction. )
 
-%+  { ADD } %-   { SUB }  %*  { MUL } %/   { DIV }
+%+  { ADD } %-   { SUB } 
 %<  { LTH } %>   { GTH }  %=  { EQU } %!   { NEQ }
-%++ { ADD2 } %-- { SUB2 } %** { MUL2 } %// { DIV2 }
+%++ { ADD2 } %-- { SUB2 } 
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
-%TOS  { #00 SWP } %TOB  { NIP }
-%RTN  { JMP2r }   %MOD  { DUP2 / * - }
-%MOD8 { #07 AND } %MOD2 { #01 AND }
-%SFL  { #40 SFT SFT }
+%2/  { #01 SFT }
+%8/  { #03 SFT }
 %2//  { #01 SFT2 } %8//  { #03 SFT2 }
 %2**  { #10 SFT2 } %8**  { #30 SFT2 }
+%40** { #60 SFT2 }
+%8MOD { #07 AND } %2MOD { #01 AND }
+
+%TOS  { #00 SWP } 
+%RTN  { JMP2r }   
+%SFL  { #40 SFT SFT }
 
 %WIDTH { #40 }   %HEIGHT { #40 }
+%WIDTH-MOD { #3f AND }   %HEIGHT-MOD { #3f AND }
+
 %BANK1 { #8000 } %BANK2 { #a000 }
 
-%GET-SIZE { WIDTH TOS 8// HEIGHT TOS ** }
+%GET-SIZE { WIDTH TOS 8// 40** }
 %GET-ITERATORS { SWP2k POP NIP }
 %GET-ITER { OVR2 NIP OVR SWP }
 
@@ -72,7 +78,7 @@ BRK
 	
 	.Mouse/state DEI #00 = #01 JCN [ BRK ]
 
-	( incr frame ) .world/frame LDZ #01 + [ DUP ] .world/frame STZ
+	( incr frame ) .world/frame LDZ INC [ DUP ] .world/frame STZ
 	( reset count ) #0000 .world/count STZ2
 
 	#03 AND #00 = #01 JCN [ BRK ] 
@@ -94,10 +100,10 @@ BRK
 			( neighbours ) DUP2 ;get-neighbours JSR2
 			( state ) ROT ROT ;get-cell JSR2
 			,run-cell JSR
-			SWP #01 + SWP
+			SWP INC SWP
 			LTHk ,&hor JCN
 		POP2
-		SWP #01 + SWP
+		SWP INC SWP
 		LTHk ,&ver JCN
 	POP2
 
@@ -131,13 +137,13 @@ RTN
 @save-cell ( x y -- )
 	
 	( get index )
-	HEIGHT MOD SWP WIDTH MOD SWP
-	WIDTH #08 / TOS ROT TOS ** ROT #08 / TOS ++ [ BANK2 ++ ]
+	HEIGHT-MOD SWP WIDTH-MOD SWP
+	TOS 8** ROT 8/ TOS ++ [ BANK2 ++ ]
 	( incr count )
-	.world/count LDZ2 #0001 ADD2 .world/count STZ2
+	.world/count LDZ2 INC2 .world/count STZ2
 	( save in buffer )
 	STH2
-	DUP2 POP MOD8 #01 SWP SFL 
+	DUP2 POP 8MOD #01 SWP SFL 
 	LDAkr STHr SWP ORA
 	STH2r STA
 
@@ -160,12 +166,12 @@ RTN
 
 	.Mouse/state DEI #00 ! #01 JCN [ BRK ]
 
-	.Mouse/x DEI2 DUP2 .anchor/x LDZ2 >> ROT ROT .anchor/x LDZ2 WIDTH DUP ADD TOS ++ #0001 ++ << #0101 ==
+	.Mouse/x DEI2 DUP2 .anchor/x LDZ2 >> ROT ROT .anchor/x LDZ2 WIDTH DUP ADD TOS ++ INC2 << #0101 ==
 	.Mouse/y DEI2 DUP2 .anchor/y LDZ2 >> ROT ROT .anchor/y LDZ2 HEIGHT DUP ADD TOS ++ << #0101 ==
 	#0101 == #01 JCN [ BRK ]
 
-	.Mouse/x DEI2 .anchor/x LDZ2 SUB2 #02 / TOB
-	.Mouse/y DEI2 .anchor/y LDZ2 SUB2 #02 / TOB
+	.Mouse/x DEI2 .anchor/x LDZ2 SUB2 2/ NIP
+	.Mouse/y DEI2 .anchor/y LDZ2 SUB2 2/ NIP
 	;set-cell JSR2
 	
 	;draw-grid JSR2
@@ -199,25 +205,25 @@ BRK
 		WIDTH #00
 		&hor
 			DUP TOS 2** .anchor/x LDZ2 ++ .Screen/x DEO2
-			GET-ITER ,get-cell JSR #01 + .Screen/pixel DEO
-			#01 + GTHk ,&hor JCN
+			GET-ITER ,get-cell JSR INC .Screen/pixel DEO
+			INC GTHk ,&hor JCN
 		POP2
-		#01 + GTHk ,&ver JCN
+		INC GTHk ,&ver JCN
 	POP2
 
 RTN
 
 @get-index ( x y -- index* )
 	
-	HEIGHT MOD SWP WIDTH MOD SWP
-	WIDTH #08 / TOS ROT TOS ** ROT #08 / TOS ++ [ BANK1 ++ ]
+	HEIGHT-MOD SWP WIDTH-MOD SWP
+	TOS 8** ROT 8/ TOS ++ [ BANK1 ++ ]
 
 RTN
 
 @set-cell ( x y -- )
 	
 	DUP2 ,get-index JSR STH2
-	POP MOD8 #01 SWP SFL 
+	POP 8MOD #01 SWP SFL 
 	LDAkr STHr SWP ORA
 	STH2r STA
 
@@ -227,8 +233,8 @@ RTN
 	
 	DUP2 ,get-index JSR LDA 
 	NIP SWP
-	MOD8
-	SFT MOD2
+	8MOD
+	SFT 2MOD
 
 RTN 
 
@@ -236,12 +242,12 @@ RTN
 	
 	( -1,-1 ) DUP2 #01 - [ SWP #01 - SWP ] ,get-cell JSR STH
 	(  0,-1 ) DUP2 #01 -      ,get-cell JSR STH ADDr
-	( +1,-1 ) DUP2 #01 - [ SWP #01 + SWP ] ,get-cell JSR STH ADDr
+	( +1,-1 ) DUP2 #01 - [ SWP INC SWP ] ,get-cell JSR STH ADDr
 	( -1, 0 ) DUP2       [ SWP #01 - SWP ] ,get-cell JSR STH ADDr
-	( +1, 0 ) DUP2       [ SWP #01 + SWP ] ,get-cell JSR STH ADDr
-	( -1,+1 ) DUP2 #01 + [ SWP #01 - SWP ] ,get-cell JSR STH ADDr
-	(  0,+1 ) DUP2 #01 +      ,get-cell JSR STH ADDr
-	( +1,+1 )      #01 + [ SWP #01 + SWP ] ,get-cell JSR STH ADDr
+	( +1, 0 ) DUP2       [ SWP INC SWP ] ,get-cell JSR STH ADDr
+	( -1,+1 ) DUP2 INC [ SWP #01 - SWP ] ,get-cell JSR STH ADDr
+	(  0,+1 ) DUP2 INC      ,get-cell JSR STH ADDr
+	( +1,+1 )      INC [ SWP INC SWP ] ,get-cell JSR STH ADDr
 	STHr
 
 RTN
