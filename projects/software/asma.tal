@@ -252,8 +252,13 @@
 		;asma/state STA
 	#01 ( 0001 )
 	SWPk ( 0001 0100 ) ;asma/written-addr STA2
+	;&preamble-end ;&preamble SUB2k ,asma-assemble-chunk JSR POP2 POP2
 	;asma/line STA2
 	JMP2r
+
+	&preamble
+	"%BRK 20 '{ 20 "00 20 '} 20
+	&preamble-end
 
 (
 	Divide a file up into chunks, and pass each chunk to asma-assemble-chunk.
@@ -470,6 +475,8 @@
 	LDAkr STHr LIT2r 0001 ADD2r ( 00 byte char / end* )
 	DUP ,&not-end JCN
 	POP POP2r
+	DUP ,&not-zero JCN #80 NIP ( LIT by itself needs keep flag, to distinguish from BRK )
+	&not-zero
 	SWP
 	JMP2r
 
@@ -918,20 +925,20 @@
 	&7d          $2         $2          '} 00          :asma-ignore
 
 @asma-opcodes
-	&BRK        :&AND      :&DEI &_disasm "BRK 00
-	&_entry     :&EQU      :&ROT        "LIT 00
+	&_entry     :&GTH      :&ROT &_disasm "LIT 00
+	&INC         $2         $2          "INC 00
 	&POP         $2         $2          "POP 00
-	&DUP        :&DIV      :&EOR        "DUP 00
+	&DUP         $2         $2          "DUP 00
 	&NIP        :&MUL      :&OVR        "NIP 00
 	&SWP         $2         $2          "SWP 00
 	&OVR        :&ORA      :&POP        "OVR 00
 	&ROT        :&NIP      :&STR        "ROT 00
-	&EQU        :&DEO      :&JSR        "EQU 00
+	&EQU         $2         $2          "EQU 00
 	&NEQ         $2         $2          "NEQ 00
-	&GTH         $2         $2          "GTH 00
+	&GTH        :&DIV      :&JSR        "GTH 00
 	&LTH         $2         $2          "LTH 00
 	&JMP         $2         $2          "JMP 00
-	&JCN        :&GTH      :&JMP        "JCN 00
+	&JCN        :&INC      :&JMP        "JCN 00
 	&JSR        :&JCN      :&LDR        "JSR 00
 	&STH         $2         $2          "STH 00
 	&LDZ         $2         $2          "LDZ 00
@@ -940,15 +947,15 @@
 	&STR        :&STA      :&SUB        "STR 00
 	&LDA         $2         $2          "LDA 00
 	&STA        :&SFT      :&STH        "STA 00
-	&DEI         $2         $2          "DEI 00
-	&DEO        :&BRK      :&DUP        "DEO 00
+	&DEI        :&AND      :&DEO        "DEI 00
+	&DEO         $2         $2          "DEO 00
 	&ADD         $2         $2          "ADD 00
 	&SUB        :&STZ      :&SWP        "SUB 00
 	&MUL        :&LTH      :&NEQ        "MUL 00
-	&DIV         $2         $2          "DIV 00
+	&DIV        :&DEI      :&EOR        "DIV 00
 	&AND        :&ADD       $2          "AND 00
 	&ORA         $2         $2          "ORA 00
-	&EOR         $2         $2          "EOR 00
+	&EOR        :&DUP      :&EQU        "EOR 00
 	&SFT         $2         $2          "SFT 00
 
 (
