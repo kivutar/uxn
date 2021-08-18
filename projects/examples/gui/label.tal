@@ -20,13 +20,10 @@
 
 |0100
 	
-	( theme ) #0f0f .System/r DEO2 #0fff .System/g DEO2 #0ff0 .System/b DEO2
-	
-	;draw JSR2
-	
-BRK
-
-@draw ( -- )
+	( theme ) 
+	#0f0f .System/r DEO2 
+	#0fff .System/g DEO2 
+	#0ff0 .System/b DEO2
 	
 	( find screen center )
 	.Screen/width DEI2 2// .center/x STZ2

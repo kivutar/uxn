@@ -1,11 +1,7 @@
 ( GUI Hover )
 
-%+  { ADD }  %-  { SUB }
-%<  { LTH }  %>  { GTH }  %=  { EQU }  %!  { NEQ }
-%++ { ADD2 } %-- { SUB2 }
-%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 %RTN { JMP2r }
-%GTS2 { #8000 ++ SWP2 #8000 ++ << }
+%GTS2 { #8000 ADD2 SWP2 #8000 ADD2 LTH2 }
 
 ( devices )
 
@@ -28,7 +24,11 @@
 
 |0100
 
-	( theme ) #0f0f .System/r DEO2 #0fff .System/g DEO2 #0ff0 .System/b DEO2
+	( theme ) 
+	#0f0f .System/r DEO2 
+	#0fff .System/g DEO2 
+	#0ff0 .System/b DEO2
+
 	( vectors ) ;on-mouse .Mouse/vector DEO2
 	
 	#0020 #0030 #0060 #0060 .r1/y2 STZ2 .r1/x2 STZ2 .r1/y1 STZ2 .r1/x1 STZ2
@@ -62,27 +62,20 @@
 		&draw3 
 	.r3/x1 LDZ2 .r3/y1 LDZ2 .r3/x2 LDZ2 .r3/y2 LDZ2 .color LDZ ;line-rect JSR2
 
-	;draw-cursor JSR2
-
-BRK
-
-@draw-cursor ( -- )
-
 	( clear last cursor )
 	.pointer/x LDZ2 .Screen/x DEO2
 	.pointer/y LDZ2 .Screen/y DEO2
 	#40 .Screen/sprite DEO
 
 	( record pointer positions )
-	.Mouse/x DEI2 .pointer/x STZ2 .Mouse/y DEI2 .pointer/y STZ2
+	.Mouse/x DEI2 DUP2 .pointer/x STZ2 .Screen/x DEO2 
+	.Mouse/y DEI2 DUP2 .pointer/y STZ2 .Screen/y DEO2
+	.pointer/sprite LDZ2 .Screen/addr DEO2
 
 	( draw new cursor )
-	.pointer/sprite LDZ2 .Screen/addr DEO2
-	.pointer/x LDZ2 .Screen/x DEO2
-	.pointer/y LDZ2 .Screen/y DEO2
 	#41 .Screen/sprite DEO
 
-RTN
+BRK
 
 @within-rect ( x* y* rect -- flag )
 	

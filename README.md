@@ -63,7 +63,6 @@ You can also use the emulator without graphics by using `uxncli`. You can find a
 
 ```
 cc src/uxn.c -DNDEBUG -Os -g0 -s src/uxncli.c -o bin/uxncli
-
 ```
 
 ### I/O

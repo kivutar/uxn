@@ -1,7 +1,7 @@
 ( GUI Picture )
 
 %RTN { JMP2r }
-%8+ { #0008 ADD2 }
+%LOAD-IMAGE { .File/length DEO2 .File/name DEO2 ;image .File/load DEO2 }
 
 ( devices )
 
@@ -13,97 +13,93 @@
 
 |0000
 
-@color    [ &byte $1 ]
-@position [ &x $2 &y $2 ]
-@size     [ &width $2 &height $2 ]
+@position
+	&x $2 &y $2
+@size
+	&width $2 &height $2
 
 ( program )
 
 |0100
 
-	( theme ) #f07a .System/r DEO2 #f02a .System/g DEO2 #f02a .System/b DEO2
+	( theme ) 
+	#072f .System/r DEO2 
+	#072f .System/g DEO2 
+	#072f .System/b DEO2
 
-	( background ) ;checker_icn #02 ;cover-pattern JSR2
+	( background ) ;checker-icn #02 ;cover-pattern JSR2
 
-	( load ) ;icn1_path .File/name DEO2 #1800 .File/length DEO2 ;image .File/load DEO2
-	( draw ) #0008 #0008 #0100 #00c0 #07 ;image ;draw-icn JSR2
-
-	( load ) ;icn2_path .File/name DEO2 #0800 .File/length DEO2 ;image .File/load DEO2
-	( draw ) #0010 #0078 #0080 #0080 #07 ;image ;draw-icn JSR2
-
-	( load ) ;chr1_path .File/name DEO2 #4000 .File/length DEO2 ;image .File/load DEO2
-	( draw ) #00a8 #0010 #0100 #0100 #8f ;image ;draw-chr JSR2
-
-	( load ) ;chr2_path .File/name DEO2 #0900 .File/length DEO2 ;image .File/load DEO2
-	( draw ) #0088 #0088 #0060 #0060 #81 ;image ;draw-chr JSR2
-
+	( load ) ;icn1-path #1800 LOAD-IMAGE
+	( draw ) #0008 #0008 #0100 #00c0 ;image #01 ;draw-icn JSR2
+	( load ) ;icn2-path #0800 LOAD-IMAGE
+	( draw ) #0010 #00a8 #0080 #0080 ;image #03 ;draw-icn JSR2
+	( load ) ;chr1-path #4000 LOAD-IMAGE
+	( draw ) #00e8 #0080 #0100 #0080 ;image #81 ;draw-chr JSR2
+	( load ) ;chr2-path #0900 LOAD-IMAGE
+	( draw ) #0068 #0098 #0060 #0060 ;image #85 ;draw-chr JSR2
 
 BRK
 
-@draw-icn ( x y width height color addr -- )
+@draw-icn ( x* y* width* height* addr* color  -- )
 	
-	( load ) .Screen/addr DEO2 .color STZ .size/height STZ2 .size/width STZ2 .position/y STZ2 .position/x STZ2
-	#0000 .size/height LDZ2
+	( load ) STH .Screen/addr DEO2 .size/height STZ2 .size/width STZ2 .position/y STZ2 .position/x STZ2
+	.size/height LDZ2 #0000 
 	&ver
-		( save ) OVR2 .position/y LDZ2 ADD2 .Screen/y DEO2
-		#0000 .size/width LDZ2
+		( save ) DUP2 .position/y LDZ2 ADD2 .Screen/y DEO2
+		.size/width LDZ2 #0000
 		&hor
-			( save ) OVR2 .position/x LDZ2 ADD2 .Screen/x DEO2
-			( draw ) .color LDZ .Screen/sprite DEO
-			( incr ) .Screen/addr DEI2 8+ .Screen/addr DEO2
-			( incr ) SWP2 8+ SWP2
-			LTH2k ,&hor JCN
+			( save ) DUP2 .position/x LDZ2 ADD2 .Screen/x DEO2
+			( draw ) STHkr .Screen/sprite DEO
+			( incr ) .Screen/addr DEI2 #0008 ADD2 .Screen/addr DEO2
+			#0008 ADD2 GTH2k ,&hor JCN
 		POP2 POP2
-		( incr ) SWP2 8+ SWP2
-		LTH2k ,&ver JCN
+		#0008 ADD2 GTH2k ,&ver JCN
 	POP2 POP2
+	POPr
 
 RTN
 
-@draw-chr ( x y width height color addr -- )
+@draw-chr ( x* y* width* height* addr* color -- )
 	
-	( load ) .Screen/addr DEO2 .color STZ .size/height STZ2 .size/width STZ2 .position/y STZ2 .position/x STZ2
-	#0000 .size/height LDZ2
+	( load ) STH .Screen/addr DEO2 .size/height STZ2 .size/width STZ2 .position/y STZ2 .position/x STZ2
+	.size/height LDZ2 #0000
 	&ver
-		( save ) OVR2 .position/y LDZ2 ADD2 .Screen/y DEO2
-		#0000 .size/width LDZ2
+		( save ) DUP2 .position/y LDZ2 ADD2 .Screen/y DEO2
+		.size/width LDZ2 #0000
 		&hor
-			( save ) OVR2 .position/x LDZ2 ADD2 .Screen/x DEO2
-			( draw ) .color LDZ .Screen/sprite DEO
+			( save ) DUP2 .position/x LDZ2 ADD2 .Screen/x DEO2
+			( draw ) STHkr .Screen/sprite DEO
 			( incr ) .Screen/addr DEI2 #0010 ADD2 .Screen/addr DEO2
-			( incr ) SWP2 8+ SWP2
-			LTH2k ,&hor JCN
+			#0008 ADD2 GTH2k ,&hor JCN
 		POP2 POP2
-		( incr ) SWP2 8+ SWP2
-		LTH2k ,&ver JCN
+		#0008 ADD2 GTH2k ,&ver JCN
 	POP2 POP2
+	POPr
 
 RTN
 
 @cover-pattern ( addr* color -- )
 	
-	( load ) .color/byte STZ .Screen/addr DEO2
-	#0000 .Screen/height DEI2
+	( load ) STH .Screen/addr DEO2
+	.Screen/height DEI2 #0000
 	&ver
-		( save ) OVR2 .Screen/y DEO2
-		#0000 .Screen/width DEI2
+		( save ) DUP2 .Screen/y DEO2
+		.Screen/width DEI2 #0000
 		&hor
-			( save ) OVR2 .Screen/x DEO2
-			( draw ) .color LDZ .Screen/sprite DEO
-			( incr ) SWP2 8+ SWP2
-			LTH2k ,&hor JCN
+			( save ) DUP2 .Screen/x DEO2
+			( draw ) STHkr .Screen/sprite DEO
+			#0008 ADD2 GTH2k ,&hor JCN
 		POP2 POP2
-		( incr ) SWP2 8+ SWP2
-		LTH2k ,&ver JCN
+		#0008 ADD2 GTH2k ,&ver JCN
 	POP2 POP2
+	POPr
 
 RTN
 
-@checker_icn [ f0f0 f0f0 0f0f 0f0f ]
-
-@icn1_path [ "projects/pictures/ergo100x0c0.bit 00 ]
-@icn2_path [ "projects/pictures/dafu80x80.bit 00 ]
-@chr1_path [ "projects/pictures/zerotwo2020.chr 00 ]
-@chr2_path [ "projects/pictures/felix0cx0c.chr 00 ]
+@checker-icn f0f0 f0f0 0f0f 0f0f
+@icn1-path   "projects/pictures/ergo100x0c0.bit 00
+@icn2-path   "projects/pictures/dafu80x80.bit 00
+@chr1-path   "projects/pictures/pc98.chr 00
+@chr2-path   "projects/pictures/felix0cx0c.chr 00
 
 @image [ ]
