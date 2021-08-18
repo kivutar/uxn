@@ -21,7 +21,7 @@
 
 |0100
 
-	( theme ) #037a .System/r DEO2 #032a .System/g DEO2 #052a .System/b DEO2
+	( theme ) #f07a .System/r DEO2 #f02a .System/g DEO2 #f02a .System/b DEO2
 
 	( background ) ;checker_icn #02 ;cover-pattern JSR2
 
@@ -36,6 +36,7 @@
 
 	( load ) ;chr2_path .File/name DEO2 #0900 .File/length DEO2 ;image .File/load DEO2
 	( draw ) #0088 #0088 #0060 #0060 #81 ;image ;draw-chr JSR2
+
 
 BRK
 
@@ -79,9 +80,9 @@ RTN
 
 RTN
 
-@cover-pattern ( addr color -- )
+@cover-pattern ( addr* color -- )
 	
-	( load ) .color STZ .Screen/addr DEO2
+	( load ) .color/byte STZ .Screen/addr DEO2
 	#0000 .Screen/height DEI2
 	&ver
 		( save ) OVR2 .Screen/y DEO2

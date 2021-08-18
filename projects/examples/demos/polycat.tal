@@ -52,7 +52,7 @@ BRK
 
 @on-frame ( -> )
 
-	.cat/timer LDZ #01 ADD [ DUP ] .cat/timer STZ
+	.cat/timer LDZ INC [ DUP ] .cat/timer STZ
 		DUP ,&skip0 JCN #0000 ;draw-tail JSR2 &skip0
 		[ #10 ] !~ ,&skip1 JCN #0001 ;draw-tail JSR2 &skip1
 		[ #20 ] !~ ,&skip2 JCN #0002 ;draw-tail JSR2 &skip2
@@ -126,13 +126,13 @@ RTN
 	.cat/x LDZ2 #0010 SUB2 .Screen/x DEO2
 	;ground .Screen/addr DEO2
 
-	#00 #10
+	#10 #00 
 	&loop
 		( draw ) #01 .Screen/sprite DEO
 		( sety ) .Screen/addr DEI2 #0008 ADD2 .Screen/addr DEO2
 		( setx ) .Screen/x DEI2 #0008 ADD2 .Screen/x DEO2
-		( incr ) SWP #01 ADD SWP
-		LTHk ,&loop JCN
+		( incr ) INC
+		GTHk ,&loop JCN
 	POP2
 
 RTN

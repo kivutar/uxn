@@ -11,6 +11,7 @@
 %MOD  { DUP2 / * - }
 %LTS2 { #8000 ++ SWP2 #8000 ++ >> }
 %GTS2 { #8000 ++ SWP2 #8000 ++ << }
+%2/  { #01 SFT }
 %2//  { #01 SFT2 }
 %4//  { #02 SFT2 }
 %8//  { #03 SFT2 }
@@ -102,7 +103,7 @@ BRK
 		.adsr-view/x2 LDZ2 #003a -- #0002 ++ .Screen/x DEO2
 		#10 OVR - .Audio0/output DEI #04 SFT < .Screen/pixel DEO
 		.Screen/y DEI2 #0002 ++ .Screen/y DEO2
-		#01 + GTHk ,&loop JCN
+		INC GTHk ,&loop JCN
 	POP2
 
 BRK
@@ -140,7 +141,7 @@ BRK
 	DUP #04 SFT #01 AND #01 ! ,&no-up JCN
 		( move ) .Audio0/addr DEI2 #0001 -- .Audio0/addr DEO2 &no-up
 	DUP #05 SFT #01 AND #01 ! ,&no-down JCN
-		( move ) .Audio0/addr DEI2 #0001 ++ .Audio0/addr DEO2 &no-down
+		( move ) .Audio0/addr DEI2 INC2 .Audio0/addr DEO2 &no-down
 	DUP #06 SFT #01 AND #01 ! ,&no-left JCN
 		( move ) .Audio0/addr DEI2 #0010 -- .Audio0/addr DEO2 &no-left
 	DUP #07 SFT #01 AND #01 ! ,&no-right JCN
@@ -188,7 +189,7 @@ BRK
 		.Mouse/y DEI2 .octave-view/y1 LDZ2 -- 8// NIP 
 		[ #00 ] !~ ,&no-incr JCN
 			.octave LDZ #03 = ,&no-incr JCN
-			.octave LDZ #01 + .octave STZ &no-incr
+			.octave LDZ INC .octave STZ &no-incr
 		[ #02 ] !~ ,&no-decr JCN
 			.octave LDZ #ff = ,&no-decr JCN
 			.octave LDZ #01 - .octave STZ &no-decr
@@ -218,13 +219,13 @@ BRK
 		DUP #f0 AND STH #01 .Mouse/state DEI #10 = #0e * + + #0f AND STHr +
 		.Audio0/adsr DEO &no-d
 	[ #02 ] !~ ,&no-s JCN
-		.Audio0/adsr #01 + DEI
+		.Audio0/adsr INC DEI
 		#10 .Mouse/state DEI #10 = #e0 * + +
-		.Audio0/adsr #01 + DEO &no-s
+		.Audio0/adsr INC DEO &no-s
 	[ #03 ] !~ ,&no-r JCN
-		.Audio0/adsr #01 + DEI
+		.Audio0/adsr INC DEI
 		DUP #f0 AND STH #01 .Mouse/state DEI #10 = #0e * + + #0f AND STHr +
-		.Audio0/adsr #01 + DEO &no-r
+		.Audio0/adsr INC DEO &no-r
 	[ #05 ] !~ ,&no-left JCN
 		.Audio0/volume DEI 
 		#10 .Mouse/state DEI #10 = #e0 * + +
@@ -317,10 +318,10 @@ RTN
 		.Audio0/adsr DEI #0f AND
 		;draw-knob JSR2
 	.adsr-view/x1 LDZ2 #0030 ++ .adsr-view/y1 LDZ2
-		.Audio0/adsr #01 + DEI #04 SFT
+		.Audio0/adsr INC DEI #04 SFT
 		;draw-knob JSR2
 	.adsr-view/x1 LDZ2 #0048 ++ .adsr-view/y1 LDZ2
-		.Audio0/adsr #01 + DEI #0f AND
+		.Audio0/adsr INC DEI #0f AND
 		;draw-knob JSR2
 	( volume )
 	.adsr-view/x2 LDZ2 #0028 -- .adsr-view/y1 LDZ2
@@ -337,7 +338,7 @@ RTN
 	( clear )
 	.wave-view/x1 LDZ2
 	.wave-view/y1 LDZ2
-	.wave-view/x2 LDZ2 #0001 ++
+	.wave-view/x2 LDZ2 INC2
 	.wave-view/y2 LDZ2
 	#00 ;fill-rect JSR2
 
@@ -354,13 +355,13 @@ RTN
 			#03 .Screen/pixel DEO
 		&no-dot
 		DUP TOS .Audio0/addr DEI2 ++ LDA 
-		#02 /
+		2/
 		TOS 4// .wave-view/y1 LDZ2 ++ .Screen/y DEO2
-		.Screen/x DEI2 #0001 ++ .Screen/x DEO2
+		.Screen/x DEI2 INC2 .Screen/x DEO2
 		( draw ) DUP 
 			.Audio0/length DEI2 NIP > 
-			.Audio0/length DEI2 #0100 !! #0101 == DUP ADD #01 + .Screen/pixel DEO
-		#01 + GTHk ,&loop JCN
+			.Audio0/length DEI2 #0100 !! #0101 == DUP ADD INC .Screen/pixel DEO
+		INC GTHk ,&loop JCN
 	POP2
 
 	( range )
@@ -380,7 +381,7 @@ RTN
 	&loop
 		DUP2 .Screen/y DEO2
 		( draw ) STHkr .Screen/pixel DEO
-		#0001 ++ GTH2k ,&loop JCN
+		INC2 GTH2k ,&loop JCN
 	POP2 POP2
 	POPr
 
@@ -438,10 +439,10 @@ RTN
 		&hor
 			( save ) DUP2 .Screen/x DEO2
 			( draw ) ,&color LDR .Screen/pixel DEO
-			( incr ) #0001 ++
+			( incr ) INC2
 			OVR2 OVR2 GTS2 ,&hor JCN
 		POP2 POP2 STH2r STH2r
-		( incr ) #0001 ++
+		( incr ) INC2
 		OVR2 OVR2 GTS2 ,&ver JCN
 	POP2 POP2 POP2 POP2
 

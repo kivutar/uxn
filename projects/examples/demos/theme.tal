@@ -327,12 +327,12 @@ RTN
 	.Screen/x DEO2 
 	STH2r
 	&loop
-		DUP2 LDA #00 SWP 8**
+		LDAk #00 SWP 8**
 		;font ADD2 .Screen/addr DEO2 
 		( draw ) STHkr .Screen/sprite DEO
 		( incr ) ++
 		( incr ) .Screen/x DEI2 8+ .Screen/x DEO2
-		DUP2 LDA ,&loop JCN
+		LDAk ,&loop JCN
 	POP2 POPr
 
 RTN

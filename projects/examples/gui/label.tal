@@ -52,10 +52,10 @@ RTN
 	( load ) .label/addr STZ2 .label/color STZ .Screen/y DEO2 .Screen/x DEO2
 	.label/addr LDZ2
 	&loop
-		( draw ) DUP2 LDA #00 SWP 8** ;font ADD2 .Screen/addr DEO2 .label/color LDZ .Screen/sprite DEO
+		( draw ) LDAk #00 SWP 8** ;font ADD2 .Screen/addr DEO2 .label/color LDZ .Screen/sprite DEO
 		( incr ) #0001 ADD2
 		( incr ) .Screen/x DEI2 #0008 ADD2 .Screen/x DEO2
-		DUP2 LDA ,&loop JCN
+		LDAk ,&loop JCN
 	POP2
 
 RTN
@@ -66,10 +66,10 @@ RTN
 	( align ) .label/addr LDZ2 ;get-text-length JSR2 8** 2// SUB2 .Screen/x DEO2
 	.label/addr LDZ2
 	&loop
-		( draw ) DUP2 LDA #00 SWP 8** ;font ADD2 .Screen/addr DEO2 .label/color LDZ .Screen/sprite DEO
+		( draw ) LDAk #00 SWP 8** ;font ADD2 .Screen/addr DEO2 .label/color LDZ .Screen/sprite DEO
 		( incr ) #0001 ADD2
 		( incr ) .Screen/x DEI2 #0008 ADD2 .Screen/x DEO2
-		DUP2 LDA ,&loop JCN
+		LDAk ,&loop JCN
 	POP2
 
 RTN
@@ -80,10 +80,10 @@ RTN
 	( align ) .label/addr LDZ2 ;get-text-length JSR2 8** SUB2 .Screen/x DEO2
 	.label/addr LDZ2
 	&loop
-		( draw ) DUP2 LDA #00 SWP 8** ;font ADD2 .Screen/addr DEO2 .label/color LDZ .Screen/sprite DEO
+		( draw ) LDAk #00 SWP 8** ;font ADD2 .Screen/addr DEO2 .label/color LDZ .Screen/sprite DEO
 		( incr ) #0001 ADD2
 		( incr ) .Screen/x DEI2 #0008 ADD2 .Screen/x DEO2
-		DUP2 LDA ,&loop JCN
+		LDAk ,&loop JCN
 	POP2
 
 RTN

@@ -452,10 +452,10 @@ RTN
 	( load ) .label/addr STZ2 .label/color STZ .Screen/y DEO2 .Screen/x DEO2
 	.label/addr LDZ2
 	&loop
-		( draw ) DUP2 LDA #00 SWP 8** ;font ADD2 .Screen/addr DEO2 .label/color LDZ .Screen/sprite DEO
+		( draw ) LDAk #00 SWP 8** ;font ADD2 .Screen/addr DEO2 .label/color LDZ .Screen/sprite DEO
 		( incr ) ++
 		( incr ) .Screen/x DEI2 8++ .Screen/x DEO2
-		DUP2 LDA ,&loop JCN
+		LDAk ,&loop JCN
 	POP2
 
 RTN

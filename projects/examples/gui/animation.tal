@@ -52,19 +52,19 @@ BRK
 	
 	( stash ) STH 
 	;dvd_icn .Screen/addr DEO2
-	.dvd/y LDZ2 [ .dvd/y LDZ2 #0010 ADD2 ]
+	[ .dvd/y LDZ2 #0010 ADD2 ] .dvd/y LDZ2 
 	&ver
-		OVR2 .Screen/y DEO2
-		.dvd/x LDZ2 [ .dvd/x LDZ2 #0020 ADD2 ]
+		DUP2 .Screen/y DEO2
+		[ .dvd/x LDZ2 #0020 ADD2 ] .dvd/x LDZ2 
 		&hor
-			OVR2 .Screen/x DEO2
+			DUP2 .Screen/x DEO2
 			( draw ) STHkr .Screen/sprite DEO
 			( next ) .Screen/addr DEI2 #0008 ADD2 .Screen/addr DEO2
-			( incr ) SWP2 #0008 ADD2 SWP2
-			LTH2k ,&hor JCN
+			( incr ) #0008 ADD2
+			GTH2k ,&hor JCN
 		POP2 POP2
-		( incr ) SWP2 #0008 ADD2 SWP2
-		LTH2k ,&ver JCN
+		( incr ) #0008 ADD2
+		GTH2k ,&ver JCN
 	POP2 POP2
 	( destroy ) POPr
 
