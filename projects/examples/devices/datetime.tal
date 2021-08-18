@@ -71,14 +71,13 @@ BRK
 	#0080 SCALEX #0080 SCALEY .needles/hx LDZ2 .needles/hy LDZ2 #03 ;draw-line JSR2
 
 	( circle )
-	#00 #3c
+	#3c #00 
 	&loop
-		( load ) OVR #00 SWP 2** ;table ADD2 LDA2
+		( load ) DUP #00 SWP 2** ;table ADD2 LDA2
 		#00 SWP SCALEY .Screen/y DEO2
 		#00 SWP SCALEX .Screen/x DEO2
-		OVR #0f MOD #00 EQU #01 ADD .Screen/pixel DEO
-		( incr ) SWP #01 ADD SWP
-		LTHk ,&loop JCN
+		DUP #0f MOD #00 EQU INC .Screen/pixel DEO
+		INC GTHk ,&loop JCN
 	POP2
 
 	;draw-display JSR2

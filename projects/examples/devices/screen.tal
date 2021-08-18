@@ -1,6 +1,8 @@
 ( dev/screen )
 
 %RTN { JMP2r }
+%2/  { #01 SFT }
+%4/  { #02 SFT }
 
 ( devices )
 
@@ -42,7 +44,7 @@ BRK
 
 @on-frame ( -> )
 
-	.count LDZ2 #0001 ADD2 [ DUP2 ] .count STZ2
+	.count LDZ2 INC2 [ DUP2 ] .count STZ2
 	
 	.center/x LDZ2 #0048 ADD2 .Screen/x DEO2
 	.center/y LDZ2 #0050 SUB2 .Screen/y DEO2
@@ -79,7 +81,7 @@ BRK
 		.center/y LDZ2 #0040 SUB2 ADD2 .Screen/y DEO2
 		.center/x LDZ2 #0050 SUB2 .Screen/x DEO2
 		( draw ) #01 .Screen/sprite DEO
-		#01 ADD GTHk ,&loop JCN
+		INC GTHk ,&loop JCN
 	POP2
 
 RTN
@@ -89,12 +91,12 @@ RTN
 	;preview_icn .Screen/addr DEO2
 	#00 #00
 	&loop
-		( move ) DUP #0f AND #40 SFT #02 DIV #00 SWP 
+		( move ) DUP #0f AND #40 SFT 2/ #00 SWP 
 			.center/x LDZ2 #0040 SUB2 ADD2 .Screen/x DEO2
-		( move ) DUP #f0 AND #02 DIV #00 SWP 
+		( move ) DUP #f0 AND 2/ #00 SWP 
 			.center/y LDZ2 #0040 SUB2 ADD2 .Screen/y DEO2
 		( draw ) DUP .Screen/sprite DEO
-		#01 ADD NEQk ,&loop JCN
+		INC NEQk ,&loop JCN
 	POP2
 	
 RTN
@@ -104,12 +106,12 @@ RTN
 	#10 #00
 	&loop
 		( color ) STHk
-		( y ) DUP #04 DIV [ #00 SWP ] #40 SFT2
+		( y ) DUP 4/ [ #00 SWP ] #40 SFT2
 			[ .center/y LDZ2 #0040 SUB2 ADD2 ] STH2
 		( x ) DUP #03 AND [ #00 SWP ] #40 SFT2 #0040 ADD2 
 			[ .center/x LDZ2 #0008 ADD2 ADD2 ]
 		STH2r STHr #00 ;draw-circle JSR2
-		#01 ADD GTHk ,&loop JCN
+		INC GTHk ,&loop JCN
 	POP2
 	
 RTN
@@ -119,12 +121,12 @@ RTN
 	#10 #00
 	&loop
 		( color ) STHk
-		( y ) DUP #04 DIV [ #00 SWP ] #40 SFT2
+		( y ) DUP 4/ [ #00 SWP ] #40 SFT2
 			[ .center/y LDZ2 ADD2 ] STH2
 		( x ) DUP #03 AND [ #00 SWP ] #40 SFT2 #0040 ADD2 
 			[ .center/x LDZ2 #0008 ADD2 ADD2 ]
 		STH2r STHr #80 ;draw-circle JSR2
-		#01 ADD GTHk ,&loop JCN
+		INC GTHk ,&loop JCN
 	POP2
 	
 RTN

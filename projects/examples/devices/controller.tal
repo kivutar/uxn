@@ -146,21 +146,21 @@ RTN
 @line-rect ( x1* y1* x2* y2* color -- )
 
 	( load ) .color STZ DUP2 STH2 .rect/y2 STZ2 .rect/x2 STZ2 DUP2 STH2 .rect/y1 STZ2 .rect/x1 STZ2
-	STH2r #0001 ++ STH2r
+	STH2r INC2 STH2r
 	&ver
 		( save ) OVR2 .Screen/y DEO2
 		( draw ) .rect/x1 LDZ2 .Screen/x DEO2 .color LDZ DUP .Screen/pixel DEO
 		( draw ) .rect/x2 LDZ2 .Screen/x DEO2 .Screen/pixel DEO
-		( incr ) SWP2 #0001 ++ SWP2
+		( incr ) SWP2 INC2 SWP2
 		OVR2 OVR2 LTS2 ,&ver JCN
 	POP2 POP2
-	.rect/x1 LDZ2 #0001 ++ .rect/x2 LDZ2 #0001 --
+	.rect/x1 LDZ2 INC2 .rect/x2 LDZ2 #0001 --
 	&hor
 		( save ) OVR2 .Screen/x DEO2
 		( draw ) .rect/y1 LDZ2 .Screen/y DEO2 .color LDZ DUP .Screen/pixel DEO
 		( draw ) .rect/y2 LDZ2 .Screen/y DEO2 .Screen/pixel DEO
-		( incr ) SWP2 #0001 ++ SWP2
-		OVR2 OVR2 #0001 ++ LTS2 ,&hor JCN
+		( incr ) SWP2 INC2 SWP2
+		OVR2 OVR2 INC2 LTS2 ,&hor JCN
 	POP2 POP2
 
 RTN

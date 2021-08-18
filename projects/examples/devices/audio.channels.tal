@@ -60,7 +60,7 @@ BRK
 	.counter LDZ #18 MOD #30 ADD 
 		.Audio0/pitch .counter LDZ #03 AND #40 SFT ADD DEO
 
-	.counter LDZ #01 ADD .counter STZ
+	.counter LDZ INC .counter STZ
 	#00 .timer STZ
 
 BRK

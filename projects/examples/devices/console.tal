@@ -10,8 +10,7 @@
 	;hello-word 
 	&while
 		( send ) LDAk .Console/write DEO
-		( incr ) #0001 ADD2
-		( loop ) LDAk ,&while JCN
+		INC2 LDAk ,&while JCN
 	POP2
 	( show debugger ) #01 .System/debug DEO
 

@@ -9,7 +9,6 @@
 %RTN  { JMP2r }
 %TOS  { #00 SWP }
 %MOD  { DUP2 / * - }
-%LTS2 { #8000 ++ SWP2 #8000 ++ >> }
 %GTS2 { #8000 ++ SWP2 #8000 ++ << }
 %2/  { #01 SFT }
 %2//  { #01 SFT2 }
@@ -268,13 +267,13 @@ RTN
 	
 	.octave-view/x1 LDZ2 .octave-view/y1 LDZ2
 
-	OVR2 OVR2 ;keys-left-icns #01 .last-note LDZ #00 = + ;draw-key JSR2
-	OVR2 #0008 ++ OVR2 ;keys-middle-icns #01 .last-note LDZ #02 = + ;draw-key JSR2
-	OVR2 #0010 ++ OVR2 ;keys-right-icns #01 .last-note LDZ #04 = + ;draw-key JSR2
-	OVR2 #0018 ++ OVR2 ;keys-left-icns #01 .last-note LDZ #05 = + ;draw-key JSR2
-	OVR2 #0020 ++ OVR2 ;keys-middle-icns #01 .last-note LDZ #07 = + ;draw-key JSR2
-	OVR2 #0028 ++ OVR2 ;keys-middle-icns #01 .last-note LDZ #09 = + ;draw-key JSR2
-	SWP2 #0030 ++ SWP2 ;keys-right-icns #01 .last-note LDZ #0b = + ;draw-key JSR2
+	OVR2 OVR2 ;keys-left-icns .last-note LDZ #00 = INC ;draw-key JSR2
+	OVR2 #0008 ++ OVR2 ;keys-middle-icns .last-note LDZ #02 = INC ;draw-key JSR2
+	OVR2 #0010 ++ OVR2 ;keys-right-icns .last-note LDZ #04 = INC ;draw-key JSR2
+	OVR2 #0018 ++ OVR2 ;keys-left-icns .last-note LDZ #05 = INC ;draw-key JSR2
+	OVR2 #0020 ++ OVR2 ;keys-middle-icns .last-note LDZ #07 = INC ;draw-key JSR2
+	OVR2 #0028 ++ OVR2 ;keys-middle-icns .last-note LDZ #09 = INC ;draw-key JSR2
+	SWP2 #0030 ++ SWP2 ;keys-right-icns .last-note LDZ #0b = INC ;draw-key JSR2
 
 	.octave-view/x1 LDZ2 #0048 ++ .Screen/x DEO2
 
