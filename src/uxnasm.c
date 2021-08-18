@@ -247,10 +247,7 @@ parsetoken(char *w)
 	} else if(w[0] == ';' && (l = findlabel(w + 1))) { /* absolute */
 		pushshort(l->addr, 1);
 		return ++l->refs;
-	} else if(scmp(w, "BRK", 4)) { /* special BRK opcode */
-		pushbyte(0, 0);
-		return 1;
-	} else if(findopcode(w)) { /* opcode */
+	} else if(findopcode(w) || scmp(w, "BRK", 4)) { /* opcode */
 		pushbyte(findopcode(w), 0);
 		return 1;
 	} else if(w[0] == '"') { /* string */
