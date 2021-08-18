@@ -33,7 +33,10 @@
 
 |0100
 	
-	( theme ) #f03f .System/r DEO2 #f03f .System/g DEO2 #003f .System/b DEO2
+	( theme ) 
+	#f03f .System/r DEO2 
+	#f03c .System/g DEO2 
+	#f03f .System/b DEO2
 
 	( background ) ;checker_icn #03 ;cover-pattern JSR2
 
@@ -41,6 +44,8 @@
 	#0070 #0040 #0010 #01 ;draw-circle JSR2
 	#0038 #0030 #0020 #0020 SIZE-TO-RECT #01 ;line-rect JSR2
 	#0038 #0058 #0020 #0020 SIZE-TO-RECT #01 ;fill-rect JSR2
+	#0010 #0030 #0068 #01 ;line-hor JSR2
+	#0020 #0058 #0078 #01 ;line-ver JSR2
 	
 BRK
 
@@ -70,46 +75,49 @@ BRK
 
 RTN
 
-@line-rect ( x1 y1 x2 y2 color -- )
+@line-rect ( x1* y1* x2* y2* color -- )
 
-	( load ) .color STZ DUP2 STH2 -- .rect/y2 STZ2 -- .rect/x2 STZ2 DUP2 STH2 .rect/y1 STZ2 .rect/x1 STZ2
-	STH2r STH2r
+	( load ) .color STZ 
+	STH2k .rect/y2 STZ2 .rect/x2 STZ2 
+	STH2k .rect/y1 STZ2 .rect/x1 STZ2
+	STH2r STH2r SWP2
 	&ver
-		( save ) OVR2 .Screen/y DEO2
+		( save ) DUP2 .Screen/y DEO2
 		( draw ) .rect/x1 LDZ2 .Screen/x DEO2 .color LDZ DUP .Screen/pixel DEO
 		( draw ) .rect/x2 LDZ2 .Screen/x DEO2 .Screen/pixel DEO
-		( incr ) SWP2 INC2 SWP2
-		OVR2 OVR2 LTS2 ,&ver JCN
+		( incr ) INC2
+		OVR2 OVR2 GTS2 ,&ver JCN
 	POP2 POP2
-	.rect/x1 LDZ2 .rect/x2 LDZ2
+	.rect/x1 LDZ2 .rect/x2 LDZ2 SWP2
 	&hor
-		( save ) OVR2 .Screen/x DEO2
+		( save ) DUP2 .Screen/x DEO2
 		( draw ) .rect/y1 LDZ2 .Screen/y DEO2 .color LDZ DUP .Screen/pixel DEO
 		( draw ) .rect/y2 LDZ2 .Screen/y DEO2 .Screen/pixel DEO
-		( incr ) SWP2 INC2 SWP2
-		OVR2 OVR2 INC2 LTS2 ,&hor JCN
+		( incr ) INC2
+		OVR2 INC2 OVR2 GTS2 ,&hor JCN
 	POP2 POP2
 
 RTN
 
-@fill-rect ( x1 y1 x2 y2 color -- )
+@fill-rect ( x1* y1* x2* y2* color -- )
 	
-	.color STZ
-	( x1 x2 y1 y2 ) ROT2 SWP2
+	,&color STR
+	( x1 x2 y1 y2 ) ROT2
 	&ver
-		( save ) OVR2 .Screen/y DEO2
-		STH2 STH2 OVR2 OVR2
+		( save ) DUP2 .Screen/y DEO2
+		STH2 STH2 OVR2 OVR2 SWP2
 		&hor
-			( save ) OVR2 .Screen/x DEO2
-			( draw ) .color LDZ .Screen/pixel DEO
-			( incr ) SWP2 INC2 SWP2
-			OVR2 OVR2 LTS2 ,&hor JCN
+			( save ) DUP2 .Screen/x DEO2
+			( draw ) ,&color LDR .Screen/pixel DEO
+			( incr ) INC2
+			OVR2 OVR2 GTS2 ,&hor JCN
 		POP2 POP2 STH2r STH2r
-		( incr ) SWP2 INC2 SWP2
-		OVR2 OVR2 LTS2 ,&ver JCN
+		( incr ) INC2
+		OVR2 OVR2 GTS2 ,&ver JCN
 	POP2 POP2 POP2 POP2
 
 RTN
+	&color $1
 
 @draw-circle ( xc yc r color -- )
 
@@ -141,33 +149,32 @@ RTN
 
 RTN
 
-@cover-pattern ( addr color -- )
+@cover-pattern ( addr* color -- )
 	
-	( load ) .color STZ .Screen/addr DEO2
-	#0000 .Screen/height DEI2
+	( load ) STH .Screen/addr DEO2
+	.Screen/height DEI2 #0000
 	&ver
-		( save ) OVR2 .Screen/y DEO2
-		#0000 .Screen/width DEI2
+		( save ) DUP2 .Screen/y DEO2
+		.Screen/width DEI2 #0000
 		&hor
-			( save ) OVR2 .Screen/x DEO2
-			( draw ) .color LDZ .Screen/sprite DEO
-			( incr ) SWP2 8++ SWP2
-			OVR2 OVR2 LTH2 ,&hor JCN
+			( save ) DUP2 .Screen/x DEO2
+			( draw ) STHkr .Screen/sprite DEO
+			#0008 ADD2 GTH2k ,&hor JCN
 		POP2 POP2
-		( incr ) SWP2 8++ SWP2
-		OVR2 OVR2 LTH2 ,&ver JCN
+		#0008 ADD2 GTH2k ,&ver JCN
 	POP2 POP2
+	POPr
 
 RTN
 
 @line-hor ( x0* x1* y* color -- )
 	
 	STH .Screen/y DEO2
+	SWP2
 	&loop
-		( save ) OVR2 .Screen/x DEO2
+		( save ) DUP2 .Screen/x DEO2
 		( draw ) STHkr .Screen/pixel DEO
-		( incr ) SWP2 #0002 INC2 SWP2
-		LTH2k ,&loop JCN
+		INC2 GTH2k ,&loop JCN
 	POP2 POP2 POPr
 
 RTN
@@ -175,11 +182,11 @@ RTN
 @line-ver ( x* y0* y1* color -- )
 	
 	STH ROT2 .Screen/x DEO2
+	SWP2
 	&loop
-		( save ) OVR2 .Screen/y DEO2
+		( save ) DUP2 .Screen/y DEO2
 		( draw ) STHkr .Screen/pixel DEO
-		( incr ) SWP2 #0002 INC2 SWP2
-		LTH2k ,&loop JCN
+		INC2 GTH2k ,&loop JCN
 	POP2 POP2 POPr
 
 RTN
