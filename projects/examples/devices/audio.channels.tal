@@ -1,7 +1,5 @@
 ( dev/audio )
 
-%4** { #20 SFT2 }
-%8** { #30 SFT2 }
 %MOD { DUP2 DIV MUL SUB }
 
 ( devices )
@@ -55,7 +53,7 @@ BRK
 
 @on-frame ( -> )
 
-	( incr ) .timer LDZ #01 ADD .timer STZ 
+	( incr ) .timer LDZ INC .timer STZ 
 	( skip ) .timer LDZ #10 EQU #01 JCN [ BRK ]
 
 	( get note )
