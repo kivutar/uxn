@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh -e
 
 echo "Cleaning.."
 rm -f ./bin/uxnasm
