@@ -45,12 +45,10 @@ cc ${CFLAGS} src/uxnasm.c -o bin/uxnasm
 cc ${CFLAGS} ${CORE} src/devices/ppu.c src/devices/apu.c src/uxnemu.c ${UXNEMU_LDFLAGS} -o bin/uxnemu
 cc ${CFLAGS} ${CORE} src/uxncli.c -o bin/uxncli
 
-if [ -d "$HOME/bin" ] && [ -e ./bin/uxnemu ] && [ -e ./bin/uxnasm ]
+if [ -d "$HOME/bin" ]
 then
 	echo "Installing in $HOME/bin"
-	cp ./bin/uxnemu $HOME/bin
-	cp ./bin/uxnasm $HOME/bin
-	cp ./bin/uxncli $HOME/bin
+	cp bin/uxnemu bin/uxnasm bin/uxncli $HOME/bin/
 fi
 
 echo "Assembling.."
