@@ -23,6 +23,7 @@
 ( devices )
 
 |00 @System [ &vector $2 &pad $6 &r $2 &g $2 &b $2 ]
+|10 @Console [ &vector $2 &read $1 &pad $5 &write $1 &error $1 ]
 |20 @Screen [ &vector $2 &width $2 &height $2 &pad $2 &x $2 &y $2 &addr $2 &pixel $1 &sprite $1 ]
 |30 @Audio0 [ &vector $2 &position $2 &output $1 &pad $3 &adsr $2 &len $2 &addr $2 &volume $1 &pitch $1 ]
 |40 @Audio1 [ &vector $2 &position $2 &output $1 &pad $3 &adsr $2 &len $2 &addr $2 &volume $1 &pitch $1 ]
@@ -61,12 +62,16 @@
 
 	;square-wave .Audio0/addr DEO2
 	;square-wave/end ;square-wave SUB2 .Audio0/len DEO2
+	;on-square-done .Audio0/vector DEO2
 	;triangle-wave .Audio1/addr DEO2
 	;triangle-wave/end ;triangle-wave SUB2 .Audio1/len DEO2
+	;on-triangle-done .Audio1/vector DEO2
 	;sine-wave .Audio2/addr DEO2
 	;sine-wave/end ;sine-wave SUB2 .Audio2/len DEO2
+	;on-sine-done .Audio2/vector DEO2
 	;noise-wave .Audio3/addr DEO2
 	;noise-wave-end ;noise-wave SUB2 .Audio3/len DEO2
+	;on-noise-done .Audio3/vector DEO2
 
 	;draw-timeline JSR2
 	;draw-controls JSR2
@@ -124,6 +129,22 @@ BRK
 	POP
 
 BRK
+
+@on-square-done ( -> )
+	LIT '0 .Console/write DEO
+	BRK
+
+@on-triangle-done ( -> )
+	LIT '1 .Console/write DEO
+	BRK
+
+@on-sine-done ( -> )
+	LIT '2 .Console/write DEO
+	BRK
+
+@on-noise-done ( -> )
+	LIT '3 .Console/write DEO
+	BRK
 
 @play ( pitch -- )
 
