@@ -49,7 +49,7 @@ apu_render(Apu *c, Sint16 *sample, Sint16 *end)
 		if(c->i >= c->len) {
 			if(!c->repeat) {
 				c->advance = 0;
-				return 1;
+				break;
 			}
 			c->i %= c->len;
 		}
@@ -57,6 +57,7 @@ apu_render(Apu *c, Sint16 *sample, Sint16 *end)
 		*sample++ += s * c->volume[0] / 0x180;
 		*sample++ += s * c->volume[1] / 0x180;
 	}
+	if(!c->advance) apu_finished_handler(c);
 	return 1;
 }
 

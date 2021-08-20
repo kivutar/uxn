@@ -32,7 +32,7 @@ static SDL_Rect gRect;
 static Ppu ppu;
 static Apu apu[POLYPHONY];
 static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0, *devconsole;
-static Uint32 stdin_event;
+static Uint32 stdin_event, audio0_event;
 
 static Uint8 zoom = 1, reqdraw = 0;
 
@@ -410,6 +410,14 @@ nil_talk(Device *d, Uint8 b0, Uint8 w)
 
 #pragma mark - Generics
 
+void
+apu_finished_handler(Apu *c)
+{
+	SDL_Event event;
+	event.type = audio0_event + (c - apu);
+	SDL_PushEvent(&event);
+}
+
 static int
 stdin_handler(void *p)
 {
@@ -474,6 +482,8 @@ run(Uxn *u)
 				if(event.type == stdin_event) {
 					devconsole->dat[0x2] = event.cbutton.button;
 					uxn_eval(u, mempeek16(devconsole->dat, 0));
+				} else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY) {
+					uxn_eval(u, mempeek16((devaudio0 + (event.type - audio0_event))->dat, 0));
 				}
 			}
 		}
@@ -504,6 +514,7 @@ main(int argc, char **argv)
 	Uxn u;
 
 	stdin_event = SDL_RegisterEvents(1);
+	audio0_event = SDL_RegisterEvents(POLYPHONY);
 	SDL_CreateThread(stdin_handler, "stdin", NULL);
 
 	if(argc < 2)
