@@ -17,6 +17,8 @@
 -- this file changes.
 --
 
+generate_labels = false -- add labels to each opcode to inspect disassembled code
+
 replacements =
 	op_and16: '{ Uint8 a = pop8(u->src), b = pop8(u->src), c = pop8(u->src), d = pop8(u->src); push8(u->src, d & b); push8(u->src, c & a); }'
 	op_ora16: '{ Uint8 a = pop8(u->src), b = pop8(u->src), c = pop8(u->src), d = pop8(u->src); push8(u->src, d | b); push8(u->src, c | a); }'
@@ -243,7 +245,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 			continue
 		for n in *allops[i].n
 			\write '\t\tcase 0x%02x: /* %s */\n'\format n, allops[n + 1].name
-		\write '\t\t\t__asm__("evaluxn_%02x_%s:");\n'\format allops[i].n[1], allops[i].name
+		if generate_labels
+			\write '\t\t\t__asm__("evaluxn_%02x_%s:");\n'\format allops[i].n[1], allops[i].name
 		\write allops[i].body
 	\write [[
 #pragma GCC diagnostic pop

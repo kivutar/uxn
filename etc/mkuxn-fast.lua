@@ -1,3 +1,4 @@
+local generate_labels = false
 local replacements = {
   op_and16 = '{ Uint8 a = pop8(u->src), b = pop8(u->src), c = pop8(u->src), d = pop8(u->src); push8(u->src, d & b); push8(u->src, c & a); }',
   op_ora16 = '{ Uint8 a = pop8(u->src), b = pop8(u->src), c = pop8(u->src), d = pop8(u->src); push8(u->src, d | b); push8(u->src, c | a); }',
@@ -341,7 +342,9 @@ uxn_eval(Uxn *u, Uint16 vec)
         local n = _list_0[_index_0]
         _with_0:write(('\t\tcase 0x%02x: /* %s */\n'):format(n, allops[n + 1].name))
       end
-      _with_0:write(('\t\t\t__asm__("evaluxn_%02x_%s:");\n'):format(allops[i].n[1], allops[i].name))
+      if generate_labels then
+        _with_0:write(('\t\t\t__asm__("evaluxn_%02x_%s:");\n'):format(allops[i].n[1], allops[i].name))
+      end
       _with_0:write(allops[i].body)
       _continue_0 = true
     until true
