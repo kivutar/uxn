@@ -15,6 +15,7 @@
 |20 @Screen     [ &vector $2 &width    $2 &height $2 &pad   $2 &x      $2 &y      $2 &addr $2 &pixel $1 &sprite $1 ]
 |90 @Mouse      [ &vector $2 &x        $2 &y      $2 &state $1 &wheel  $1 ]
 |b0 @DateTime   [ &year   $2 &month    $1 &day    $1 &hour  $1 &minute $1 &second $1 &dotw $1 &doty $2 &isdst $1 ]
+|80 @Controller [ &vector $2 &button   $1 &key    $1 ] 
 
 ( variables )
 
@@ -38,6 +39,7 @@
 	( vectors )
 	;on-frame .Screen/vector DEO2
 	;on-mouse .Mouse/vector DEO2
+	;on-button .Controller/vector DEO2
 
 	( find center )
 	.Screen/width DEI2 2// .center/x STZ2
@@ -71,6 +73,17 @@ BRK
 	&no-touch
 
 BRK 
+
+@on-button ( -> )
+	
+	.Controller/button DEI #00 EQU ,&no-touch JCN
+		( incr ) .style LDZ #01 ADD #03 MOD .style STZ
+		( bg ) ;tiles .style LDZ #40 SFT TOS ADD2 ;cover-pattern JSR2
+		( fg ) ;redraw JSR2
+		( release ) #00 .Mouse/state DEO
+	&no-touch
+	
+BRK
 
 @redraw ( -- )
 	
