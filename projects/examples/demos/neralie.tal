@@ -30,7 +30,7 @@
 
 |0100
 
-	( theme )  #03fd .System/r DEO2 #0ef3 .System/g DEO2 #0bf2 .System/b DEO2
+	( theme )  #0f3d .System/r DEO2 #0fe3 .System/g DEO2 #0fb2 .System/b DEO2
 	( vectors )  ;on-screen .Screen/vector DEO2
 	#01 .fps/current STZ
 
@@ -40,7 +40,7 @@
 	DUP2 .Screen/width DEI2 SWP2 SUB2 #0001 SUB2 .lines/x2 STZ2
 	     .Screen/height DEI2 SWP2 SUB2 .lines/y2 STZ2
 
-	#02 .neralie/color STZ
+	#01 .neralie/color STZ
 	.lines/x1 LDZ2 .lines/x2 LDZ2
 	OVR2 OVR2 .lines/y1 LDZ2 ;h JSR2
 	          .lines/y2 LDZ2 ;h JSR2
@@ -53,13 +53,13 @@
 	#00 .neralie/color STZ
 	;neralie-lines JSR2
 	;neralie-calc JSR2
-	#02 .neralie/color STZ
+	#01 .neralie/color STZ
 	;arvelie-text JSR2
 	;neralie-text JSR2
 	;neralie-lines JSR2
 	BRK
 
-	#02 .Screen/sprite DEO
+	#01 .Screen/sprite DEO
 	#0000 #00 .number/count LDZ DUP2 ;h JSR2
 	.number/count LDZ #01 ADD .number/count STZ
 
