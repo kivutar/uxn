@@ -29,19 +29,19 @@
 |0100 ( -> )
 	
 	( theme )
-	#0fff .System/r DEO2 
-	#0f0f .System/g DEO2 
-	#0f00 .System/b DEO2 
+	#0f8f .System/r DEO2 
+	#0f8f .System/g DEO2 
+	#0f80 .System/b DEO2 
 
 	( vectors )
 	;on-frame .Screen/vector DEO2
 	;on-button .Controller/vector DEO2
 
 	( setup synth )
-	#0202 .Audio0/adsr DEO2
+	#0208 .Audio0/adsr DEO2
 	;saw .Audio0/addr DEO2
 	#0100 .Audio0/length DEO2
-	#00 .Audio0/volume DEO ( TODO: turn ON )
+	#dd .Audio0/volume DEO ( TODO: turn ON )
 
 	( center )
 	.Screen/width DEI2 2// #0080 SUB2 .offset/x STZ2
@@ -142,10 +142,10 @@ RTN
 RTN
 
 @melody 
-	54 52 54 4f 4b 4f 48 00
-	54 52 54 4f 4b 4f 48 00
+	54 52 54 4f 4b 4f 48 ff
+	54 52 54 4f 4b 4f 48 ff
 	54 56 57 56 57 54 56 54 
-	56 52 54 52 54 50 54 00 
+	56 52 54 52 54 50 54 ff 
 
 @selector-icn
 	0000 0010 387c 0000
