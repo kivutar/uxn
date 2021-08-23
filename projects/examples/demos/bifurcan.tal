@@ -121,7 +121,7 @@ RTN
 	&loop
 		( save-x ) OVR #03 MOD TOS 8** .anchor/x LDZ2 ADD2 .Screen/x DEO2
 		( save-y ) OVR #03 DIV TOS 8** .anchor/y LDZ2 ADD2 .Screen/y DEO2
-		( get digit* ) OVR STHkr DUP ADD TOS ;digits ADD2 LDA2 
+		( get digit* ) OVR STHkr ADDk TOS ;digits ADD2 LDA2 
 		( get bit ) ROT #0e SWP SUB SFT2 #0001 AND2 
 		( set tile ) 8** ;tiles ADD2 
 		( set style ) .style LDZ #40 SFT TOS ADD2

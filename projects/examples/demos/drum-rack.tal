@@ -357,7 +357,7 @@ RTN
 
 @draw-mixer ( mixer -- )
 
-	DUP STH #00 SWP PAD-HEIGHT ** .mix-view/y1 LDZ2 ++ #0003 ++
+	STHk #00 SWP PAD-HEIGHT ** .mix-view/y1 LDZ2 ++ #0003 ++
 
 	( adsr )
 	DUP2 .mix-view/x1 LDZ2 SWP2
@@ -551,7 +551,7 @@ RTN
 
 @line-rect ( x1* y1* x2* y2* color -- )
 
-	( load ) .color STZ DUP2 STH2 .rect/y2 STZ2 .rect/x2 STZ2 DUP2 STH2 .rect/y1 STZ2 .rect/x1 STZ2
+	( load ) .color STZ STH2k .rect/y2 STZ2 .rect/x2 STZ2 STH2k .rect/y1 STZ2 .rect/x1 STZ2
 	STH2r INC2 STH2r
 	&ver
 		( save ) OVR2 .Screen/y DEO2
