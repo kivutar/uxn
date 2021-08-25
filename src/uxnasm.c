@@ -157,12 +157,12 @@ makemacro(char *name, FILE *f)
 		return error("Macro name is invalid", name);
 	m = &p.macros[p.mlen++];
 	scpy(name, m->name, 64);
-	while(fscanf(f, "%s", word)) {
+	while(fscanf(f, "%63s", word)) {
 		if(word[0] == '{') continue;
 		if(word[0] == '}') break;
 		if(m->len > 64)
 			return error("Macro too large", name);
-		if(slen(word) >= 64)
+		if(slen(word) >= 63)
 			return error("Word too long", name);
 		scpy(word, m->items[m->len++], 64);
 	}
@@ -290,8 +290,10 @@ pass1(FILE *f)
 	int ccmnt = 0;
 	Uint16 addr = 0;
 	char w[64], scope[64], subw[64];
-	while(fscanf(f, "%s", w) == 1) {
+	while(fscanf(f, "%63s", w) == 1) {
 		if(skipblock(w, &ccmnt, '(', ')')) continue;
+		if(slen(w) == 63)
+			fprintf(stderr, "Warning: token beginning with \"%s\" is too long\n", w);
 		if(w[0] == '|') {
 			if(!sihx(w + 1))
 				return error("Pass 1 - Invalid padding", w);
@@ -320,7 +322,7 @@ pass2(FILE *f)
 {
 	int ccmnt = 0, cmacr = 0;
 	char w[64], scope[64], subw[64];
-	while(fscanf(f, "%s", w) == 1) {
+	while(fscanf(f, "%63s", w) == 1) {
 		if(w[0] == '%') continue;
 		if(w[0] == '&') continue;
 		if(w[0] == '[') continue;

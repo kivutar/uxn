@@ -56,7 +56,7 @@
 	( returns the next number in a 65,535-long sequence,
 	  which is never zero but every other 16-bit number
 	  appears once before the sequence repeats )
-	( http://www.retroprogramming.com/2017/07/ xorshift-pseudorandom-numbers-in-z80.html )
+	( http://www.retroprogramming.com/2017/07/xorshift-pseudorandom-numbers-in-z80.html )
 	,&seed LDR2
 	DUP2 #70 SFT2 EOR2
 	DUP2 #09 SFT2 EOR2
@@ -68,7 +68,7 @@
 
 @prng2 ( -- number* )
 	( returns the next number in a (2^32-1)-long sequence )
-	( http://b2d-f9r.blogspot.com/2010/08/ 16-bit-xorshift-rng-now-with-more.html )
+	( http://b2d-f9r.blogspot.com/2010/08/16-bit-xorshift-rng-now-with-more.html )
 	,&x LDR2
 	DUP2 #50 SFT2 EOR2
 	DUP2 #03 SFT2 EOR2
