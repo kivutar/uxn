@@ -1,5 +1,8 @@
 ( pseudo-random number generator )
 
+( based on 16-bit xorshift algorithm discussed on
+  http://www.retroprogramming.com/2017/07/xorshift-pseudorandom-numbers-in-z80.html )
+
 ( devices )
 
 |00 @System     [ &vector $2 &wst      $1 &rst    $1 &pad   $4 &r      $2 &g      $2 &b    $2 &debug  $1 &halt $1 ]
