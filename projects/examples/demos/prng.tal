@@ -1,0 +1,60 @@
+( pseudo-random number generator )
+
+( devices )
+
+|00 @System     [ &vector $2 &wst      $1 &rst    $1 &pad   $4 &r      $2 &g      $2 &b    $2 &debug  $1 &halt $1 ]
+|20 @Screen     [ &vector $2 &width    $2 &height $2 &pad   $2 &x      $2 &y      $2 &addr $2 &pixel  $1 &sprite $1 ]
+|b0 @DateTime   [ &year   $2 &month    $1 &day    $1 &hour  $1 &minute $1 &second $1 &dotw $1 &doty   $2 &isdst $1 ]
+
+( variables )
+
+|0000
+
+( program )
+
+|0100 ( -> )
+	( init )
+	;on-frame .Screen/vector DEO2
+	( seed prng (must be nonzero) )
+	.DateTime/month DEI .DateTime/day DEI
+	#00 .DateTime/second #a0 SFT2 EOR2
+	#00 .DateTime/minute #40 SFT2 EOR2
+	.DateTime/hour EOR
+	ORAk ,&non-zero JCN INC2 &non-zero
+	;prng/seed STA2
+
+	( theme )
+	#0fe5 .System/r DEO2 
+	#0fc5 .System/g DEO2 
+	#0f25 .System/b DEO2
+	BRK
+
+@on-frame ( -> )
+	#c0
+	&loop
+		,draw-pixel JSR
+		INC
+		DUP ,&loop JCN
+	POP
+	BRK
+
+@draw-pixel
+	,prng JSR
+	#00 SWP .Screen/x DEO2
+	#00 SWP .Screen/y DEO2
+	#01 .Screen/pixel DEO
+	JMP2r
+
+@prng ( -- number* )
+	( returns the next number in the 65,535-long sequence,
+	  which is never zero but every other 16-bit number
+	  appears once before the sequence repeats )
+	,&seed LDR2
+	DUP2 #70 SFT2 EOR2
+	DUP2 #09 SFT2 EOR2
+	DUP2 #80 SFT2 EOR2
+	,&seed STR2k POP
+	JMP2r
+
+	&seed $2
+
