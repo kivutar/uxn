@@ -6,7 +6,7 @@ An assembler and emulator for the [Uxn stack-machine](https://wiki.xxiivv.com/si
 
 ### Linux 
 
-To build the Uxn emulator, you must install [SDL2](https://wiki.libsdl.org/) for your distro. For example:
+To build the Uxn emulator, you must install [SDL2](https://wiki.libsdl.org/) for your distro. If you are using a package manager:
 
 ```sh
 sudo pacman -Sy sdl2             # Arch
@@ -20,7 +20,7 @@ Build the assembler and emulator by running the `build.sh` script. The assembler
 	--debug # Add debug flags to compiler
 ```
 
-If you only wish to simply build the `uxncli` cli tool:
+If you wish to build the emulator without graphics mode:
 
 ```sh
 cc src/uxn.c -DNDEBUG -Os -g0 -s src/uxncli.c -o bin/uxncli
