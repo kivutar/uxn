@@ -6,11 +6,24 @@ An assembler and emulator for the [Uxn stack-machine](https://wiki.xxiivv.com/si
 
 ### Linux 
 
-To build the Uxn emulator, you must have [SDL2](https://wiki.libsdl.org/).
+To build the Uxn emulator, you must install [SDL2](https://wiki.libsdl.org/) for your distro. For example:
+
+```sh
+sudo pacman -Sy sdl2             # Arch
+sudo apt install libsdl2-dev     # Ubuntu
+```
+
+Build the assembler and emulator by running the `build.sh` script. The assembler(`uxnasm`) and emulator(`uxnemu`) are created in the `/bin` folder.
 
 ```sh
 ./build.sh 
 	--debug # Add debug flags to compiler
+```
+
+If you only wish to simply build the `uxncli` cli tool:
+
+```sh
+cc src/uxn.c -DNDEBUG -Os -g0 -s src/uxncli.c -o bin/uxncli
 ```
 
 ### Plan 9 
@@ -37,39 +50,29 @@ cd uxn
 
 ## Getting Started
 
-Begin by building the assembler and emulator by running the build script. The assembler(`uxnasm`) and emulator(`uxnemu`) are created in the `/bin` folder.
+### Emulator
 
+To launch a `.rom` in the emulator, point the emulator to the target rom file:
+
+```sh
+bin/uxnemu bin/piano.rom
 ```
-./build.sh
-```
+
+You can also use the emulator without graphics by using `uxncli`. You can find additional roms [here](https://sr.ht/~rabbits/uxn/sources), you can find prebuilt rom files [here](https://itch.io/c/248074/uxn-roms). 
 
 ### Assembler 
 
-The following command will create an Uxn-compatible rom from an [uxntal file](https://wiki.xxiivv.com/site/uxntal.html). Point the assembler to a .tal file in `/projects` to assemble a rom.
+The following command will create an Uxn-compatible rom from an [uxntal file](https://wiki.xxiivv.com/site/uxntal.html). Point the assembler to a `.tal` file, followed by and the rom name:
 
-```
+```sh
 bin/uxnasm projects/examples/demos/life.tal bin/life.rom
-```
-
-### Emulator
-
-To start the rom, point the emulator to the newly created rom:
-
-```
-bin/uxnemu bin/life.rom
-```
-
-You can also use the emulator without graphics by using `uxncli`. You can find additional roms [here](https://sr.ht/~rabbits/uxn/sources). If you only wish to build `uxncli`
-
-```
-cc src/uxn.c -DNDEBUG -Os -g0 -s src/uxncli.c -o bin/uxncli
 ```
 
 ### I/O
 
 You can send events from Uxn to another application, or another instance of uxn, with the Unix pipe. For a companion application that translates notes data into midi, see the [shim](https://git.sr.ht/~rabbits/shim).
 
-```
+```sh
 uxnemu orca.rom | shim
 ```
 

@@ -58,7 +58,7 @@ BRK
 	[ #01 ] NEQk NIP ,&no-up JCN 
 		.selection LDZ STHk 
 		#00 ;draw-note JSR2
-		[ STHkr GET-NOTE #01 ADD ] #00 STHkr ;melody ADD2 STA
+		[ STHkr GET-NOTE INC ] #00 STHkr ;melody ADD2 STA
 		STHr #01 ;draw-note JSR2
 		#02 ;draw-selector JSR2
 		&no-up
