@@ -126,72 +126,72 @@ RTN
 	
 	( draw hor line )
 	#0000 .Screen/x DEO2 .center/y LDZ2 .Screen/y DEO2
-	#0000 .Screen/width DEI2 ( from/to )
+	.Screen/width DEI2 #0000 ( to/from )
 	&draw-hor
 		( draw ) #01 .Screen/pixel DEO
-		( incr ) SWP2 #0002 ADD2 DUP2 .Screen/x DEO2 SWP2
-		LTH2k ,&draw-hor JCN
+		( incr ) #0002 ADD2 DUP2 .Screen/x DEO2
+		GTH2k ,&draw-hor JCN
 	POP2 POP2
 
 	( draw ver line )
 	.center/x LDZ2 .Screen/x DEO2 #0000 .Screen/y DEO2
-	#0000 .Screen/height DEI2 ( from/to )
+	.Screen/height DEI2 #0000 ( to/from )
 	&draw-ver
 		( draw ) #02 .Screen/pixel DEO
-		( incr ) SWP2 #0002 ADD2 DUP2 .Screen/y DEO2 SWP2
-		LTH2k ,&draw-ver JCN
+		( incr ) #0002 ADD2 DUP2 .Screen/y DEO2
+		GTH2k ,&draw-ver JCN
 	POP2 POP2
 
 	( draw blending modes )
 	;preview_icn .Screen/addr DEO2
 	#0010 .Screen/y DEO2
-	#00 #08
+	#0800
 	&draw-pixel1
-		( move ) OVR #30 SFT #00 SWP #0010 ADD2 .Screen/x DEO2
-		( draw ) OVR .Screen/pixel DEO
-		( incr ) SWP INC SWP
-		LTHk ,&draw-pixel1 JCN
-	POP POP
+		( move ) #00 OVR #30 SFT #0010 ADD2 .Screen/x DEO2
+		( draw ) DUP .Screen/pixel DEO
+		( incr ) INC
+		GTHk ,&draw-pixel1 JCN
+	POP2
 	#0018 .Screen/y DEO2
-	#00 #08
+	#0800
 	&draw-pixel2
-		( move ) OVR #30 SFT #00 SWP #0010 ADD2 .Screen/x DEO2
-		( draw ) OVR #08 ADD .Screen/pixel DEO
-		( incr ) SWP INC SWP
-		LTHk ,&draw-pixel2 JCN
-	POP POP
+		( move ) #00 OVR #30 SFT #0010 ADD2 .Screen/x DEO2
+		( draw ) DUP #08 ADD .Screen/pixel DEO
+		( incr ) INC
+		GTHk ,&draw-pixel2 JCN
+	POP2
 	#0020 .Screen/y DEO2
-	#00 #08
+	#0800
 	&draw-icn1
-		( move ) OVR #30 SFT #00 SWP #0010 ADD2 .Screen/x DEO2
-		( draw ) OVR #00 ADD .Screen/sprite DEO
-		( incr ) SWP INC SWP
-		LTHk ,&draw-icn1 JCN
-	POP POP
+		( move ) #00 OVR #30 SFT #0010 ADD2 .Screen/x DEO2
+		( draw ) DUP .Screen/sprite DEO
+		( incr ) INC
+		GTHk ,&draw-icn1 JCN
+	POP2
 	#0028 .Screen/y DEO2
-	#00 #08
+	#0800
 	&draw-icn2
-		( move ) OVR #30 SFT #00 SWP #0010 ADD2 .Screen/x DEO2
-		( draw ) OVR #08 ADD .Screen/sprite DEO
-		( incr ) SWP INC SWP
-		LTHk ,&draw-icn2 JCN
-	POP POP
+		( move ) #00 OVR #30 SFT #0010 ADD2 .Screen/x DEO2
+		( draw ) DUP #08 ADD .Screen/sprite DEO
+		( incr ) INC
+		GTHk ,&draw-icn2 JCN
+	POP2
 	#0030 .Screen/y DEO2
-	#00 #08
+	#0800
 	&draw-chr1
-		( move ) OVR #30 SFT #00 SWP #0010 ADD2 .Screen/x DEO2
-		( draw ) OVR #80 ADD .Screen/sprite DEO
-		( incr ) SWP INC SWP
-		LTHk ,&draw-chr1 JCN
-	POP POP
+		( move ) #00 OVR #30 SFT #0010 ADD2 .Screen/x DEO2
+		( draw ) DUP #80 ADD .Screen/sprite DEO
+		( incr ) INC
+		GTHk ,&draw-chr1 JCN
+	POP2
 	#0038 .Screen/y DEO2
-	#00 #08
+	#0800
 	&draw-chr2
-		( move ) OVR #30 SFT #00 SWP #0010 ADD2 .Screen/x DEO2
-		( draw ) OVR #88 ADD .Screen/sprite DEO
-		( incr ) SWP INC SWP
-		LTHk ,&draw-chr2 JCN
-	POP POP
+		( move ) #00 OVR #30 SFT #0010 ADD2 .Screen/x DEO2
+		( draw ) DUP #88 ADD .Screen/sprite DEO
+		( incr ) INC
+		GTHk ,&draw-chr2 JCN
+	POP2
 
 RTN
 
@@ -287,19 +287,19 @@ RTN
 @fill-rect ( x1* y1* x2* y2* color -- )
 	
 	.color STZ
-	( x1 x2 y1 y2 ) ROT2 SWP2
+	STH2 ROT2 ROT2 STH2 ( x2 x1 / y2 y1 )
 	&ver
-		( save ) OVR2 .Screen/y DEO2
-		STH2 STH2 OVR2 OVR2
+		( save ) STH2kr .Screen/y DEO2
+		OVR2 OVR2
 		&hor
-			( save ) OVR2 .Screen/x DEO2
+			( save ) DUP2 .Screen/x DEO2
 			( draw ) .color LDZ .Screen/pixel DEO
-			( incr ) SWP2 INC2 SWP2
-			LTH2k ,&hor JCN
-		POP2 POP2 STH2r STH2r
-		( incr ) SWP2 INC2 SWP2
-		LTH2k ,&ver JCN
-	POP2 POP2 POP2 POP2
+			( incr ) INC2
+			GTH2k ,&hor JCN
+		POP2 POP2
+		( incr ) INC2r
+		GTH2kr STHr ,&ver JCN
+	POP2 POP2 POP2r POP2r
 
 RTN
 
