@@ -7,7 +7,6 @@
 
 %RTN { JMP2r }
 %TOS { #00 SWP }
-%INCR { SWP INC SWP }
 
 ( devices )
 
@@ -138,18 +137,18 @@ RTN
 		STH 
 		( get addr ) DUP TOS #30 SFT2 #30 SFT2k ROT POP ADD2 ;font-data #0100 ++ ++ .Screen/addr DEO2
 		( get width ) TOS ;font-data ++ LDA TOS
-		#00 #03
+		#0300
 		&ver
-			#00 #03
+			#0300
 			&hor
 				STHkr .Screen/sprite DEO
 				.Screen/x DEI2 #0008 ++ .Screen/x DEO2 
 				.Screen/addr DEI2 #0008 ++ .Screen/addr DEO2
-				INCR LTHk ,&hor JCN
+				INC GTHk ,&hor JCN
 			POP2
 			.Screen/y DEI2 #0008 ++ .Screen/y DEO2 
 			.Screen/x DEI2 #0018 -- .Screen/x DEO2 
-			INCR LTHk ,&ver JCN
+			INC GTHk ,&ver JCN
 		POP2
 		.Screen/y DEI2 #0018 -- .Screen/y DEO2 
 		( use width ) .Screen/x DEI2 ++ .Screen/x DEO2
