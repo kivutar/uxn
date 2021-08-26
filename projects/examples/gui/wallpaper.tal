@@ -21,11 +21,11 @@
 	#ffff
 	&loop
 	DUP2 ,row JSR
-	#0001 ADD2
+	INC2
 	DUP2 .Screen/height DEI2 LTH2 ,&loop JCN
 	POP2
 	.scroll/wait LDZ ,&noscroll JCN
-	.scroll/y LDZ2 #0001 ADD2 .scroll/y STZ2
+	.scroll/y LDZ2 INC2 .scroll/y STZ2
 	BRK
 
 	&noscroll
@@ -55,7 +55,7 @@
 	OVR2 .Screen/x DEO2
 	#05 ADD .Screen/pixel DEO
 	.Screen/y DEI2
-	DUP2 #0001 ADD2 .Screen/y DEO2
+	DUP2 INC2 .Screen/y DEO2
 	#00 .Screen/pixel DEO
 	.Screen/y DEO2
 	POP

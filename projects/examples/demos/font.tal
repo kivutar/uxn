@@ -7,7 +7,7 @@
 
 %RTN { JMP2r }
 %TOS { #00 SWP }
-%INCR { SWP #01 ADD SWP }
+%INCR { SWP INC SWP }
 
 ( devices )
 
@@ -67,7 +67,7 @@ BRK
 		( draw ) STHkr .Screen/sprite DEO
 		( use width ) .Screen/x DEI2 ++ .Screen/x DEO2
 		&continue
-		( incr addr ) #0001 ++
+		( incr addr ) INC2
 		LDAk ,&loop JCN
 	POP2 POP2 POPr
 
@@ -86,7 +86,7 @@ RTN
 			POP ,&continue JMP &no-linebreak
 		STHkr ,&sprite JSR
 		&continue
-		( incr addr ) #0001 ++
+		( incr addr ) INC2
 		LDAk ,&loop JCN
 	POP2 POP2 POPr
 	RTN
@@ -129,7 +129,7 @@ RTN
 			POP ,&continue JMP &no-linebreak
 		STHkr ,&sprite JSR
 		&continue
-		( incr addr ) #0001 ++
+		( incr addr ) INC2
 		LDAk ,&loop JCN
 	POP2 POP2 POPr
 	RTN

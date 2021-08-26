@@ -1,6 +1,6 @@
 ( dev/controller/buttons )
 
-%++ { #0001 ADD2 } 
+%++ { INC2 } 
 %-- { #0001 SUB2 }
 %2// { #01 SFT2 }
 

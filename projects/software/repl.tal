@@ -71,7 +71,7 @@
 	&append
 	;buffer/cursor LDA2
 	STH2k STA
-	STH2r #0001 ADD2 ;ring-buffer ORA2 ;buffer/cursor STA2
+	STH2r INC2 ;ring-buffer ORA2 ;buffer/cursor STA2
 	,&draw JMP
 
 	&backspace
@@ -92,7 +92,7 @@
 	DUP2 .File/name DEO2
 	( find end of string for suffix )
 	&loop
-		#0001 ADD2
+		INC2
 		LDAk ,&loop JCN
 	( suffix is cell size )
 	#0001 SUB2 LDAk #0f AND ;repl/font-cells STA
@@ -112,7 +112,7 @@
 	POP
 	POP2
 
-	;repl/font-cells LDA DUP MUL #08 MUL #01 ADD #00 .File/length DEO2
+	;repl/font-cells LDA DUP MUL #08 MUL INC #00 .File/length DEO2
 	;font-data .File/load DEO2
 
 	JMP2r
@@ -128,7 +128,7 @@
 	&not-end
 	#00 SWP ;font-data ADD2 LDA
 	LITr 00 STH ADD2r
-	#0001 ADD2
+	INC2
 	,&loop JMP
 
 @wrapped-write ( string* -- )
@@ -160,7 +160,7 @@
 	#00 ;repl/font-cells LDA #fff8 MUL2 .Screen/y DEI2 ADD2 .Screen/y DEO2
 	;font-data ADD2 LDA #00 SWP .Screen/x DEI2 ADD2 .Screen/x DEO2
 	LDAk STH
-	#0001 ADD2
+	INC2
 	STHr #20 GTH ;write JCN2
 	JMP2r
 

@@ -1,7 +1,7 @@
 ( Project by Alex Schroeder - https://alexschroeder.ch )
 
 %RTN { JMP2r }
-%INCR { SWP #01 ADD SWP }
+%INCR { SWP INC SWP }
 %CELL { #1000 }
 %NEXT { #2000 }
 
@@ -62,7 +62,7 @@ RTN
 		OVR DUP DUP ( three copies of the counter )
 		#01 SUB #00 SWP CELL ADD2 LDA
 		SWP
-		#01 ADD #00 SWP CELL ADD2 LDA
+		INC #00 SWP CELL ADD2 LDA
 		( the cell dies if the neighbors are either both dead or both alive, i.e. Rule 90 )
 		NEQ
 		( one copy of the counter and the life value )

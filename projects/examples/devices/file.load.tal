@@ -46,7 +46,7 @@
 	#09 .Screen/sprite DEO
 	.Screen/x DEI2 #0008 ADD2 .Screen/x DEO2
 	&next
-	#0001 ADD2
+	INC2
 	,draw JMP
 
 	&linefeed

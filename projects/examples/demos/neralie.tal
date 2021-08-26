@@ -44,7 +44,7 @@
 	.lines/x1 LDZ2 .lines/x2 LDZ2
 	OVR2 OVR2 .lines/y1 LDZ2 ;h JSR2
 	          .lines/y2 LDZ2 ;h JSR2
-	.lines/y1 LDZ2 #0001 SUB2 .lines/y2 LDZ2 #0001 ADD2
+	.lines/y1 LDZ2 #0001 SUB2 .lines/y2 LDZ2 INC2
 	OVR2 OVR2 .lines/x1 LDZ2 ;v JSR2
 	          .lines/x2 LDZ2 ;v JSR2
 
@@ -61,7 +61,7 @@
 
 	#01 .Screen/sprite DEO
 	#0000 #00 .number/count LDZ DUP2 ;h JSR2
-	.number/count LDZ #01 ADD .number/count STZ
+	.number/count LDZ INC .number/count STZ
 
 @neralie-calc ( -- )
 	( add up fractions of a pulse, store tenths in n6 )
@@ -143,7 +143,7 @@
 
 	&next ( digit-addr number* -- next-digit-addr next-number* prev-digit* )
 	#03e8 ;modf JSR2 STH2 #000a MUL2
-	ROT DUP STH #01 ADD ROT ROT
+	ROT DUP STH INC ROT ROT
 	#00 STHr LDZ ADD2
 	STH2r
 	JMP2r
@@ -194,7 +194,7 @@
 	,&loop JMP
 
 @update-fps ( -- )
-	.fps/next LDZ #01 ADD .fps/next STZ
+	.fps/next LDZ INC .fps/next STZ
 	s .fps/second LDZ NEQ JMP JMP2r
 	s .fps/second STZ
 	.fps/next LDZ .fps/current STZ
@@ -242,7 +242,7 @@
 	GTH2 ,&carry JCN
 	JMP2r
 	&carry
-	ROT #01 ADD ROT ROT
+	ROT INC ROT ROT
 	JMP2r
 
 @font-numbers

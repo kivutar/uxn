@@ -66,7 +66,7 @@ BRK
 	;draw-cursor JSR2
 
 	.Mouse/state DEI #00 EQU ,&no-touch JCN
-		( incr ) .style LDZ #01 ADD #03 MOD .style STZ
+		( incr ) .style LDZ INC #03 MOD .style STZ
 		( bg ) ;tiles .style LDZ #40 SFT TOS ADD2 ;cover-pattern JSR2
 		( fg ) ;redraw JSR2
 		( release ) #00 .Mouse/state DEO
@@ -77,7 +77,7 @@ BRK
 @on-button ( -> )
 	
 	.Controller/button DEI #00 EQU ,&no-touch JCN
-		( incr ) .style LDZ #01 ADD #03 MOD .style STZ
+		( incr ) .style LDZ INC #03 MOD .style STZ
 		( bg ) ;tiles .style LDZ #40 SFT TOS ADD2 ;cover-pattern JSR2
 		( fg ) ;redraw JSR2
 		( release ) #00 .Mouse/state DEO
@@ -127,7 +127,7 @@ RTN
 		( set style ) .style LDZ #40 SFT TOS ADD2
 		.Screen/addr DEO2
 		( draw ) #01 .Screen/sprite DEO
-		( incr ) SWP #01 ADD SWP 
+		( incr ) SWP INC SWP 
 		LTHk ,&loop JCN
 	POP2
 	POPr

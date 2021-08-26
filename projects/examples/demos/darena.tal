@@ -87,7 +87,7 @@ BRK
 
 
 @on_frame ( -> )
-	;f_count LDA #01 ADD DUP ;f_count STA ( increase frame counter )
+	;f_count LDA INC DUP ;f_count STA ( increase frame counter )
 	;ani_speedmask LDA ( mask with animation speed mask )
 	AND #00 EQU ,update_frame JCN ( jump to update if it's time )
 BRK
@@ -127,7 +127,7 @@ BRK
 
 		#40 .Screen/sprite DEO
 
-		#01 ADD
+		INC
 		DUP2
 		NEQ ,&rocks_loop JCN
 	POP2
@@ -162,7 +162,7 @@ JMP2r
 		DUP
 		;r_color ROT #00 SWP ADD2 LDA #41 ADD .Screen/sprite DEO
 
-		#01 ADD
+		INC
 
 		DUP2
 		NEQ ,&rocks_loop JCN
@@ -239,7 +239,7 @@ JMP2r
 
 		( check collision with rocks )
 		( nrocks #00 )
-		,&src_i LDR nrocks_mask AND DUP #01 ADD nrocks_mask AND
+		,&src_i LDR nrocks_mask AND DUP INC nrocks_mask AND
 
 		&rocks_loop
 			DUP ( get rocks_x[i] )
@@ -254,7 +254,7 @@ JMP2r
 			,&src_y LDR ,&rock_y LDR ,&range_y LDR ADD LTH ( if sy < ry + 8  )
 			ADD ADD ADD #04 EQU ,&found JCN
 
-			#01 ADD nrocks_mask AND
+			INC nrocks_mask AND
 			DUP2
 			NEQ ,&rocks_loop JCN
 		POP2
@@ -426,7 +426,7 @@ JMP2r
 	( increment and save animation pointer )
 	&s_animate
 		DUP
-		get_nibble_h #01 ADD #03 AND #40 SFT
+		get_nibble_h INC #03 AND #40 SFT
 		SWP get_nibble_l ORA
 		;c_state STA
 	JMP2r

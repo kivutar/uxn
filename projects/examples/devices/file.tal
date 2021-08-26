@@ -68,7 +68,7 @@ BRK
 
 	&keep-going
 	.Console/write DEO
-	#0001 ADD2
+	INC2
 	,print-string JMP
 
 @successtxt "Success! 09 $1
