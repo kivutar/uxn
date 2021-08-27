@@ -4,13 +4,14 @@ An assembler and emulator for the [Uxn stack-machine](https://wiki.xxiivv.com/si
 
 ## Build
 
-### Linux 
+### Linux/OS X
 
 To build the Uxn emulator, you must install [SDL2](https://wiki.libsdl.org/) for your distro. If you are using a package manager:
 
 ```sh
 sudo pacman -Sy sdl2             # Arch
 sudo apt install libsdl2-dev     # Ubuntu
+sudo brew sdl2                   # OS X
 ```
 
 Build the assembler and emulator by running the `build.sh` script. The assembler(`uxnasm`) and emulator(`uxnemu`) are created in the `/bin` folder.
@@ -18,6 +19,7 @@ Build the assembler and emulator by running the `build.sh` script. The assembler
 ```sh
 ./build.sh 
 	--debug # Add debug flags to compiler
+	--format # Format source code
 ```
 
 If you wish to build the emulator without graphics mode:

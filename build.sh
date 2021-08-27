@@ -8,7 +8,7 @@ rm -f ./bin/boot.rom
 
 # When clang-format is present
 
-if command -v clang-format > /dev/null 2>&1
+if [ "${1}" = '--format' ]; 
 then
 	echo "Formatting.."
 	clang-format -i src/uxn.h
