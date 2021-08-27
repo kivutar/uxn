@@ -157,7 +157,7 @@ makemacro(char *name, FILE *f)
 		return error("Macro name is invalid", name);
 	m = &p.macros[p.mlen++];
 	scpy(name, m->name, 64);
-	while(fscanf(f, "%63s", word)) {
+	while(fscanf(f, "%63s", word) == 1) {
 		if(word[0] == '{') continue;
 		if(word[0] == '}') break;
 		if(m->len > 64)
@@ -285,6 +285,21 @@ parsetoken(char *w)
 }
 
 static int
+doinclude(FILE *f, int (*pass)(FILE *))
+{
+	char word[64];
+	FILE *finc;
+	int ret;
+	if(fscanf(f, "%63s", word) != 1)
+		return error("End of input", "include");
+	if(!(finc = fopen(word, "r")))
+		return error("Include failed to open", word);
+	ret = pass(finc);
+	fclose(finc);
+	return ret;
+}
+
+static int
 pass1(FILE *f)
 {
 	int ccmnt = 0;
@@ -308,6 +323,9 @@ pass1(FILE *f)
 		} else if(w[0] == '&') {
 			if(!makelabel(sublabel(subw, scope, w + 1), addr))
 				return error("Pass 1 - Invalid sublabel", w);
+		} else if(scmp(w, "include", 8)) {
+			if(!doinclude(f, pass1))
+				return 0;
 		} else if(sihx(w))
 			addr += slen(w) / 2;
 		else
@@ -339,6 +357,10 @@ pass2(FILE *f)
 			continue;
 		} else if(w[0] == '@') {
 			scpy(w + 1, scope, 64);
+			continue;
+		} else if(scmp(w, "include", 8)) {
+			if(!doinclude(f, pass2))
+				return 0;
 			continue;
 		}
 		if(w[1] == '&')
