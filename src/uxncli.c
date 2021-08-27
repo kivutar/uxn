@@ -76,7 +76,7 @@ file_talk(Device *d, Uint8 b0, Uint8 w)
 	if(w && (read || b0 == 0xf)) {
 		char *name = (char *)&d->mem[mempeek16(d->dat, 0x8)];
 		Uint16 result = 0, length = mempeek16(d->dat, 0xa);
-		Uint16 offset = mempeek16(d->dat, 0x4);
+		long offset = (mempeek16(d->dat, 0x4) << 16) + mempeek16(d->dat, 0x6);
 		Uint16 addr = mempeek16(d->dat, b0 - 1);
 		FILE *f = fopen(name, read ? "r" : (offset ? "a" : "w"));
 		if(f) {

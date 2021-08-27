@@ -25,7 +25,7 @@
 |70 @Midi       [ &vector $2 &channel  $1 &note   $1 &velocity $1 ]
 |80 @Controller [ &vector $2 &button   $1 &key    $1 ]
 |90 @Mouse      [ &vector $2 &x        $2 &y      $2 &state $1 &wheel  $1 ]
-|a0 @File       [ &vector $2 &success  $2 &offset $2 &pad   $2 &name  $2 &length $2 &load $2 &save $2 ]
+|a0 @File       [ &vector $2 &success  $2 &offset-hs $2 &offset-ls $2 &name $2 &length $2 &load $2 &save $2 ]
 
 ( variables )
 
