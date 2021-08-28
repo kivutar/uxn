@@ -36,6 +36,7 @@ typedef struct {
 } Program;
 
 Program p;
+static Uint16 addr = 0;
 
 /* clang-format off */
 
@@ -170,7 +171,7 @@ makemacro(char *name, FILE *f)
 }
 
 static int
-makelabel(char *name, Uint16 addr)
+makelabel(char *name)
 {
 	Label *l;
 	if(findlabel(name))
@@ -303,7 +304,6 @@ static int
 pass1(FILE *f)
 {
 	int ccmnt = 0;
-	Uint16 addr = 0;
 	char w[64], scope[64], subw[64];
 	while(fscanf(f, "%63s", w) == 1) {
 		if(skipblock(w, &ccmnt, '(', ')')) continue;
@@ -317,11 +317,11 @@ pass1(FILE *f)
 			if(!makemacro(w + 1, f))
 				return error("Pass 1 - Invalid macro", w);
 		} else if(w[0] == '@') {
-			if(!makelabel(w + 1, addr))
+			if(!makelabel(w + 1))
 				return error("Pass 1 - Invalid label", w);
 			scpy(w + 1, scope, 64);
 		} else if(w[0] == '&') {
-			if(!makelabel(sublabel(subw, scope, w + 1), addr))
+			if(!makelabel(sublabel(subw, scope, w + 1)))
 				return error("Pass 1 - Invalid sublabel", w);
 		} else if(scmp(w, "include", 8)) {
 			if(!doinclude(f, pass1))
