@@ -153,7 +153,7 @@ makemacro(char *name, FILE *f)
 		return error("Macro duplicate", name);
 	if(sihx(name) && slen(name) % 2 == 0)
 		return error("Macro name is hex number", name);
-	if(findopcode(name) || scmp(name, "BRK", 4) || !slen(name) || scmp(name,"include",8))
+	if(findopcode(name) || scmp(name, "BRK", 4) || !slen(name) || scmp(name, "include", 8))
 		return error("Macro name is invalid", name);
 	m = &p.macros[p.mlen++];
 	scpy(name, m->name, 64);

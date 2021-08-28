@@ -132,13 +132,13 @@ uxn_halt(Uxn *u, Uint8 error, char *name, int id)
 static void
 run(Uxn *u)
 {
-    Uint16 vec = PAGE_PROGRAM;
+	Uint16 vec = PAGE_PROGRAM;
 	uxn_eval(u, vec);
 	while((!u->dev[0].dat[0xf]) && (read(0, &devconsole->dat[0x2], 1) > 0)) {
-        vec = mempeek16(devconsole->dat, 0);
-        if (!vec) vec = u->ram.ptr; /* continue after last BRK */
+		vec = mempeek16(devconsole->dat, 0);
+		if(!vec) vec = u->ram.ptr; /* continue after last BRK */
 		uxn_eval(u, vec);
-    }
+	}
 }
 
 static int
