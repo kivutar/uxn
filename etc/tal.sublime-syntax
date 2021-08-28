@@ -31,10 +31,10 @@ contexts:
       scope:  entity.name.type.typedef
       pop: true
     - match: '\;(\S+)\sLDA2'
-      scope:  constant.numeric
+      scope:  entity.name.type.typedef
       pop: true
     - match: '\;(\S+)\sLDA'
-      scope:  constant.numeric
+      scope:  entity.name.type.typedef
       pop: true
     # set
     - match: '\.(\S+)\sDEO2'
@@ -56,10 +56,10 @@ contexts:
       scope:  constant.numeric
       pop: true
     - match: '\;(\S+)\sSTA2'
-      scope:  entity.name.type.typedef
+      scope:  constant.numeric
       pop: true
     - match: '\;(\S+)\sSTA'
-      scope:  entity.name.type.typedef
+      scope:  constant.numeric
       pop: true
 
     # label
@@ -68,6 +68,10 @@ contexts:
       pop: true
     # sublabel
     - match: '\&(\S+)\s?'
+      scope: string.control
+      pop: true
+    # include
+    - match: 'include'
       scope: string.control
       pop: true
 

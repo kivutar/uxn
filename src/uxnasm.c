@@ -20,7 +20,6 @@ typedef unsigned short Uint16;
 typedef struct {
 	char name[64], items[256][64];
 	Uint8 len;
-	Uint16 refs;
 } Macro;
 
 typedef struct {
@@ -154,7 +153,7 @@ makemacro(char *name, FILE *f)
 		return error("Macro duplicate", name);
 	if(sihx(name) && slen(name) % 2 == 0)
 		return error("Macro name is hex number", name);
-	if(findopcode(name) || scmp(name, "BRK", 4) || !slen(name))
+	if(findopcode(name) || scmp(name, "BRK", 4) || !slen(name) || scmp(name,"include",8))
 		return error("Macro name is invalid", name);
 	m = &p.macros[p.mlen++];
 	scpy(name, m->name, 64);
@@ -280,7 +279,7 @@ parsetoken(char *w)
 		for(i = 0; i < m->len; ++i)
 			if(!parsetoken(m->items[i]))
 				return error("Invalid macro", m->name);
-		return ++m->refs;
+		return 1;
 	}
 	return error("Invalid token", w);
 }
@@ -380,9 +379,6 @@ cleanup(char *filename)
 			continue; /* Ignore capitalized labels(devices) */
 		else if(!p.labels[i].refs)
 			fprintf(stderr, "--- Unused label: %s\n", p.labels[i].name);
-	for(i = 0; i < p.mlen; ++i)
-		if(!p.macros[i].refs)
-			fprintf(stderr, "--- Unused macro: %s\n", p.macros[i].name);
 	printf("Assembled %s(%d bytes), %d labels, %d macros.\n", filename, (p.length - TRIM), p.llen, p.mlen);
 }
 
