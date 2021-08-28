@@ -112,7 +112,14 @@ redraw(Uxn *u)
 {
 	if(devsystem->dat[0xe])
 		inspect(&ppu, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
-	SDL_BlitSurface(idxSurface, NULL, winSurface, &gRect);
+	if(rgbaSurface == NULL)
+		SDL_BlitScaled(idxSurface, NULL, winSurface, &gRect);
+	else if(zoom == 1)
+		SDL_BlitSurface(idxSurface, NULL, winSurface, &gRect);
+	else {
+		SDL_BlitSurface(idxSurface, NULL, rgbaSurface, NULL);
+		SDL_BlitScaled(rgbaSurface, NULL, winSurface, &gRect);
+	}
 	SDL_UpdateWindowSurface(gWindow);
 	reqdraw = 0;
 }
