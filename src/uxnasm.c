@@ -59,30 +59,6 @@ static char *scat(char *dst, const char *src) { char *ptr = dst + slen(dst); whi
 
 #pragma mark - I/O
 
-static void
-pushbyte(Uint8 b, int lit)
-{
-	if(lit) pushbyte(0x80, 0);
-	p.data[p.ptr++] = b;
-	p.length = p.ptr;
-}
-
-static void
-pushshort(Uint16 s, int lit)
-{
-	if(lit) pushbyte(0x20, 0);
-	pushbyte((s >> 8) & 0xff, 0);
-	pushbyte(s & 0xff, 0);
-}
-
-static void
-pushword(char *s)
-{
-	int i = 0;
-	char c;
-	while((c = s[i++])) pushbyte(c, 0);
-}
-
 static Macro *
 findmacro(char *name)
 {
@@ -127,6 +103,30 @@ findopcode(char *s)
 		return i;
 	}
 	return 0;
+}
+
+static void
+pushbyte(Uint8 b, int lit)
+{
+	if(lit) pushbyte(findopcode("LIT"), 0);
+	p.data[p.ptr++] = b;
+	p.length = p.ptr;
+}
+
+static void
+pushshort(Uint16 s, int lit)
+{
+	if(lit) pushbyte(findopcode("LIT2"), 0);
+	pushbyte((s >> 8) & 0xff, 0);
+	pushbyte(s & 0xff, 0);
+}
+
+static void
+pushword(char *s)
+{
+	int i = 0;
+	char c;
+	while((c = s[i++])) pushbyte(c, 0);
 }
 
 static char *
