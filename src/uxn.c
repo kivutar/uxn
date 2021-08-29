@@ -12,7 +12,8 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-#define MODE_RETURN 0x40
+#define MODE_RETURN 0x20
+#define MODE_SHORT 0x40
 #define MODE_KEEP 0x80
 
 #pragma mark - Operations
@@ -145,7 +146,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		} else {
 			pop8 = pop8_nokeep;
 		}
-		(*ops[instr & 0x3f])(u);
+		(*ops[(instr & 0x1f) | ((instr & MODE_SHORT) >> 1)])(u);
 		if(u->wst.error)
 			return uxn_halt(u, u->wst.error, "Working-stack", instr);
 		if(u->rst.error)

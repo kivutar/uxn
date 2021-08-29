@@ -204,9 +204,9 @@ for l in assert(io.lines('src/uxn.c')) do
         },
         body = dump(ops[op], 'u->wst', 'u->rst')
       }
-      allops[i + 0x40 + 1] = {
+      allops[i + 0x20 + 1] = {
         n = {
-          i + 0x40
+          i + 0x20
         },
         body = dump(ops[op], 'u->rst', 'u->wst')
       }
@@ -216,13 +216,16 @@ for l in assert(io.lines('src/uxn.c')) do
         },
         body = dump(ops['keep_' .. op], 'u->wst', 'u->rst')
       }
-      allops[i + 0xc0 + 1] = {
+      allops[i + 0xa0 + 1] = {
         n = {
-          i + 0xc0
+          i + 0xa0
         },
         body = dump(ops['keep_' .. op], 'u->rst', 'u->wst')
       }
       i = i + 1
+      if i == 0x20 then
+        i = i + 0x20
+      end
     end
   end
 end
@@ -237,12 +240,12 @@ for l in assert(io.lines('src/uxnasm.c')) do
     for op in l:gmatch('"(...)"') do
       i = i + 1
       allops[i + 0x00].name = op
-      allops[i + 0x20].name = op .. '2'
-      allops[i + 0x40].name = op .. 'r'
+      allops[i + 0x20].name = op .. 'r'
+      allops[i + 0x40].name = op .. '2'
       allops[i + 0x60].name = op .. '2r'
       allops[i + 0x80].name = op .. 'k'
-      allops[i + 0xa0].name = op .. '2k'
-      allops[i + 0xc0].name = op .. 'kr'
+      allops[i + 0xa0].name = op .. 'kr'
+      allops[i + 0xc0].name = op .. '2k'
       allops[i + 0xe0].name = op .. '2kr'
     end
   end

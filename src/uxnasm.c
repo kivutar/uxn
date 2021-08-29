@@ -88,10 +88,10 @@ findopcode(char *s)
 		if(!scmp(ops[i], s, 3))
 			continue;
 		while(s[3 + m]) {
-			if(s[3 + m] == '2')
-				i |= (1 << 5); /* mode: short */
-			else if(s[3 + m] == 'r')
-				i |= (1 << 6); /* mode: return */
+			if(s[3 + m] == 'r')
+				i |= (1 << 5); /* mode: return */
+			else if(s[3 + m] == '2')
+				i |= (1 << 6); /* mode: short */
 			else if(s[3 + m] == 'k')
 				i |= (1 << 7); /* mode: keep */
 			else

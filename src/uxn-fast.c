@@ -22,7 +22,8 @@ See etc/mkuxn-fast.moon for instructions.
 
 */
 
-#define MODE_RETURN 0x40
+#define MODE_RETURN 0x20
+#define MODE_SHORT 0x40
 #define MODE_KEEP 0x80
 
 #pragma mark - Operations
@@ -500,492 +501,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr -= 1;
 			}
 			break;
-		case 0x20: /* LIT2 */
-		case 0xa0: /* LIT2k */
-			{
-				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, u->ram.ptr++);
-				u->wst.dat[u->wst.ptr + 1] = mempeek8(u->ram.dat, u->ram.ptr++);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr > 253, 0)) {
-					u->wst.error = 2;
-					goto error;
-				}
-#endif
-				u->wst.ptr += 2;
-			}
-			break;
-		case 0x21: /* INC2 */
-			{
-				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
-				u->wst.dat[u->wst.ptr - 2] = (a + 1) >> 8;
-				u->wst.dat[u->wst.ptr - 1] = (a + 1) & 0xff;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 2, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-			}
-			break;
-		case 0x22: /* POP2 */
-			{
-				(u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 2, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 2;
-			}
-			break;
-		case 0x23: /* DUP2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2];
-				u->wst.dat[u->wst.ptr] = b;
-				u->wst.dat[u->wst.ptr + 1] = a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 2, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->wst.ptr > 253, 0)) {
-					u->wst.error = 2;
-					goto error;
-				}
-#endif
-				u->wst.ptr += 2;
-			}
-			break;
-		case 0x24: /* NIP2 */
-			{
-				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
-				(u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
-				u->wst.dat[u->wst.ptr - 4] = a >> 8;
-				u->wst.dat[u->wst.ptr - 3] = a & 0xff;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 2;
-			}
-			break;
-		case 0x25: /* SWP2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
-				u->wst.dat[u->wst.ptr - 4] = b;
-				u->wst.dat[u->wst.ptr - 3] = a;
-				u->wst.dat[u->wst.ptr - 2] = d;
-				u->wst.dat[u->wst.ptr - 1] = c;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-			}
-			break;
-		case 0x26: /* OVR2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
-				u->wst.dat[u->wst.ptr] = d;
-				u->wst.dat[u->wst.ptr + 1] = c;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->wst.ptr > 253, 0)) {
-					u->wst.error = 2;
-					goto error;
-				}
-#endif
-				u->wst.ptr += 2;
-			}
-			break;
-		case 0x27: /* ROT2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4], e = u->wst.dat[u->wst.ptr - 5], f = u->wst.dat[u->wst.ptr - 6];
-				u->wst.dat[u->wst.ptr - 6] = d;
-				u->wst.dat[u->wst.ptr - 5] = c;
-				u->wst.dat[u->wst.ptr - 4] = b;
-				u->wst.dat[u->wst.ptr - 3] = a;
-				u->wst.dat[u->wst.ptr - 2] = f;
-				u->wst.dat[u->wst.ptr - 1] = e;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 6, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-			}
-			break;
-		case 0x28: /* EQU2 */
-			{
-				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
-				u->wst.dat[u->wst.ptr - 4] = b == a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 3;
-			}
-			break;
-		case 0x29: /* NEQ2 */
-			{
-				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
-				u->wst.dat[u->wst.ptr - 4] = b != a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 3;
-			}
-			break;
-		case 0x2a: /* GTH2 */
-			{
-				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
-				u->wst.dat[u->wst.ptr - 4] = b > a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 3;
-			}
-			break;
-		case 0x2b: /* LTH2 */
-			{
-				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
-				u->wst.dat[u->wst.ptr - 4] = b < a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 3;
-			}
-			break;
-		case 0x2c: /* JMP2 */
-			{
-				u->ram.ptr = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 2, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 2;
-			}
-			break;
-		case 0x2d: /* JCN2 */
-			{
-				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
-				if(u->wst.dat[u->wst.ptr - 3]) u->ram.ptr = a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 3, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 3;
-			}
-			break;
-		case 0x2e: /* JSR2 */
-			{
-				u->rst.dat[u->rst.ptr] = u->ram.ptr >> 8;
-				u->rst.dat[u->rst.ptr + 1] = u->ram.ptr & 0xff;
-				u->ram.ptr = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 2, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 2;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr > 253, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 2;
-			}
-			break;
-		case 0x2f: /* STH2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = b;
-				u->rst.dat[u->rst.ptr + 1] = a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 2, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 2;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr > 253, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 2;
-			}
-			break;
-		case 0x30: /* LDZ2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr - 1] = mempeek8(u->ram.dat, a);
-				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, a + 1);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 1, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->wst.ptr > 254, 0)) {
-					u->wst.error = 2;
-					goto error;
-				}
-#endif
-				u->wst.ptr += 1;
-			}
-			break;
-		case 0x31: /* STZ2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
-				mempoke16(u->ram.dat, a, b);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 3, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 3;
-			}
-			break;
-		case 0x32: /* LDR2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr - 1] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a);
-				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a + 1);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 1, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->wst.ptr > 254, 0)) {
-					u->wst.error = 2;
-					goto error;
-				}
-#endif
-				u->wst.ptr += 1;
-			}
-			break;
-		case 0x33: /* STR2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
-				mempoke16(u->ram.dat, u->ram.ptr + (Sint8)a, b);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 3, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 3;
-			}
-			break;
-		case 0x34: /* LDA2 */
-			{
-				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
-				u->wst.dat[u->wst.ptr - 2] = mempeek8(u->ram.dat, a);
-				u->wst.dat[u->wst.ptr - 1] = mempeek8(u->ram.dat, a + 1);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 2, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-			}
-			break;
-		case 0x35: /* STA2 */
-			{
-				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
-				Uint16 b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
-				mempoke16(u->ram.dat, a, b);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 4;
-			}
-			break;
-		case 0x36: /* DEI2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr - 1] = devpeek8(&u->dev[a >> 4], a);
-				u->wst.dat[u->wst.ptr] = devpeek8(&u->dev[a >> 4], a + 1);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 1, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->wst.ptr > 254, 0)) {
-					u->wst.error = 2;
-					goto error;
-				}
-#endif
-				u->wst.ptr += 1;
-			}
-			break;
-		case 0x37: /* DEO2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
-				devpoke16(&u->dev[a >> 4], a, b);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 3, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 3;
-			}
-			break;
-		case 0x38: /* ADD2 */
-			{
-				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
-				u->wst.dat[u->wst.ptr - 4] = (b + a) >> 8;
-				u->wst.dat[u->wst.ptr - 3] = (b + a) & 0xff;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 2;
-			}
-			break;
-		case 0x39: /* SUB2 */
-			{
-				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
-				u->wst.dat[u->wst.ptr - 4] = (b - a) >> 8;
-				u->wst.dat[u->wst.ptr - 3] = (b - a) & 0xff;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 2;
-			}
-			break;
-		case 0x3a: /* MUL2 */
-			{
-				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
-				u->wst.dat[u->wst.ptr - 4] = (b * a) >> 8;
-				u->wst.dat[u->wst.ptr - 3] = (b * a) & 0xff;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 2;
-			}
-			break;
-		case 0x3b: /* DIV2 */
-			{
-				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
-				if(a == 0) {
-					u->wst.error = 3;
-#ifndef NO_STACK_CHECKS
-					goto error;
-#endif
-					a = 1;
-				}
-				u->wst.dat[u->wst.ptr - 4] = (b / a) >> 8;
-				u->wst.dat[u->wst.ptr - 3] = (b / a) & 0xff;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 2;
-			}
-			break;
-		case 0x3c: /* AND2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
-				u->wst.dat[u->wst.ptr - 4] = d & b;
-				u->wst.dat[u->wst.ptr - 3] = c & a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 2;
-			}
-			break;
-		case 0x3d: /* ORA2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
-				u->wst.dat[u->wst.ptr - 4] = d | b;
-				u->wst.dat[u->wst.ptr - 3] = c | a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 2;
-			}
-			break;
-		case 0x3e: /* EOR2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
-				u->wst.dat[u->wst.ptr - 4] = d ^ b;
-				u->wst.dat[u->wst.ptr - 3] = c ^ a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 4, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 2;
-			}
-			break;
-		case 0x3f: /* SFT2 */
-			{
-				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
-				u->wst.dat[u->wst.ptr - 3] = (b >> (a & 0x0f) << ((a & 0xf0) >> 4)) >> 8;
-				u->wst.dat[u->wst.ptr - 2] = (b >> (a & 0x0f) << ((a & 0xf0) >> 4)) & 0xff;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->wst.ptr < 3, 0)) {
-					u->wst.error = 1;
-					goto error;
-				}
-#endif
-				u->wst.ptr -= 1;
-			}
-			break;
-		case 0x40: /* LITr */
-		case 0xc0: /* LITkr */
+		case 0x20: /* LITr */
+		case 0xa0: /* LITkr */
 			{
 				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, u->ram.ptr++);
 #ifndef NO_STACK_CHECKS
@@ -997,7 +514,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr += 1;
 			}
 			break;
-		case 0x41: /* INCr */
+		case 0x21: /* INCr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				u->rst.dat[u->rst.ptr - 1] = a + 1;
@@ -1009,7 +526,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0x42: /* POPr */
+		case 0x22: /* POPr */
 			{
 				u->rst.dat[u->rst.ptr - 1];
 #ifndef NO_STACK_CHECKS
@@ -1021,7 +538,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x43: /* DUPr */
+		case 0x23: /* DUPr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				u->rst.dat[u->rst.ptr] = a;
@@ -1038,7 +555,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr += 1;
 			}
 			break;
-		case 0x44: /* NIPr */
+		case 0x24: /* NIPr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				u->rst.dat[u->rst.ptr - 2];
@@ -1052,7 +569,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x45: /* SWPr */
+		case 0x25: /* SWPr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				u->rst.dat[u->rst.ptr - 2] = a;
@@ -1065,7 +582,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0x46: /* OVRr */
+		case 0x26: /* OVRr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				u->rst.dat[u->rst.ptr] = b;
@@ -1082,7 +599,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr += 1;
 			}
 			break;
-		case 0x47: /* ROTr */
+		case 0x27: /* ROTr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2], c = u->rst.dat[u->rst.ptr - 3];
 				u->rst.dat[u->rst.ptr - 3] = b;
@@ -1096,7 +613,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0x48: /* EQUr */
+		case 0x28: /* EQUr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				u->rst.dat[u->rst.ptr - 2] = b == a;
@@ -1109,7 +626,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x49: /* NEQr */
+		case 0x29: /* NEQr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				u->rst.dat[u->rst.ptr - 2] = b != a;
@@ -1122,7 +639,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x4a: /* GTHr */
+		case 0x2a: /* GTHr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				u->rst.dat[u->rst.ptr - 2] = b > a;
@@ -1135,7 +652,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x4b: /* LTHr */
+		case 0x2b: /* LTHr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				u->rst.dat[u->rst.ptr - 2] = b < a;
@@ -1148,7 +665,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x4c: /* JMPr */
+		case 0x2c: /* JMPr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				u->ram.ptr += (Sint8)a;
@@ -1161,7 +678,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x4d: /* JCNr */
+		case 0x2d: /* JCNr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				if(u->rst.dat[u->rst.ptr - 2]) u->ram.ptr += (Sint8)a;
@@ -1174,7 +691,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 2;
 			}
 			break;
-		case 0x4e: /* JSRr */
+		case 0x2e: /* JSRr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				u->wst.dat[u->wst.ptr] = u->ram.ptr >> 8;
@@ -1196,7 +713,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0x4f: /* STHr */
+		case 0x2f: /* STHr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				u->wst.dat[u->wst.ptr] = a;
@@ -1216,7 +733,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 1;
 			}
 			break;
-		case 0x50: /* LDZr */
+		case 0x30: /* LDZr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				u->rst.dat[u->rst.ptr - 1] = mempeek8(u->ram.dat, a);
@@ -1228,7 +745,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0x51: /* STZr */
+		case 0x31: /* STZr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				Uint8 b = u->rst.dat[u->rst.ptr - 2];
@@ -1242,7 +759,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 2;
 			}
 			break;
-		case 0x52: /* LDRr */
+		case 0x32: /* LDRr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				u->rst.dat[u->rst.ptr - 1] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a);
@@ -1254,7 +771,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0x53: /* STRr */
+		case 0x33: /* STRr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				Uint8 b = u->rst.dat[u->rst.ptr - 2];
@@ -1268,7 +785,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 2;
 			}
 			break;
-		case 0x54: /* LDAr */
+		case 0x34: /* LDAr */
 			{
 				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
 				u->rst.dat[u->rst.ptr - 2] = mempeek8(u->ram.dat, a);
@@ -1281,7 +798,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x55: /* STAr */
+		case 0x35: /* STAr */
 			{
 				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
 				Uint8 b = u->rst.dat[u->rst.ptr - 3];
@@ -1295,7 +812,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 3;
 			}
 			break;
-		case 0x56: /* DEIr */
+		case 0x36: /* DEIr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				u->rst.dat[u->rst.ptr - 1] = devpeek8(&u->dev[a >> 4], a);
@@ -1307,7 +824,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0x57: /* DEOr */
+		case 0x37: /* DEOr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				devpoke8(&u->dev[a >> 4], a, b);
@@ -1320,7 +837,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 2;
 			}
 			break;
-		case 0x58: /* ADDr */
+		case 0x38: /* ADDr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				u->rst.dat[u->rst.ptr - 2] = b + a;
@@ -1333,7 +850,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x59: /* SUBr */
+		case 0x39: /* SUBr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				u->rst.dat[u->rst.ptr - 2] = b - a;
@@ -1346,7 +863,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x5a: /* MULr */
+		case 0x3a: /* MULr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				u->rst.dat[u->rst.ptr - 2] = b * a;
@@ -1359,7 +876,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x5b: /* DIVr */
+		case 0x3b: /* DIVr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				if(a == 0) {
@@ -1379,7 +896,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x5c: /* ANDr */
+		case 0x3c: /* ANDr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				u->rst.dat[u->rst.ptr - 2] = b & a;
@@ -1392,7 +909,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x5d: /* ORAr */
+		case 0x3d: /* ORAr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				u->rst.dat[u->rst.ptr - 2] = b | a;
@@ -1405,7 +922,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x5e: /* EORr */
+		case 0x3e: /* EORr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				u->rst.dat[u->rst.ptr - 2] = b ^ a;
@@ -1418,7 +935,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr -= 1;
 			}
 			break;
-		case 0x5f: /* SFTr */
+		case 0x3f: /* SFTr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
 				u->rst.dat[u->rst.ptr - 2] = b >> (a & 0x07) << ((a & 0x70) >> 4);
@@ -1429,6 +946,490 @@ uxn_eval(Uxn *u, Uint16 vec)
 				}
 #endif
 				u->rst.ptr -= 1;
+			}
+			break;
+		case 0x40: /* LIT2 */
+		case 0xc0: /* LIT2k */
+			{
+				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, u->ram.ptr++);
+				u->wst.dat[u->wst.ptr + 1] = mempeek8(u->ram.dat, u->ram.ptr++);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr > 253, 0)) {
+					u->wst.error = 2;
+					goto error;
+				}
+#endif
+				u->wst.ptr += 2;
+			}
+			break;
+		case 0x41: /* INC2 */
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
+				u->wst.dat[u->wst.ptr - 2] = (a + 1) >> 8;
+				u->wst.dat[u->wst.ptr - 1] = (a + 1) & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 2, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+			}
+			break;
+		case 0x42: /* POP2 */
+			{
+				(u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 2, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 2;
+			}
+			break;
+		case 0x43: /* DUP2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2];
+				u->wst.dat[u->wst.ptr] = b;
+				u->wst.dat[u->wst.ptr + 1] = a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 2, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->wst.ptr > 253, 0)) {
+					u->wst.error = 2;
+					goto error;
+				}
+#endif
+				u->wst.ptr += 2;
+			}
+			break;
+		case 0x44: /* NIP2 */
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
+				(u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
+				u->wst.dat[u->wst.ptr - 4] = a >> 8;
+				u->wst.dat[u->wst.ptr - 3] = a & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 2;
+			}
+			break;
+		case 0x45: /* SWP2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
+				u->wst.dat[u->wst.ptr - 4] = b;
+				u->wst.dat[u->wst.ptr - 3] = a;
+				u->wst.dat[u->wst.ptr - 2] = d;
+				u->wst.dat[u->wst.ptr - 1] = c;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+			}
+			break;
+		case 0x46: /* OVR2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
+				u->wst.dat[u->wst.ptr] = d;
+				u->wst.dat[u->wst.ptr + 1] = c;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->wst.ptr > 253, 0)) {
+					u->wst.error = 2;
+					goto error;
+				}
+#endif
+				u->wst.ptr += 2;
+			}
+			break;
+		case 0x47: /* ROT2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4], e = u->wst.dat[u->wst.ptr - 5], f = u->wst.dat[u->wst.ptr - 6];
+				u->wst.dat[u->wst.ptr - 6] = d;
+				u->wst.dat[u->wst.ptr - 5] = c;
+				u->wst.dat[u->wst.ptr - 4] = b;
+				u->wst.dat[u->wst.ptr - 3] = a;
+				u->wst.dat[u->wst.ptr - 2] = f;
+				u->wst.dat[u->wst.ptr - 1] = e;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 6, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+			}
+			break;
+		case 0x48: /* EQU2 */
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
+				u->wst.dat[u->wst.ptr - 4] = b == a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 3;
+			}
+			break;
+		case 0x49: /* NEQ2 */
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
+				u->wst.dat[u->wst.ptr - 4] = b != a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 3;
+			}
+			break;
+		case 0x4a: /* GTH2 */
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
+				u->wst.dat[u->wst.ptr - 4] = b > a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 3;
+			}
+			break;
+		case 0x4b: /* LTH2 */
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
+				u->wst.dat[u->wst.ptr - 4] = b < a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 3;
+			}
+			break;
+		case 0x4c: /* JMP2 */
+			{
+				u->ram.ptr = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 2, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 2;
+			}
+			break;
+		case 0x4d: /* JCN2 */
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
+				if(u->wst.dat[u->wst.ptr - 3]) u->ram.ptr = a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 3, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 3;
+			}
+			break;
+		case 0x4e: /* JSR2 */
+			{
+				u->rst.dat[u->rst.ptr] = u->ram.ptr >> 8;
+				u->rst.dat[u->rst.ptr + 1] = u->ram.ptr & 0xff;
+				u->ram.ptr = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 2, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 2;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr > 253, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 2;
+			}
+			break;
+		case 0x4f: /* STH2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b;
+				u->rst.dat[u->rst.ptr + 1] = a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 2, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 2;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr > 253, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 2;
+			}
+			break;
+		case 0x50: /* LDZ2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1];
+				u->wst.dat[u->wst.ptr - 1] = mempeek8(u->ram.dat, a);
+				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, a + 1);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 1, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->wst.ptr > 254, 0)) {
+					u->wst.error = 2;
+					goto error;
+				}
+#endif
+				u->wst.ptr += 1;
+			}
+			break;
+		case 0x51: /* STZ2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1];
+				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
+				mempoke16(u->ram.dat, a, b);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 3, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 3;
+			}
+			break;
+		case 0x52: /* LDR2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1];
+				u->wst.dat[u->wst.ptr - 1] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a);
+				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a + 1);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 1, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->wst.ptr > 254, 0)) {
+					u->wst.error = 2;
+					goto error;
+				}
+#endif
+				u->wst.ptr += 1;
+			}
+			break;
+		case 0x53: /* STR2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1];
+				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
+				mempoke16(u->ram.dat, u->ram.ptr + (Sint8)a, b);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 3, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 3;
+			}
+			break;
+		case 0x54: /* LDA2 */
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
+				u->wst.dat[u->wst.ptr - 2] = mempeek8(u->ram.dat, a);
+				u->wst.dat[u->wst.ptr - 1] = mempeek8(u->ram.dat, a + 1);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 2, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+			}
+			break;
+		case 0x55: /* STA2 */
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
+				Uint16 b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
+				mempoke16(u->ram.dat, a, b);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 4;
+			}
+			break;
+		case 0x56: /* DEI2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1];
+				u->wst.dat[u->wst.ptr - 1] = devpeek8(&u->dev[a >> 4], a);
+				u->wst.dat[u->wst.ptr] = devpeek8(&u->dev[a >> 4], a + 1);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 1, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->wst.ptr > 254, 0)) {
+					u->wst.error = 2;
+					goto error;
+				}
+#endif
+				u->wst.ptr += 1;
+			}
+			break;
+		case 0x57: /* DEO2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1];
+				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
+				devpoke16(&u->dev[a >> 4], a, b);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 3, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 3;
+			}
+			break;
+		case 0x58: /* ADD2 */
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
+				u->wst.dat[u->wst.ptr - 4] = (b + a) >> 8;
+				u->wst.dat[u->wst.ptr - 3] = (b + a) & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 2;
+			}
+			break;
+		case 0x59: /* SUB2 */
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
+				u->wst.dat[u->wst.ptr - 4] = (b - a) >> 8;
+				u->wst.dat[u->wst.ptr - 3] = (b - a) & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 2;
+			}
+			break;
+		case 0x5a: /* MUL2 */
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
+				u->wst.dat[u->wst.ptr - 4] = (b * a) >> 8;
+				u->wst.dat[u->wst.ptr - 3] = (b * a) & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 2;
+			}
+			break;
+		case 0x5b: /* DIV2 */
+			{
+				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
+				if(a == 0) {
+					u->wst.error = 3;
+#ifndef NO_STACK_CHECKS
+					goto error;
+#endif
+					a = 1;
+				}
+				u->wst.dat[u->wst.ptr - 4] = (b / a) >> 8;
+				u->wst.dat[u->wst.ptr - 3] = (b / a) & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 2;
+			}
+			break;
+		case 0x5c: /* AND2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
+				u->wst.dat[u->wst.ptr - 4] = d & b;
+				u->wst.dat[u->wst.ptr - 3] = c & a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 2;
+			}
+			break;
+		case 0x5d: /* ORA2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
+				u->wst.dat[u->wst.ptr - 4] = d | b;
+				u->wst.dat[u->wst.ptr - 3] = c | a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 2;
+			}
+			break;
+		case 0x5e: /* EOR2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
+				u->wst.dat[u->wst.ptr - 4] = d ^ b;
+				u->wst.dat[u->wst.ptr - 3] = c ^ a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 4, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 2;
+			}
+			break;
+		case 0x5f: /* SFT2 */
+			{
+				Uint8 a = u->wst.dat[u->wst.ptr - 1];
+				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
+				u->wst.dat[u->wst.ptr - 3] = (b >> (a & 0x0f) << ((a & 0xf0) >> 4)) >> 8;
+				u->wst.dat[u->wst.ptr - 2] = (b >> (a & 0x0f) << ((a & 0xf0) >> 4)) & 0xff;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->wst.ptr < 3, 0)) {
+					u->wst.error = 1;
+					goto error;
+				}
+#endif
+				u->wst.ptr -= 1;
 			}
 			break;
 		case 0x60: /* LIT2r */
@@ -2425,7 +2426,517 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 1;
 			}
 			break;
-		case 0xa1: /* INC2k */
+		case 0xa1: /* INCkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				u->rst.dat[u->rst.ptr] = a + 1;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 1, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xa2: /* POPkr */
+			{
+				u->rst.dat[u->rst.ptr - 1];
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 1, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+#endif
+			}
+			break;
+		case 0xa3: /* DUPkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				u->rst.dat[u->rst.ptr] = a;
+				u->rst.dat[u->rst.ptr + 1] = a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 1, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 253, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 2;
+			}
+			break;
+		case 0xa4: /* NIPkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xa5: /* SWPkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = a;
+				u->rst.dat[u->rst.ptr + 1] = b;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 253, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 2;
+			}
+			break;
+		case 0xa6: /* OVRkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b;
+				u->rst.dat[u->rst.ptr + 1] = a;
+				u->rst.dat[u->rst.ptr + 2] = b;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 252, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 3;
+			}
+			break;
+		case 0xa7: /* ROTkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2], c = u->rst.dat[u->rst.ptr - 3];
+				u->rst.dat[u->rst.ptr] = b;
+				u->rst.dat[u->rst.ptr + 1] = a;
+				u->rst.dat[u->rst.ptr + 2] = c;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 3, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 252, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 3;
+			}
+			break;
+		case 0xa8: /* EQUkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b == a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xa9: /* NEQkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b != a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xaa: /* GTHkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b > a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xab: /* LTHkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b < a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xac: /* JMPkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				u->ram.ptr += (Sint8)a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 1, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+#endif
+			}
+			break;
+		case 0xad: /* JCNkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				if(u->rst.dat[u->rst.ptr - 2]) u->ram.ptr += (Sint8)a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+#endif
+			}
+			break;
+		case 0xae: /* JSRkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				u->wst.dat[u->wst.ptr] = u->ram.ptr >> 8;
+				u->wst.dat[u->wst.ptr + 1] = u->ram.ptr & 0xff;
+				u->ram.ptr += (Sint8)a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 1, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->wst.ptr > 253, 0)) {
+					u->wst.error = 2;
+					goto error;
+				}
+#endif
+				u->wst.ptr += 2;
+			}
+			break;
+		case 0xaf: /* STHkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				u->wst.dat[u->wst.ptr] = a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 1, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->wst.ptr > 254, 0)) {
+					u->wst.error = 2;
+					goto error;
+				}
+#endif
+				u->wst.ptr += 1;
+			}
+			break;
+		case 0xb0: /* LDZkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, a);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 1, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xb1: /* STZkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				Uint8 b = u->rst.dat[u->rst.ptr - 2];
+				mempoke8(u->ram.dat, a, b);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+#endif
+			}
+			break;
+		case 0xb2: /* LDRkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 1, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xb3: /* STRkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				Uint8 b = u->rst.dat[u->rst.ptr - 2];
+				mempoke8(u->ram.dat, u->ram.ptr + (Sint8)a, b);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+#endif
+			}
+			break;
+		case 0xb4: /* LDAkr */
+			{
+				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
+				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, a);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xb5: /* STAkr */
+			{
+				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
+				Uint8 b = u->rst.dat[u->rst.ptr - 3];
+				mempoke8(u->ram.dat, a, b);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 3, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+#endif
+			}
+			break;
+		case 0xb6: /* DEIkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1];
+				u->rst.dat[u->rst.ptr] = devpeek8(&u->dev[a >> 4], a);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 1, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xb7: /* DEOkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				devpoke8(&u->dev[a >> 4], a, b);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+#endif
+			}
+			break;
+		case 0xb8: /* ADDkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b + a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xb9: /* SUBkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b - a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xba: /* MULkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b * a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xbb: /* DIVkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				if(a == 0) {
+					u->rst.error = 3;
+#ifndef NO_STACK_CHECKS
+					goto error;
+#endif
+					a = 1;
+				}
+				u->rst.dat[u->rst.ptr] = b / a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xbc: /* ANDkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b & a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xbd: /* ORAkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b | a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xbe: /* EORkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b ^ a;
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xbf: /* SFTkr */
+			{
+				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
+				u->rst.dat[u->rst.ptr] = b >> (a & 0x07) << ((a & 0x70) >> 4);
+#ifndef NO_STACK_CHECKS
+				if(__builtin_expect(u->rst.ptr < 2, 0)) {
+					u->rst.error = 1;
+					goto error;
+				}
+				if(__builtin_expect(u->rst.ptr > 254, 0)) {
+					u->rst.error = 2;
+					goto error;
+				}
+#endif
+				u->rst.ptr += 1;
+			}
+			break;
+		case 0xc1: /* INC2k */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
 				u->wst.dat[u->wst.ptr] = (a + 1) >> 8;
@@ -2443,7 +2954,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0xa2: /* POP2k */
+		case 0xc2: /* POP2k */
 			{
 				(u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
 #ifndef NO_STACK_CHECKS
@@ -2454,7 +2965,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0xa3: /* DUP2k */
+		case 0xc3: /* DUP2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2];
 				u->wst.dat[u->wst.ptr] = b;
@@ -2474,7 +2985,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 4;
 			}
 			break;
-		case 0xa4: /* NIP2k */
+		case 0xc4: /* NIP2k */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
 				(u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
@@ -2493,7 +3004,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0xa5: /* SWP2k */
+		case 0xc5: /* SWP2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
 				u->wst.dat[u->wst.ptr] = b;
@@ -2513,7 +3024,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 4;
 			}
 			break;
-		case 0xa6: /* OVR2k */
+		case 0xc6: /* OVR2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
 				u->wst.dat[u->wst.ptr] = d;
@@ -2535,7 +3046,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 6;
 			}
 			break;
-		case 0xa7: /* ROT2k */
+		case 0xc7: /* ROT2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4], e = u->wst.dat[u->wst.ptr - 5], f = u->wst.dat[u->wst.ptr - 6];
 				u->wst.dat[u->wst.ptr] = d;
@@ -2557,7 +3068,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 6;
 			}
 			break;
-		case 0xa8: /* EQU2k */
+		case 0xc8: /* EQU2k */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
 				u->wst.dat[u->wst.ptr] = b == a;
@@ -2574,7 +3085,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 1;
 			}
 			break;
-		case 0xa9: /* NEQ2k */
+		case 0xc9: /* NEQ2k */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
 				u->wst.dat[u->wst.ptr] = b != a;
@@ -2591,7 +3102,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 1;
 			}
 			break;
-		case 0xaa: /* GTH2k */
+		case 0xca: /* GTH2k */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
 				u->wst.dat[u->wst.ptr] = b > a;
@@ -2608,7 +3119,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 1;
 			}
 			break;
-		case 0xab: /* LTH2k */
+		case 0xcb: /* LTH2k */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
 				u->wst.dat[u->wst.ptr] = b < a;
@@ -2625,7 +3136,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 1;
 			}
 			break;
-		case 0xac: /* JMP2k */
+		case 0xcc: /* JMP2k */
 			{
 				u->ram.ptr = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
 #ifndef NO_STACK_CHECKS
@@ -2636,7 +3147,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0xad: /* JCN2k */
+		case 0xcd: /* JCN2k */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
 				if(u->wst.dat[u->wst.ptr - 3]) u->ram.ptr = a;
@@ -2648,7 +3159,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0xae: /* JSR2k */
+		case 0xce: /* JSR2k */
 			{
 				u->rst.dat[u->rst.ptr] = u->ram.ptr >> 8;
 				u->rst.dat[u->rst.ptr + 1] = u->ram.ptr & 0xff;
@@ -2666,7 +3177,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr += 2;
 			}
 			break;
-		case 0xaf: /* STH2k */
+		case 0xcf: /* STH2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2];
 				u->rst.dat[u->rst.ptr] = b;
@@ -2684,7 +3195,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->rst.ptr += 2;
 			}
 			break;
-		case 0xb0: /* LDZ2k */
+		case 0xd0: /* LDZ2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, a);
@@ -2702,7 +3213,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0xb1: /* STZ2k */
+		case 0xd1: /* STZ2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
@@ -2715,7 +3226,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0xb2: /* LDR2k */
+		case 0xd2: /* LDR2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a);
@@ -2733,7 +3244,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0xb3: /* STR2k */
+		case 0xd3: /* STR2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
@@ -2746,7 +3257,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0xb4: /* LDA2k */
+		case 0xd4: /* LDA2k */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
 				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, a);
@@ -2764,7 +3275,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0xb5: /* STA2k */
+		case 0xd5: /* STA2k */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
 				Uint16 b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
@@ -2777,7 +3288,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0xb6: /* DEI2k */
+		case 0xd6: /* DEI2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				u->wst.dat[u->wst.ptr] = devpeek8(&u->dev[a >> 4], a);
@@ -2795,7 +3306,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0xb7: /* DEO2k */
+		case 0xd7: /* DEO2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
@@ -2808,7 +3319,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 #endif
 			}
 			break;
-		case 0xb8: /* ADD2k */
+		case 0xd8: /* ADD2k */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
 				u->wst.dat[u->wst.ptr] = (b + a) >> 8;
@@ -2826,7 +3337,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0xb9: /* SUB2k */
+		case 0xd9: /* SUB2k */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
 				u->wst.dat[u->wst.ptr] = (b - a) >> 8;
@@ -2844,7 +3355,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0xba: /* MUL2k */
+		case 0xda: /* MUL2k */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
 				u->wst.dat[u->wst.ptr] = (b * a) >> 8;
@@ -2862,7 +3373,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0xbb: /* DIV2k */
+		case 0xdb: /* DIV2k */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8)), b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
 				if(a == 0) {
@@ -2887,7 +3398,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0xbc: /* AND2k */
+		case 0xdc: /* AND2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
 				u->wst.dat[u->wst.ptr] = d & b;
@@ -2905,7 +3416,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0xbd: /* ORA2k */
+		case 0xdd: /* ORA2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
 				u->wst.dat[u->wst.ptr] = d | b;
@@ -2923,7 +3434,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0xbe: /* EOR2k */
+		case 0xde: /* EOR2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2], c = u->wst.dat[u->wst.ptr - 3], d = u->wst.dat[u->wst.ptr - 4];
 				u->wst.dat[u->wst.ptr] = d ^ b;
@@ -2941,7 +3452,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 				u->wst.ptr += 2;
 			}
 			break;
-		case 0xbf: /* SFT2k */
+		case 0xdf: /* SFT2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
@@ -2958,516 +3469,6 @@ uxn_eval(Uxn *u, Uint16 vec)
 				}
 #endif
 				u->wst.ptr += 2;
-			}
-			break;
-		case 0xc1: /* INCkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr] = a + 1;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 1, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xc2: /* POPkr */
-			{
-				u->rst.dat[u->rst.ptr - 1];
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 1, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-#endif
-			}
-			break;
-		case 0xc3: /* DUPkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr] = a;
-				u->rst.dat[u->rst.ptr + 1] = a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 1, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 253, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 2;
-			}
-			break;
-		case 0xc4: /* NIPkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xc5: /* SWPkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = a;
-				u->rst.dat[u->rst.ptr + 1] = b;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 253, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 2;
-			}
-			break;
-		case 0xc6: /* OVRkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = b;
-				u->rst.dat[u->rst.ptr + 1] = a;
-				u->rst.dat[u->rst.ptr + 2] = b;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 252, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 3;
-			}
-			break;
-		case 0xc7: /* ROTkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2], c = u->rst.dat[u->rst.ptr - 3];
-				u->rst.dat[u->rst.ptr] = b;
-				u->rst.dat[u->rst.ptr + 1] = a;
-				u->rst.dat[u->rst.ptr + 2] = c;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 3, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 252, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 3;
-			}
-			break;
-		case 0xc8: /* EQUkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = b == a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xc9: /* NEQkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = b != a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xca: /* GTHkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = b > a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xcb: /* LTHkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = b < a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xcc: /* JMPkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->ram.ptr += (Sint8)a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 1, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-#endif
-			}
-			break;
-		case 0xcd: /* JCNkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				if(u->rst.dat[u->rst.ptr - 2]) u->ram.ptr += (Sint8)a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-#endif
-			}
-			break;
-		case 0xce: /* JSRkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->wst.dat[u->wst.ptr] = u->ram.ptr >> 8;
-				u->wst.dat[u->wst.ptr + 1] = u->ram.ptr & 0xff;
-				u->ram.ptr += (Sint8)a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 1, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->wst.ptr > 253, 0)) {
-					u->wst.error = 2;
-					goto error;
-				}
-#endif
-				u->wst.ptr += 2;
-			}
-			break;
-		case 0xcf: /* STHkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->wst.dat[u->wst.ptr] = a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 1, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->wst.ptr > 254, 0)) {
-					u->wst.error = 2;
-					goto error;
-				}
-#endif
-				u->wst.ptr += 1;
-			}
-			break;
-		case 0xd0: /* LDZkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, a);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 1, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xd1: /* STZkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				Uint8 b = u->rst.dat[u->rst.ptr - 2];
-				mempoke8(u->ram.dat, a, b);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-#endif
-			}
-			break;
-		case 0xd2: /* LDRkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 1, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xd3: /* STRkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				Uint8 b = u->rst.dat[u->rst.ptr - 2];
-				mempoke8(u->ram.dat, u->ram.ptr + (Sint8)a, b);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-#endif
-			}
-			break;
-		case 0xd4: /* LDAkr */
-			{
-				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
-				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, a);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xd5: /* STAkr */
-			{
-				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
-				Uint8 b = u->rst.dat[u->rst.ptr - 3];
-				mempoke8(u->ram.dat, a, b);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 3, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-#endif
-			}
-			break;
-		case 0xd6: /* DEIkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr] = devpeek8(&u->dev[a >> 4], a);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 1, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xd7: /* DEOkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				devpoke8(&u->dev[a >> 4], a, b);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-#endif
-			}
-			break;
-		case 0xd8: /* ADDkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = b + a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xd9: /* SUBkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = b - a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xda: /* MULkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = b * a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xdb: /* DIVkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				if(a == 0) {
-					u->rst.error = 3;
-#ifndef NO_STACK_CHECKS
-					goto error;
-#endif
-					a = 1;
-				}
-				u->rst.dat[u->rst.ptr] = b / a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xdc: /* ANDkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = b & a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xdd: /* ORAkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = b | a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xde: /* EORkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = b ^ a;
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
-			}
-			break;
-		case 0xdf: /* SFTkr */
-			{
-				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				u->rst.dat[u->rst.ptr] = b >> (a & 0x07) << ((a & 0x70) >> 4);
-#ifndef NO_STACK_CHECKS
-				if(__builtin_expect(u->rst.ptr < 2, 0)) {
-					u->rst.error = 1;
-					goto error;
-				}
-				if(__builtin_expect(u->rst.ptr > 254, 0)) {
-					u->rst.error = 2;
-					goto error;
-				}
-#endif
-				u->rst.ptr += 1;
 			}
 			break;
 		case 0xe1: /* INC2kr */
@@ -4024,7 +4025,7 @@ uxn_boot(Uxn *u)
 	unsigned int i;
 	char *cptr = (char *)u;
 	for(i = 0; i < sizeof(*u); i++)
-		cptr[i] = 0;
+		cptr[i] = 0x00;
 	return 1;
 }
 
