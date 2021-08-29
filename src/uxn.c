@@ -68,7 +68,7 @@ static void op_and(Uxn *u) { Uint8 a = pop8(u->src), b = pop8(u->src); push8(u->
 static void op_ora(Uxn *u) { Uint8 a = pop8(u->src), b = pop8(u->src); push8(u->src, b | a); }
 static void op_eor(Uxn *u) { Uint8 a = pop8(u->src), b = pop8(u->src); push8(u->src, b ^ a); }
 static void op_sft(Uxn *u) { Uint8 a = pop8(u->src), b = pop8(u->src); push8(u->src, b >> (a & 0x07) << ((a & 0x70) >> 4)); }
-/* Stack */
+/* Stack(16-bits) */
 static void op_lit16(Uxn *u) { push16(u->src, mempeek16(u->ram.dat, u->ram.ptr++)); u->ram.ptr++; }
 static void op_inc16(Uxn *u) { Uint16 a = pop16(u->src); push16(u->src, a + 1); }
 static void op_pop16(Uxn *u) { pop16(u->src); }
@@ -160,7 +160,7 @@ uxn_boot(Uxn *u)
 	unsigned int i;
 	char *cptr = (char *)u;
 	for(i = 0; i < sizeof(*u); i++)
-		cptr[i] = 0;
+		cptr[i] = 0x00;
 	return 1;
 }
 
