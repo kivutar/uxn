@@ -77,10 +77,10 @@ file_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	Uint8 read = b0 == 0xd;
 	if(w && (read || b0 == 0xf)) {
-		char *name = (char *)&d->mem[mempeek16(d->dat, 0x8)];
-		Uint16 result = 0, length = mempeek16(d->dat, 0xa);
-		long offset = (mempeek16(d->dat, 0x4) << 16) + mempeek16(d->dat, 0x6);
-		Uint16 addr = mempeek16(d->dat, b0 - 1);
+		char *name = (char *)&d->mem[peek16(d->dat, 0x8)];
+		Uint16 result = 0, length = peek16(d->dat, 0xa);
+		long offset = (peek16(d->dat, 0x4) << 16) + peek16(d->dat, 0x6);
+		Uint16 addr = peek16(d->dat, b0 - 1);
 		FILE *f = fopen(name, read ? "r" : (offset ? "a" : "w"));
 		if(f) {
 			fprintf(stderr, "%s %s %s #%04x, ", read ? "Loading" : "Saving", name, read ? "to" : "from", addr);
@@ -89,7 +89,7 @@ file_talk(Device *d, Uint8 b0, Uint8 w)
 			fprintf(stderr, "%04x bytes\n", result);
 			fclose(f);
 		}
-		mempoke16(d->dat, 0x2, result);
+		poke16(d->dat, 0x2, result);
 	}
 }
 
@@ -99,14 +99,14 @@ datetime_talk(Device *d, Uint8 b0, Uint8 w)
 	time_t seconds = time(NULL);
 	struct tm *t = localtime(&seconds);
 	t->tm_year += 1900;
-	mempoke16(d->dat, 0x0, t->tm_year);
+	poke16(d->dat, 0x0, t->tm_year);
 	d->dat[0x2] = t->tm_mon;
 	d->dat[0x3] = t->tm_mday;
 	d->dat[0x4] = t->tm_hour;
 	d->dat[0x5] = t->tm_min;
 	d->dat[0x6] = t->tm_sec;
 	d->dat[0x7] = t->tm_wday;
-	mempoke16(d->dat, 0x08, t->tm_yday);
+	poke16(d->dat, 0x08, t->tm_yday);
 	d->dat[0xa] = t->tm_isdst;
 	(void)b0;
 	(void)w;
@@ -138,7 +138,7 @@ run(Uxn *u)
 	Uint16 vec = PAGE_PROGRAM;
 	uxn_eval(u, vec);
 	while((!u->dev[0].dat[0xf]) && (read(0, &devconsole->dat[0x2], 1) > 0)) {
-		vec = mempeek16(devconsole->dat, 0);
+		vec = peek16(devconsole->dat, 0);
 		if(!vec) vec = u->ram.ptr; /* continue after last BRK */
 		uxn_eval(u, vec);
 	}

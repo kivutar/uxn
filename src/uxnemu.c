@@ -221,8 +221,8 @@ domouse(SDL_Event *event)
 	Uint8 flag = 0x00;
 	Uint16 x = clamp(event->motion.x / zoom - PAD, 0, ppu.width - 1);
 	Uint16 y = clamp(event->motion.y / zoom - PAD, 0, ppu.height - 1);
-	mempoke16(devmouse->dat, 0x2, x);
-	mempoke16(devmouse->dat, 0x4, y);
+	poke16(devmouse->dat, 0x2, x);
+	poke16(devmouse->dat, 0x4, y);
 	switch(event->button.button) {
 	case SDL_BUTTON_LEFT: flag = 0x01; break;
 	case SDL_BUTTON_RIGHT: flag = 0x10; break;
@@ -320,16 +320,16 @@ static void
 screen_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	if(w && b0 == 0xe) {
-		Uint16 x = mempeek16(d->dat, 0x8);
-		Uint16 y = mempeek16(d->dat, 0xa);
+		Uint16 x = peek16(d->dat, 0x8);
+		Uint16 y = peek16(d->dat, 0xa);
 		Uint8 layer = d->dat[0xe] >> 4 & 0x1;
 		ppu_pixel(&ppu, layer, x, y, d->dat[0xe] & 0x3);
 		reqdraw = 1;
 	} else if(w && b0 == 0xf) {
-		Uint16 x = mempeek16(d->dat, 0x8);
-		Uint16 y = mempeek16(d->dat, 0xa);
+		Uint16 x = peek16(d->dat, 0x8);
+		Uint16 y = peek16(d->dat, 0xa);
 		Uint8 layer = d->dat[0xf] >> 0x6 & 0x1;
-		Uint8 *addr = &d->mem[mempeek16(d->dat, 0xc)];
+		Uint8 *addr = &d->mem[peek16(d->dat, 0xc)];
 		if(d->dat[0xf] >> 0x7 & 0x1)
 			ppu_2bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] >> 0x4 & 0x1, d->dat[0xf] >> 0x5 & 0x1);
 		else
@@ -343,10 +343,10 @@ file_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	Uint8 read = b0 == 0xd;
 	if(w && (read || b0 == 0xf)) {
-		char *name = (char *)&d->mem[mempeek16(d->dat, 0x8)];
-		Uint16 result = 0, length = mempeek16(d->dat, 0xa);
-		long offset = (mempeek16(d->dat, 0x4) << 16) + mempeek16(d->dat, 0x6);
-		Uint16 addr = mempeek16(d->dat, b0 - 1);
+		char *name = (char *)&d->mem[peek16(d->dat, 0x8)];
+		Uint16 result = 0, length = peek16(d->dat, 0xa);
+		long offset = (peek16(d->dat, 0x4) << 16) + peek16(d->dat, 0x6);
+		Uint16 addr = peek16(d->dat, b0 - 1);
 		FILE *f = fopen(name, read ? "r" : (offset ? "a" : "w"));
 		if(f) {
 			fprintf(stderr, "%s %s %s #%04x, ", read ? "Loading" : "Saving", name, read ? "to" : "from", addr);
@@ -355,7 +355,7 @@ file_talk(Device *d, Uint8 b0, Uint8 w)
 			fprintf(stderr, "%04x bytes\n", result);
 			fclose(f);
 		}
-		mempoke16(d->dat, 0x2, result);
+		poke16(d->dat, 0x2, result);
 	}
 }
 
@@ -366,17 +366,17 @@ audio_talk(Device *d, Uint8 b0, Uint8 w)
 	if(!audio_id) return;
 	if(!w) {
 		if(b0 == 0x2)
-			mempoke16(d->dat, 0x2, c->i);
+			poke16(d->dat, 0x2, c->i);
 		else if(b0 == 0x4)
 			d->dat[0x4] = apu_get_vu(c);
 	} else if(b0 == 0xf) {
 		SDL_LockAudioDevice(audio_id);
-		c->len = mempeek16(d->dat, 0xa);
-		c->addr = &d->mem[mempeek16(d->dat, 0xc)];
+		c->len = peek16(d->dat, 0xa);
+		c->addr = &d->mem[peek16(d->dat, 0xc)];
 		c->volume[0] = d->dat[0xe] >> 4;
 		c->volume[1] = d->dat[0xe] & 0xf;
 		c->repeat = !(d->dat[0xf] & 0x80);
-		apu_start(c, mempeek16(d->dat, 0x8), d->dat[0xf] & 0x7f);
+		apu_start(c, peek16(d->dat, 0x8), d->dat[0xf] & 0x7f);
 		SDL_UnlockAudioDevice(audio_id);
 		SDL_PauseAudioDevice(audio_id, 0);
 	}
@@ -388,14 +388,14 @@ datetime_talk(Device *d, Uint8 b0, Uint8 w)
 	time_t seconds = time(NULL);
 	struct tm *t = localtime(&seconds);
 	t->tm_year += 1900;
-	mempoke16(d->dat, 0x0, t->tm_year);
+	poke16(d->dat, 0x0, t->tm_year);
 	d->dat[0x2] = t->tm_mon;
 	d->dat[0x3] = t->tm_mday;
 	d->dat[0x4] = t->tm_hour;
 	d->dat[0x5] = t->tm_min;
 	d->dat[0x6] = t->tm_sec;
 	d->dat[0x7] = t->tm_wday;
-	mempoke16(d->dat, 0x08, t->tm_yday);
+	poke16(d->dat, 0x08, t->tm_yday);
 	d->dat[0xa] = t->tm_isdst;
 	(void)b0;
 	(void)w;
@@ -459,19 +459,19 @@ run(Uxn *u)
 			case SDL_KEYDOWN:
 			case SDL_KEYUP:
 				doctrl(u, &event, event.type == SDL_KEYDOWN);
-				uxn_eval(u, mempeek16(devctrl->dat, 0));
+				uxn_eval(u, peek16(devctrl->dat, 0));
 				devctrl->dat[3] = 0;
 				break;
 			case SDL_MOUSEWHEEL:
 				devmouse->dat[7] = event.wheel.y;
-				uxn_eval(u, mempeek16(devmouse->dat, 0));
+				uxn_eval(u, peek16(devmouse->dat, 0));
 				devmouse->dat[7] = 0;
 				break;
 			case SDL_MOUSEBUTTONUP:
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEMOTION:
 				domouse(&event);
-				uxn_eval(u, mempeek16(devmouse->dat, 0));
+				uxn_eval(u, peek16(devmouse->dat, 0));
 				break;
 			case SDL_WINDOWEVENT:
 				if(event.window.event == SDL_WINDOWEVENT_EXPOSED)
@@ -482,12 +482,12 @@ run(Uxn *u)
 			default:
 				if(event.type == stdin_event) {
 					devconsole->dat[0x2] = event.cbutton.button;
-					uxn_eval(u, mempeek16(devconsole->dat, 0));
+					uxn_eval(u, peek16(devconsole->dat, 0));
 				} else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY)
-					uxn_eval(u, mempeek16((devaudio0 + (event.type - audio0_event))->dat, 0));
+					uxn_eval(u, peek16((devaudio0 + (event.type - audio0_event))->dat, 0));
 			}
 		}
-		uxn_eval(u, mempeek16(devscreen->dat, 0));
+		uxn_eval(u, peek16(devscreen->dat, 0));
 		if(reqdraw || devsystem->dat[0xe])
 			redraw(u);
 		if(!BENCH) {
@@ -544,8 +544,8 @@ main(int argc, char **argv)
 	uxn_port(&u, 0xf, "---", nil_talk);
 
 	/* Write screen size to dev/screen */
-	mempoke16(devscreen->dat, 2, ppu.width);
-	mempoke16(devscreen->dat, 4, ppu.height);
+	poke16(devscreen->dat, 2, ppu.width);
+	poke16(devscreen->dat, 4, ppu.height);
 
 	run(&u);
 	quit();

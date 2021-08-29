@@ -29,13 +29,13 @@ See etc/mkuxn-fast.moon for instructions.
 #pragma mark - Operations
 
 /* clang-format off */
-static void   mempoke8(Uint8 *m, Uint16 a, Uint8 b) { m[a] = b; }
-static Uint8  mempeek8(Uint8 *m, Uint16 a) { return m[a]; }
-static void   devpoke8(Device *d, Uint8 a, Uint8 b) { d->dat[a & 0xf] = b; d->talk(d, a & 0x0f, 1); }
-static Uint8  devpeek8(Device *d, Uint8 a) { d->talk(d, a & 0x0f, 0); return d->dat[a & 0xf];  }
-void   mempoke16(Uint8 *m, Uint16 a, Uint16 b) { mempoke8(m, a, b >> 8); mempoke8(m, a + 1, b); }
-Uint16 mempeek16(Uint8 *m, Uint16 a) { return (mempeek8(m, a) << 8) + mempeek8(m, a + 1); }
-static void   devpoke16(Device *d, Uint8 a, Uint16 b) { devpoke8(d, a, b >> 8); devpoke8(d, a + 1, b); }
+static void   poke8(Uint8 *m, Uint16 a, Uint8 b) { m[a] = b; }
+static Uint8  peek8(Uint8 *m, Uint16 a) { return m[a]; }
+static void   devw8(Device *d, Uint8 a, Uint8 b) { d->dat[a & 0xf] = b; d->talk(d, a & 0x0f, 1); }
+static Uint8  devr8(Device *d, Uint8 a) { d->talk(d, a & 0x0f, 0); return d->dat[a & 0xf];  }
+void   poke16(Uint8 *m, Uint16 a, Uint16 b) { poke8(m, a, b >> 8); poke8(m, a + 1, b); }
+Uint16 peek16(Uint8 *m, Uint16 a) { return (peek8(m, a) << 8) + peek8(m, a + 1); }
+static void   devw16(Device *d, Uint8 a, Uint16 b) { devw8(d, a, b >> 8); devw8(d, a + 1, b); }
 
 /* clang-format on */
 
@@ -57,7 +57,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x00: /* LIT */
 		case 0x80: /* LITk */
 			{
-				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, u->ram.ptr++);
+				u->wst.dat[u->wst.ptr] = peek8(u->ram.dat, u->ram.ptr++);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr > 254, 0)) {
 					u->wst.error = 2;
@@ -289,7 +289,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x10: /* LDZ */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr - 1] = mempeek8(u->ram.dat, a);
+				u->wst.dat[u->wst.ptr - 1] = peek8(u->ram.dat, a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 1, 0)) {
 					u->wst.error = 1;
@@ -302,7 +302,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint8 b = u->wst.dat[u->wst.ptr - 2];
-				mempoke8(u->ram.dat, a, b);
+				poke8(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 2, 0)) {
 					u->wst.error = 1;
@@ -315,7 +315,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x12: /* LDR */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr - 1] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a);
+				u->wst.dat[u->wst.ptr - 1] = peek8(u->ram.dat, u->ram.ptr + (Sint8)a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 1, 0)) {
 					u->wst.error = 1;
@@ -328,7 +328,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint8 b = u->wst.dat[u->wst.ptr - 2];
-				mempoke8(u->ram.dat, u->ram.ptr + (Sint8)a, b);
+				poke8(u->ram.dat, u->ram.ptr + (Sint8)a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 2, 0)) {
 					u->wst.error = 1;
@@ -341,7 +341,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x14: /* LDA */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
-				u->wst.dat[u->wst.ptr - 2] = mempeek8(u->ram.dat, a);
+				u->wst.dat[u->wst.ptr - 2] = peek8(u->ram.dat, a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 2, 0)) {
 					u->wst.error = 1;
@@ -355,7 +355,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
 				Uint8 b = u->wst.dat[u->wst.ptr - 3];
-				mempoke8(u->ram.dat, a, b);
+				poke8(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 3, 0)) {
 					u->wst.error = 1;
@@ -368,7 +368,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x16: /* DEI */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr - 1] = devpeek8(&u->dev[a >> 4], a);
+				u->wst.dat[u->wst.ptr - 1] = devr8(&u->dev[a >> 4], a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 1, 0)) {
 					u->wst.error = 1;
@@ -380,7 +380,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x17: /* DEO */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2];
-				devpoke8(&u->dev[a >> 4], a, b);
+				devw8(&u->dev[a >> 4], a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 2, 0)) {
 					u->wst.error = 1;
@@ -504,7 +504,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x20: /* LITr */
 		case 0xa0: /* LITkr */
 			{
-				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, u->ram.ptr++);
+				u->rst.dat[u->rst.ptr] = peek8(u->ram.dat, u->ram.ptr++);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr > 254, 0)) {
 					u->rst.error = 2;
@@ -736,7 +736,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x30: /* LDZr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr - 1] = mempeek8(u->ram.dat, a);
+				u->rst.dat[u->rst.ptr - 1] = peek8(u->ram.dat, a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 1, 0)) {
 					u->rst.error = 1;
@@ -749,7 +749,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				Uint8 b = u->rst.dat[u->rst.ptr - 2];
-				mempoke8(u->ram.dat, a, b);
+				poke8(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 2, 0)) {
 					u->rst.error = 1;
@@ -762,7 +762,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x32: /* LDRr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr - 1] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a);
+				u->rst.dat[u->rst.ptr - 1] = peek8(u->ram.dat, u->ram.ptr + (Sint8)a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 1, 0)) {
 					u->rst.error = 1;
@@ -775,7 +775,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				Uint8 b = u->rst.dat[u->rst.ptr - 2];
-				mempoke8(u->ram.dat, u->ram.ptr + (Sint8)a, b);
+				poke8(u->ram.dat, u->ram.ptr + (Sint8)a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 2, 0)) {
 					u->rst.error = 1;
@@ -788,7 +788,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x34: /* LDAr */
 			{
 				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
-				u->rst.dat[u->rst.ptr - 2] = mempeek8(u->ram.dat, a);
+				u->rst.dat[u->rst.ptr - 2] = peek8(u->ram.dat, a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 2, 0)) {
 					u->rst.error = 1;
@@ -802,7 +802,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
 				Uint8 b = u->rst.dat[u->rst.ptr - 3];
-				mempoke8(u->ram.dat, a, b);
+				poke8(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 3, 0)) {
 					u->rst.error = 1;
@@ -815,7 +815,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x36: /* DEIr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr - 1] = devpeek8(&u->dev[a >> 4], a);
+				u->rst.dat[u->rst.ptr - 1] = devr8(&u->dev[a >> 4], a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 1, 0)) {
 					u->rst.error = 1;
@@ -827,7 +827,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x37: /* DEOr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				devpoke8(&u->dev[a >> 4], a, b);
+				devw8(&u->dev[a >> 4], a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 2, 0)) {
 					u->rst.error = 1;
@@ -951,8 +951,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x40: /* LIT2 */
 		case 0xc0: /* LIT2k */
 			{
-				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, u->ram.ptr++);
-				u->wst.dat[u->wst.ptr + 1] = mempeek8(u->ram.dat, u->ram.ptr++);
+				u->wst.dat[u->wst.ptr] = peek8(u->ram.dat, u->ram.ptr++);
+				u->wst.dat[u->wst.ptr + 1] = peek8(u->ram.dat, u->ram.ptr++);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr > 253, 0)) {
 					u->wst.error = 2;
@@ -1192,8 +1192,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x50: /* LDZ2 */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr - 1] = mempeek8(u->ram.dat, a);
-				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, a + 1);
+				u->wst.dat[u->wst.ptr - 1] = peek8(u->ram.dat, a);
+				u->wst.dat[u->wst.ptr] = peek8(u->ram.dat, a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 1, 0)) {
 					u->wst.error = 1;
@@ -1211,7 +1211,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
-				mempoke16(u->ram.dat, a, b);
+				poke16(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 3, 0)) {
 					u->wst.error = 1;
@@ -1224,8 +1224,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x52: /* LDR2 */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr - 1] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a);
-				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a + 1);
+				u->wst.dat[u->wst.ptr - 1] = peek8(u->ram.dat, u->ram.ptr + (Sint8)a);
+				u->wst.dat[u->wst.ptr] = peek8(u->ram.dat, u->ram.ptr + (Sint8)a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 1, 0)) {
 					u->wst.error = 1;
@@ -1243,7 +1243,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
-				mempoke16(u->ram.dat, u->ram.ptr + (Sint8)a, b);
+				poke16(u->ram.dat, u->ram.ptr + (Sint8)a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 3, 0)) {
 					u->wst.error = 1;
@@ -1256,8 +1256,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x54: /* LDA2 */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
-				u->wst.dat[u->wst.ptr - 2] = mempeek8(u->ram.dat, a);
-				u->wst.dat[u->wst.ptr - 1] = mempeek8(u->ram.dat, a + 1);
+				u->wst.dat[u->wst.ptr - 2] = peek8(u->ram.dat, a);
+				u->wst.dat[u->wst.ptr - 1] = peek8(u->ram.dat, a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 2, 0)) {
 					u->wst.error = 1;
@@ -1270,7 +1270,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
 				Uint16 b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
-				mempoke16(u->ram.dat, a, b);
+				poke16(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 4, 0)) {
 					u->wst.error = 1;
@@ -1283,8 +1283,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x56: /* DEI2 */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr - 1] = devpeek8(&u->dev[a >> 4], a);
-				u->wst.dat[u->wst.ptr] = devpeek8(&u->dev[a >> 4], a + 1);
+				u->wst.dat[u->wst.ptr - 1] = devr8(&u->dev[a >> 4], a);
+				u->wst.dat[u->wst.ptr] = devr8(&u->dev[a >> 4], a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 1, 0)) {
 					u->wst.error = 1;
@@ -1302,7 +1302,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
-				devpoke16(&u->dev[a >> 4], a, b);
+				devw16(&u->dev[a >> 4], a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 3, 0)) {
 					u->wst.error = 1;
@@ -1435,8 +1435,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x60: /* LIT2r */
 		case 0xe0: /* LIT2kr */
 			{
-				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, u->ram.ptr++);
-				u->rst.dat[u->rst.ptr + 1] = mempeek8(u->ram.dat, u->ram.ptr++);
+				u->rst.dat[u->rst.ptr] = peek8(u->ram.dat, u->ram.ptr++);
+				u->rst.dat[u->rst.ptr + 1] = peek8(u->ram.dat, u->ram.ptr++);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr > 253, 0)) {
 					u->rst.error = 2;
@@ -1676,8 +1676,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x70: /* LDZ2r */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr - 1] = mempeek8(u->ram.dat, a);
-				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, a + 1);
+				u->rst.dat[u->rst.ptr - 1] = peek8(u->ram.dat, a);
+				u->rst.dat[u->rst.ptr] = peek8(u->ram.dat, a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 1, 0)) {
 					u->rst.error = 1;
@@ -1695,7 +1695,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				Uint16 b = (u->rst.dat[u->rst.ptr - 2] | (u->rst.dat[u->rst.ptr - 3] << 8));
-				mempoke16(u->ram.dat, a, b);
+				poke16(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 3, 0)) {
 					u->rst.error = 1;
@@ -1708,8 +1708,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x72: /* LDR2r */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr - 1] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a);
-				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a + 1);
+				u->rst.dat[u->rst.ptr - 1] = peek8(u->ram.dat, u->ram.ptr + (Sint8)a);
+				u->rst.dat[u->rst.ptr] = peek8(u->ram.dat, u->ram.ptr + (Sint8)a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 1, 0)) {
 					u->rst.error = 1;
@@ -1727,7 +1727,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				Uint16 b = (u->rst.dat[u->rst.ptr - 2] | (u->rst.dat[u->rst.ptr - 3] << 8));
-				mempoke16(u->ram.dat, u->ram.ptr + (Sint8)a, b);
+				poke16(u->ram.dat, u->ram.ptr + (Sint8)a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 3, 0)) {
 					u->rst.error = 1;
@@ -1740,8 +1740,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x74: /* LDA2r */
 			{
 				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
-				u->rst.dat[u->rst.ptr - 2] = mempeek8(u->ram.dat, a);
-				u->rst.dat[u->rst.ptr - 1] = mempeek8(u->ram.dat, a + 1);
+				u->rst.dat[u->rst.ptr - 2] = peek8(u->ram.dat, a);
+				u->rst.dat[u->rst.ptr - 1] = peek8(u->ram.dat, a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 2, 0)) {
 					u->rst.error = 1;
@@ -1754,7 +1754,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
 				Uint16 b = (u->rst.dat[u->rst.ptr - 3] | (u->rst.dat[u->rst.ptr - 4] << 8));
-				mempoke16(u->ram.dat, a, b);
+				poke16(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 4, 0)) {
 					u->rst.error = 1;
@@ -1767,8 +1767,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x76: /* DEI2r */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr - 1] = devpeek8(&u->dev[a >> 4], a);
-				u->rst.dat[u->rst.ptr] = devpeek8(&u->dev[a >> 4], a + 1);
+				u->rst.dat[u->rst.ptr - 1] = devr8(&u->dev[a >> 4], a);
+				u->rst.dat[u->rst.ptr] = devr8(&u->dev[a >> 4], a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 1, 0)) {
 					u->rst.error = 1;
@@ -1786,7 +1786,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				Uint16 b = (u->rst.dat[u->rst.ptr - 2] | (u->rst.dat[u->rst.ptr - 3] << 8));
-				devpoke16(&u->dev[a >> 4], a, b);
+				devw16(&u->dev[a >> 4], a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 3, 0)) {
 					u->rst.error = 1;
@@ -2167,7 +2167,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x90: /* LDZk */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, a);
+				u->wst.dat[u->wst.ptr] = peek8(u->ram.dat, a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 1, 0)) {
 					u->wst.error = 1;
@@ -2185,7 +2185,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint8 b = u->wst.dat[u->wst.ptr - 2];
-				mempoke8(u->ram.dat, a, b);
+				poke8(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 2, 0)) {
 					u->wst.error = 1;
@@ -2197,7 +2197,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x92: /* LDRk */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a);
+				u->wst.dat[u->wst.ptr] = peek8(u->ram.dat, u->ram.ptr + (Sint8)a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 1, 0)) {
 					u->wst.error = 1;
@@ -2215,7 +2215,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint8 b = u->wst.dat[u->wst.ptr - 2];
-				mempoke8(u->ram.dat, u->ram.ptr + (Sint8)a, b);
+				poke8(u->ram.dat, u->ram.ptr + (Sint8)a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 2, 0)) {
 					u->wst.error = 1;
@@ -2227,7 +2227,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x94: /* LDAk */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
-				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, a);
+				u->wst.dat[u->wst.ptr] = peek8(u->ram.dat, a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 2, 0)) {
 					u->wst.error = 1;
@@ -2245,7 +2245,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
 				Uint8 b = u->wst.dat[u->wst.ptr - 3];
-				mempoke8(u->ram.dat, a, b);
+				poke8(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 3, 0)) {
 					u->wst.error = 1;
@@ -2257,7 +2257,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x96: /* DEIk */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr] = devpeek8(&u->dev[a >> 4], a);
+				u->wst.dat[u->wst.ptr] = devr8(&u->dev[a >> 4], a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 1, 0)) {
 					u->wst.error = 1;
@@ -2274,7 +2274,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x97: /* DEOk */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2];
-				devpoke8(&u->dev[a >> 4], a, b);
+				devw8(&u->dev[a >> 4], a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 2, 0)) {
 					u->wst.error = 1;
@@ -2677,7 +2677,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0xb0: /* LDZkr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, a);
+				u->rst.dat[u->rst.ptr] = peek8(u->ram.dat, a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 1, 0)) {
 					u->rst.error = 1;
@@ -2695,7 +2695,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				Uint8 b = u->rst.dat[u->rst.ptr - 2];
-				mempoke8(u->ram.dat, a, b);
+				poke8(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 2, 0)) {
 					u->rst.error = 1;
@@ -2707,7 +2707,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0xb2: /* LDRkr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a);
+				u->rst.dat[u->rst.ptr] = peek8(u->ram.dat, u->ram.ptr + (Sint8)a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 1, 0)) {
 					u->rst.error = 1;
@@ -2725,7 +2725,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				Uint8 b = u->rst.dat[u->rst.ptr - 2];
-				mempoke8(u->ram.dat, u->ram.ptr + (Sint8)a, b);
+				poke8(u->ram.dat, u->ram.ptr + (Sint8)a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 2, 0)) {
 					u->rst.error = 1;
@@ -2737,7 +2737,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0xb4: /* LDAkr */
 			{
 				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
-				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, a);
+				u->rst.dat[u->rst.ptr] = peek8(u->ram.dat, a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 2, 0)) {
 					u->rst.error = 1;
@@ -2755,7 +2755,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
 				Uint8 b = u->rst.dat[u->rst.ptr - 3];
-				mempoke8(u->ram.dat, a, b);
+				poke8(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 3, 0)) {
 					u->rst.error = 1;
@@ -2767,7 +2767,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0xb6: /* DEIkr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr] = devpeek8(&u->dev[a >> 4], a);
+				u->rst.dat[u->rst.ptr] = devr8(&u->dev[a >> 4], a);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 1, 0)) {
 					u->rst.error = 1;
@@ -2784,7 +2784,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0xb7: /* DEOkr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				devpoke8(&u->dev[a >> 4], a, b);
+				devw8(&u->dev[a >> 4], a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 2, 0)) {
 					u->rst.error = 1;
@@ -3198,8 +3198,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0xd0: /* LDZ2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, a);
-				u->wst.dat[u->wst.ptr + 1] = mempeek8(u->ram.dat, a + 1);
+				u->wst.dat[u->wst.ptr] = peek8(u->ram.dat, a);
+				u->wst.dat[u->wst.ptr + 1] = peek8(u->ram.dat, a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 1, 0)) {
 					u->wst.error = 1;
@@ -3217,7 +3217,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
-				mempoke16(u->ram.dat, a, b);
+				poke16(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 3, 0)) {
 					u->wst.error = 1;
@@ -3229,8 +3229,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0xd2: /* LDR2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a);
-				u->wst.dat[u->wst.ptr + 1] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a + 1);
+				u->wst.dat[u->wst.ptr] = peek8(u->ram.dat, u->ram.ptr + (Sint8)a);
+				u->wst.dat[u->wst.ptr + 1] = peek8(u->ram.dat, u->ram.ptr + (Sint8)a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 1, 0)) {
 					u->wst.error = 1;
@@ -3248,7 +3248,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
-				mempoke16(u->ram.dat, u->ram.ptr + (Sint8)a, b);
+				poke16(u->ram.dat, u->ram.ptr + (Sint8)a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 3, 0)) {
 					u->wst.error = 1;
@@ -3260,8 +3260,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0xd4: /* LDA2k */
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
-				u->wst.dat[u->wst.ptr] = mempeek8(u->ram.dat, a);
-				u->wst.dat[u->wst.ptr + 1] = mempeek8(u->ram.dat, a + 1);
+				u->wst.dat[u->wst.ptr] = peek8(u->ram.dat, a);
+				u->wst.dat[u->wst.ptr + 1] = peek8(u->ram.dat, a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 2, 0)) {
 					u->wst.error = 1;
@@ -3279,7 +3279,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint16 a = (u->wst.dat[u->wst.ptr - 1] | (u->wst.dat[u->wst.ptr - 2] << 8));
 				Uint16 b = (u->wst.dat[u->wst.ptr - 3] | (u->wst.dat[u->wst.ptr - 4] << 8));
-				mempoke16(u->ram.dat, a, b);
+				poke16(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 4, 0)) {
 					u->wst.error = 1;
@@ -3291,8 +3291,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0xd6: /* DEI2k */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
-				u->wst.dat[u->wst.ptr] = devpeek8(&u->dev[a >> 4], a);
-				u->wst.dat[u->wst.ptr + 1] = devpeek8(&u->dev[a >> 4], a + 1);
+				u->wst.dat[u->wst.ptr] = devr8(&u->dev[a >> 4], a);
+				u->wst.dat[u->wst.ptr + 1] = devr8(&u->dev[a >> 4], a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 1, 0)) {
 					u->wst.error = 1;
@@ -3310,7 +3310,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
-				devpoke16(&u->dev[a >> 4], a, b);
+				devw16(&u->dev[a >> 4], a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 3, 0)) {
 					u->wst.error = 1;
@@ -3733,8 +3733,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0xf0: /* LDZ2kr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, a);
-				u->rst.dat[u->rst.ptr + 1] = mempeek8(u->ram.dat, a + 1);
+				u->rst.dat[u->rst.ptr] = peek8(u->ram.dat, a);
+				u->rst.dat[u->rst.ptr + 1] = peek8(u->ram.dat, a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 1, 0)) {
 					u->rst.error = 1;
@@ -3752,7 +3752,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				Uint16 b = (u->rst.dat[u->rst.ptr - 2] | (u->rst.dat[u->rst.ptr - 3] << 8));
-				mempoke16(u->ram.dat, a, b);
+				poke16(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 3, 0)) {
 					u->rst.error = 1;
@@ -3764,8 +3764,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0xf2: /* LDR2kr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a);
-				u->rst.dat[u->rst.ptr + 1] = mempeek8(u->ram.dat, u->ram.ptr + (Sint8)a + 1);
+				u->rst.dat[u->rst.ptr] = peek8(u->ram.dat, u->ram.ptr + (Sint8)a);
+				u->rst.dat[u->rst.ptr + 1] = peek8(u->ram.dat, u->ram.ptr + (Sint8)a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 1, 0)) {
 					u->rst.error = 1;
@@ -3783,7 +3783,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				Uint16 b = (u->rst.dat[u->rst.ptr - 2] | (u->rst.dat[u->rst.ptr - 3] << 8));
-				mempoke16(u->ram.dat, u->ram.ptr + (Sint8)a, b);
+				poke16(u->ram.dat, u->ram.ptr + (Sint8)a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 3, 0)) {
 					u->rst.error = 1;
@@ -3795,8 +3795,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0xf4: /* LDA2kr */
 			{
 				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
-				u->rst.dat[u->rst.ptr] = mempeek8(u->ram.dat, a);
-				u->rst.dat[u->rst.ptr + 1] = mempeek8(u->ram.dat, a + 1);
+				u->rst.dat[u->rst.ptr] = peek8(u->ram.dat, a);
+				u->rst.dat[u->rst.ptr + 1] = peek8(u->ram.dat, a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 2, 0)) {
 					u->rst.error = 1;
@@ -3814,7 +3814,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint16 a = (u->rst.dat[u->rst.ptr - 1] | (u->rst.dat[u->rst.ptr - 2] << 8));
 				Uint16 b = (u->rst.dat[u->rst.ptr - 3] | (u->rst.dat[u->rst.ptr - 4] << 8));
-				mempoke16(u->ram.dat, a, b);
+				poke16(u->ram.dat, a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 4, 0)) {
 					u->rst.error = 1;
@@ -3826,8 +3826,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0xf6: /* DEI2kr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
-				u->rst.dat[u->rst.ptr] = devpeek8(&u->dev[a >> 4], a);
-				u->rst.dat[u->rst.ptr + 1] = devpeek8(&u->dev[a >> 4], a + 1);
+				u->rst.dat[u->rst.ptr] = devr8(&u->dev[a >> 4], a);
+				u->rst.dat[u->rst.ptr + 1] = devr8(&u->dev[a >> 4], a + 1);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 1, 0)) {
 					u->rst.error = 1;
@@ -3845,7 +3845,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				Uint16 b = (u->rst.dat[u->rst.ptr - 2] | (u->rst.dat[u->rst.ptr - 3] << 8));
-				devpoke16(&u->dev[a >> 4], a, b);
+				devw16(&u->dev[a >> 4], a, b);
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 3, 0)) {
 					u->rst.error = 1;

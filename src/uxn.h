@@ -40,8 +40,8 @@ typedef struct Uxn {
 
 struct Uxn;
 
-void mempoke16(Uint8 *m, Uint16 a, Uint16 b);
-Uint16 mempeek16(Uint8 *m, Uint16 a);
+void poke16(Uint8 *m, Uint16 a, Uint16 b);
+Uint16 peek16(Uint8 *m, Uint16 a);
 
 int uxn_boot(Uxn *c);
 int uxn_eval(Uxn *u, Uint16 vec);

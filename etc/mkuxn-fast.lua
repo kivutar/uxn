@@ -3,7 +3,7 @@ local replacements = {
   op_and16 = '{ Uint8 a = pop8(u->src), b = pop8(u->src), c = pop8(u->src), d = pop8(u->src); push8(u->src, d & b); push8(u->src, c & a); }',
   op_ora16 = '{ Uint8 a = pop8(u->src), b = pop8(u->src), c = pop8(u->src), d = pop8(u->src); push8(u->src, d | b); push8(u->src, c | a); }',
   op_eor16 = '{ Uint8 a = pop8(u->src), b = pop8(u->src), c = pop8(u->src), d = pop8(u->src); push8(u->src, d ^ b); push8(u->src, c ^ a); }',
-  op_lit16 = '{ push8(u->src, mempeek8(u->ram.dat, u->ram.ptr++)); push8(u->src, mempeek8(u->ram.dat, u->ram.ptr++)); }',
+  op_lit16 = '{ push8(u->src, peek8(u->ram.dat, u->ram.ptr++)); push8(u->src, peek8(u->ram.dat, u->ram.ptr++)); }',
   op_swp16 = '{ Uint8 a = pop8(u->src), b = pop8(u->src), c = pop8(u->src), d = pop8(u->src); push8(u->src, b); push8(u->src, a); push8(u->src, d); push8(u->src, c); }',
   op_ovr16 = '{ Uint8 a = pop8(u->src), b = pop8(u->src), c = pop8(u->src), d = pop8(u->src); push8(u->src, d); push8(u->src, c); push8(u->src, b); push8(u->src, a); push8(u->src, d); push8(u->src, c); }',
   op_dup16 = '{ Uint8 a = pop8(u->src), b = pop8(u->src); push8(u->src, b); push8(u->src, a); push8(u->src, b); push8(u->src, a); }',
@@ -295,7 +295,7 @@ See etc/mkuxn-fast.moon for instructions.
     local _continue_0 = false
     repeat
       local l = f:read('*l')
-      if l:match(' push') or l:match('[ *]pop') or l:match('devpeek16') then
+      if l:match(' push') or l:match('[ *]pop') or l:match('devr16') then
         _continue_0 = true
         break
       end
