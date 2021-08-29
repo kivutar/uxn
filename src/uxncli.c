@@ -27,26 +27,16 @@ error(char *msg, const char *err)
 }
 
 static void
-inspect(Uxn *u)
+inspect(Stack *s, char *name)
 {
 	Uint8 x, y;
-	fprintf(stderr, "\nWorking Stack\n");
+	fprintf(stderr, "\n%s\n", name);
 	for(y = 0; y < 0x04; ++y) {
 		for(x = 0; x < 0x08; ++x) {
 			Uint8 p = y * 0x08 + x;
 			fprintf(stderr,
-				p == u->wst.ptr ? "[%02x]" : " %02x ",
-				u->wst.dat[p]);
-		}
-		fprintf(stderr, "\n");
-	}
-	fprintf(stderr, "\nReturn Stack\n");
-	for(y = 0; y < 0x04; ++y) {
-		for(x = 0; x < 0x08; ++x) {
-			Uint8 p = y * 0x08 + x;
-			fprintf(stderr,
-				p == u->rst.ptr ? "[%02x]" : " %02x ",
-				u->rst.dat[p]);
+				p == s->ptr ? "[%02x]" : " %02x ",
+				s->dat[p]);
 		}
 		fprintf(stderr, "\n");
 	}
@@ -66,7 +56,10 @@ system_talk(Device *d, Uint8 b0, Uint8 w)
 		switch(b0) {
 		case 0x2: d->u->wst.ptr = d->dat[0x2]; break;
 		case 0x3: d->u->rst.ptr = d->dat[0x3]; break;
-		case 0xe: inspect(d->u); break;
+		case 0xe:
+			inspect(&d->u->wst, "Working-stack");
+			inspect(&d->u->rst, "Return-stack");
+			break;
 		case 0xf: d->u->ram.ptr = 0x0000; break;
 		}
 	}
