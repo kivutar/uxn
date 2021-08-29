@@ -162,8 +162,6 @@ makemacro(char *name, FILE *f)
 		if(word[0] == '}') break;
 		if(m->len > 64)
 			return error("Macro too large", name);
-		if(slen(word) >= 63)
-			return error("Word too long", name);
 		scpy(word, m->items[m->len++], 64);
 	}
 	return 1;
@@ -306,8 +304,8 @@ pass1(FILE *f)
 	char w[64], scope[64], subw[64];
 	while(fscanf(f, "%63s", w) == 1) {
 		if(skipblock(w, &ccmnt, '(', ')')) continue;
-		if(slen(w) == 63)
-			fprintf(stderr, "Warning: token beginning with \"%s\" is too long\n", w);
+		if(slen(w) >= 63)
+			return error("Pass 1 - Invalid token", w);
 		if(w[0] == '|') {
 			if(!sihx(w + 1))
 				return error("Pass 1 - Invalid padding", w);
