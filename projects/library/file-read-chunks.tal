@@ -1,0 +1,180 @@
+(
+
+# Summary
+
+Reads a file in chunks - perfect for when you have a small buffer or when you
+don't know the file size. Copes with files up to 4,294,967,295 bytes long.
+
+# Code
+
+)
+@file-read-chunks ( func* udata* buf* size* filename* -- func* udata'* buf* size* filename* )
+
+	#0000 DUP2                 ( F* U* B* SZ* FN* OL* OH* / )
+	&resume
+	ROT2 STH2                  ( F* U* B* SZ* OL* OH*     / FN* )
+	ROT2                       ( F* U* B* OL* OH* SZ*     / FN* )
+
+	&loop
+	STH2kr .File/name DEO2     ( F* U* B* OL* OH* SZ*     / FN* )
+	STH2k .File/length DEO2    ( F* U* B* OL* OH*         / FN* SZ* )
+	STH2k .File/offset-hs DEO2 ( F* U* B* OL*             / FN* SZ* OH* )
+	STH2k .File/offset-ls DEO2 ( F* U* B*                 / FN* SZ* OH* OL* )
+	SWP2                       ( F* B* U*                 / FN* SZ* OH* OL* )
+	ROT2k NIP2                 ( F* B* U* B* F*           / FN* SZ* OH* OL* )
+	OVR2 .File/load DEO2       ( F* B* U* B* F*           / FN* SZ* OH* OL* )
+	.File/success DEI2 SWP2    ( F* B* U* B* length* F*   / FN* SZ* OH* OL* )
+	JSR2                       ( F* B* U'* done-up-to*    / FN* SZ* OH* OL* )
+	ROT2 SWP2                  ( F* U'* B* done-up-to*    / FN* SZ* OH* OL* )
+	SUB2k NIP2                 ( F* U'* B* -done-length*  / FN* SZ* OH* OL* )
+	ORAk ,&not-end JCN         ( F* U'* B* -done-length*  / FN* SZ* OH* OL* )
+
+	POP2 POP2r POP2r           ( F* U'* B*                / FN* SZ* )
+	STH2r STH2r                ( F* U'* B* SZ* FN*        / )
+	JMP2r
+
+	&not-end
+	STH2r SWP2                 ( F* U'* B* OL* -done-length* / FN* SZ* OH* )
+	LTH2k JMP INC2r            ( F* U'* B* OL* -done-length* / FN* SZ* OH'* )
+	SUB2                       ( F* U'* B* OL'*              / FN* SZ* OH'* )
+	STH2r STH2r                ( F* U'* B* OL'* OH'* SZ*     / FN* )
+	,&loop JMP
+
+(
+
+# Arguments
+
+* func*     - address of callback routine
+* udata*    - userdata to pass to callback routine
+* buf*      - address of first byte of buffer of file's contents
+* size*     - size in bytes of buffer
+* filename* - address of filename string (zero-terminated)
+
+All of the arguments are shorts (suffixed by asterisks *).
+
+# Callback routine
+
+If you make use of userdata, the signature of the callback routine is:
+)
+	( udata* buf* length* -- udata'* done-up-to* )
+(
+
+* udata* and buf* are as above.
+* length* is the length of the chunk being worked on, which could be less than
+  size* when near the end of the file, and func* is called with zero length* to
+  signify end of file.
+* udata'* is the (potentially) modified userdata, to be passed on to the next
+  callback routine call and returned by file-read-chunks after the last chunk.
+* done-up-to* is the pointer to the first unprocessed byte in the buffer, or
+  buf* + length* if the whole chunk was processed.
+
+If you don't make use of any userdata, feel free to pretend the signature is:
+)
+	( buf* length* -- done-up-to* )
+(
+
+# Userdata
+
+The udata* parameter is not processed by file-read-chunks, except to keep the
+one returned from one callback to the next. The meaning of its contents is up
+to you - it could simply be a short integer or a pointer to a region of memory.
+
+# Operation
+
+file-read-chunks reads a file into the buffer you provide and calls func* with
+JSR2 with each chunk of data, finishing with an empty chunk at end of file.
+
+file-read-chunks loops until done-up-to* equals buf*, equivalent to when no
+data is processed by func*. This could be because processing cannot continue
+without a larger buffer, an error is detected in the data and further
+processing is pointless, or because the end-of-file empty chunk leaves the
+callback routine with no other choice.
+
+# Return values
+
+Since file-read-chunks's input parameters remain available throughout its
+operation, they are not automatically discarded in case they are useful to the
+caller.
+
+# Discussion about done-up-to*
+
+file-read-chunks is extra flexible because it doesn't just give you one chance
+to process each part of the file. Consider a func* routine that splits the
+chunk's contents into words separated by whitespace. If the buffer ends with a
+letter, you can't assume that letter is the end of that word - it's more likely
+to be the in the middle of a word that continues on. If func* returns the
+address of the first letter of the word so far, it will be called again with
+that first letter as the first character of the next chunk's buffer. There's no
+need to remember the earlier part of the word because you get presented with
+the whole lot again to give parsing another try.
+
+That said, func* must make at least _some_ progress through the chunk: if it
+returns the address at the beginning of the buffer, buf*, file-read-chunks will
+terminate and return to its caller. With our word example, a buffer of ten
+bytes will be unable to make progress with words that are ten or more letters
+long. Depending on your application, either make the buffer big enough so that
+progress should always be possible, or find a way to discern this error
+condition from everything working fine.
+
+# Discussion about recursion
+
+Since all of file-read-chunks's data is on the working and return stacks, it
+can be called recursively by code running in the callback routine. For example,
+a code assembler can process the phrase "include library.tal" by calling
+file-read-chunks again with library.tal as the filename. There are a couple of
+caveats:
+
+* the filename string must not reside inside file-read-chunk's working buffer,
+  otherwise it gets overwritten by the file's contents and subsequent chunks
+  will fail to be read properly; and
+
+* if the buffer is shared with the parent file-read-chunk, the callback routine
+  should stop further processing and return with done-up-to* straight away,
+  since the buffer contents have already been replaced by the child
+  file-read-chunk.
+
+# Resuming / starting operation from an arbitrary offset
+
+You can call file-read-chunks/resume instead of the main routine if you'd like
+to provide your own offset shorts rather than beginning at the start of the
+file. The effective signature for file-read-chunks/resume is:
+)
+	( func* udata* buf* size* filename* offset-ls* offset-hs* -- func* udata'* buf* size* filename* )
+(
+
+# Example callback routines
+
+This minimal routine is a no-op that "processes" the entire buffer each time
+and returns a valid done-up-to*:
+
+	@quick-but-useless
+		ADD2 JMP2r
+
+This extremely inefficient callback routine simply prints a single character
+from the buffer and asks for the next one. It operates with a buffer that is
+just one byte long, but for extra inefficiency you can assign a much larger
+buffer and it will ignore everything after the first byte each time. If the
+buffer is zero length it returns done-up-to* == buf* so that file-read-chunks
+returns properly.
+
+	@one-at-a-time
+		#0000 NEQ2 JMP JMP2r
+		LDAk .Console/write DEO
+		INC2 JMP2r
+
+This more efficient example writes the entire chunk to the console before
+requesting the next one by returning. How short can you make a routine that
+does the same?
+
+	@chunk-at-a-time
+		&loop
+		ORAk ,&not-eof JCN
+		POP2 JMP2r
+
+		&not-eof
+		STH2
+		LDAk .Console/write DEO
+		INC2 STH2r #0001 SUB2
+		,&loop JMP
+
+)
