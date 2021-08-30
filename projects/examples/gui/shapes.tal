@@ -1,10 +1,11 @@
 ( GUI Shapes )
 
 %RTN { JMP2r }
-%--  { #0001 SUB2 }
 %8++  { #0008 ADD2 }
 %2** { #10 SFT2 }
 %4** { #20 SFT2 }
+%2// { #01 SFT2 }
+%4// { #02 SFT2 }
 %ABS2 { DUP2 #0f SFT2 EQU #05 JCN #0000 SWP2 SUB2 }
 %LTS2  { #8000 ADD2 SWP2 #8000 ADD2 GTH2 }
 %GTS2  { #8000 ADD2 SWP2 #8000 ADD2 LTH2 }
@@ -12,6 +13,8 @@
 %SIZE-TO-RECT {
 	STH2 STH2 OVR2 STH2r ADD2 OVR2 STH2r ADD2
 } ( x y w h -- x1 y1 x2 y2 )
+
+%WIDTH { #0100 } %HEIGHT { #00a0 }
 
 ( devices )
 
@@ -34,24 +37,37 @@
 |0100
 	
 	( theme ) 
-	#f03f .System/r DEO2 
+	#f0ff .System/r DEO2 
 	#f03c .System/g DEO2 
 	#f03f .System/b DEO2
 
 	( background ) ;checker_icn #03 ;cover-pattern JSR2
 
-	#0010 #0030 #0020 #0020 SIZE-TO-RECT #01 ;line-slow JSR2
-	#0070 #0040 #0010 #01 ;draw-circle JSR2
-	#0038 #0030 #0020 #0020 SIZE-TO-RECT #01 ;line-rect JSR2
-	#0038 #0058 #0020 #0020 SIZE-TO-RECT #01 ;fill-rect JSR2
-	#0010 #0030 #0068 #01 ;line-hor JSR2
-	#0020 #0058 #0078 #01 ;line-ver JSR2
+	.Screen/width DEI2 2// WIDTH 2// SUB2 #0008 ADD2
+	.Screen/height DEI2 2// HEIGHT 2// SUB2 #0008 ADD2
+	WIDTH HEIGHT
+	SIZE-TO-RECT #02 ;fill-rect JSR2
+
+	.Screen/width DEI2 2// WIDTH 2// SUB2
+	.Screen/height DEI2 2// HEIGHT 2// SUB2
+	WIDTH HEIGHT
+	SIZE-TO-RECT #01 ;fill-rect JSR2
+
+	.Screen/width DEI2 2// WIDTH 2// SUB2  #0008 ADD2
+	.Screen/height DEI2 2// HEIGHT 2// SUB2  #0008 ADD2
+	WIDTH #0010 SUB2 HEIGHT #0010 SUB2
+	SIZE-TO-RECT #03 ;line-rect JSR2
+
+	.Screen/width DEI2 2// .Screen/height DEI2 2// WIDTH 4// #02 ;draw-circle JSR2
+
+	#0010 #0030 #0068 #02 ;line-hor JSR2
+	#0020 #0058 #0078 #02 ;line-ver JSR2
 	
 BRK
 
 @line-slow ( x1 y1 x2 y2 color -- )
 	
-	( load ) .color STZ -- .line/y0 STZ2 -- .line/x0 STZ2 .line/y STZ2 .line/x STZ2
+	( load ) .color STZ #0001 SUB2 .line/y0 STZ2 #0001 SUB2 .line/x0 STZ2 .line/y STZ2 .line/x STZ2
 	.line/x0 LDZ2 .line/x LDZ2 SUB2 ABS2 .line/dx STZ2
 	.line/y0 LDZ2 .line/y LDZ2 SUB2 ABS2 #0000 SWP2 SUB2 .line/dy STZ2
 	#ffff #00 .line/x LDZ2 .line/x0 LDZ2 LTS2 2** ADD2 .line/sx STZ2
@@ -77,27 +93,28 @@ RTN
 
 @line-rect ( x1* y1* x2* y2* color -- )
 
-	( load ) .color STZ 
-	STH2k .rect/y2 STZ2 .rect/x2 STZ2 
-	STH2k .rect/y1 STZ2 .rect/x1 STZ2
+	( load ) STH
+	STH2k ,&y2 STR2 ,&x2 STR2 
+	STH2k ,&y1 STR2 ,&x1 STR2
 	STH2r STH2r SWP2
 	&ver
 		( save ) DUP2 .Screen/y DEO2
-		( draw ) .rect/x1 LDZ2 .Screen/x DEO2 .color LDZ DUP .Screen/pixel DEO
-		( draw ) .rect/x2 LDZ2 .Screen/x DEO2 .Screen/pixel DEO
+		( draw ) ,&x1 LDR2 .Screen/x DEO2 STHkr .Screen/pixel DEO
+		( draw ) ,&x2 LDR2 .Screen/x DEO2 STHkr .Screen/pixel DEO
 		( incr ) INC2
 		OVR2 OVR2 GTS2 ,&ver JCN
 	POP2 POP2
-	.rect/x1 LDZ2 .rect/x2 LDZ2 SWP2
+	,&x1 LDR2 ,&x2 LDR2 SWP2
 	&hor
 		( save ) DUP2 .Screen/x DEO2
-		( draw ) .rect/y1 LDZ2 .Screen/y DEO2 .color LDZ DUP .Screen/pixel DEO
-		( draw ) .rect/y2 LDZ2 .Screen/y DEO2 .Screen/pixel DEO
+		( draw ) ,&y1 LDR2 .Screen/y DEO2 STHkr .Screen/pixel DEO
+		( draw ) ,&y2 LDR2 .Screen/y DEO2 STHkr .Screen/pixel DEO
 		( incr ) INC2
 		OVR2 INC2 OVR2 GTS2 ,&hor JCN
-	POP2 POP2
+	POP2 POP2 POPr
 
 RTN
+	&x1 $2 &y1 $2 &x2 $2 &y2 $2 
 
 @fill-rect ( x1* y1* x2* y2* color -- )
 	
@@ -128,14 +145,14 @@ RTN
 	&loop
 		( incr ) .circle/x LDZ2 INC2 .circle/x STZ2
 		.circle/d LDZ2 #0001 LTS2 ,&else JCN
-			( decr ) .circle/y LDZ2 -- .circle/y STZ2
+			( decr ) .circle/y LDZ2 #0001 SUB2 .circle/y STZ2
 			.circle/x LDZ2 .circle/y LDZ2 SUB2 4** .circle/d LDZ2 ADD2 .circle/d STZ2
 			;&end JMP2
 		&else
 			.circle/x LDZ2 4** .circle/d LDZ2 ADD2 .circle/d STZ2
 		&end
 		( draw ) ;&seg JSR2
-		.circle/y LDZ2 .circle/x LDZ2 -- GTS2 ,&loop JCN
+		.circle/y LDZ2 .circle/x LDZ2 #0001 SUB2 GTS2 ,&loop JCN
 	RTN
 	&seg
 		.circle/xc LDZ2 .circle/x LDZ2 ADD2 .Screen/x DEO2 .circle/yc LDZ2 .circle/y LDZ2 ADD2 .Screen/y DEO2 .color LDZ .Screen/pixel DEO
