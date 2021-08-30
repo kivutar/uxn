@@ -12,9 +12,9 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
-#define MODE_SHORT  0x20
+#define MODE_SHORT 0x20
 #define MODE_RETURN 0x40
-#define MODE_KEEP   0x80
+#define MODE_KEEP 0x80
 
 #pragma mark - Operations
 
@@ -125,7 +125,7 @@ uxn_eval(Uxn *u, Uint16 vec)
 			case 0x1c: /* AND */ a = pop(u->src), b = pop(u->src); push(u->src, b & a); break;
 			case 0x1d: /* ORA */ a = pop(u->src), b = pop(u->src); push(u->src, b | a); break;
 			case 0x1e: /* EOR */ a = pop(u->src), b = pop(u->src); push(u->src, b ^ a); break;
-			case 0x1f: /* SFT */ a = pop8(u->src), b = pop(u->src); push(u->src, b >> (a & 0x07) << ((a & 0x70) >> 4)); break;
+			case 0x1f: /* SFT */ a = pop8(u->src), b = pop(u->src); push(u->src, b >> (a & 0x0f) << ((a & 0xf0) >> 4)); break;
 		}
 		if(u->wst.error)
 			return uxn_halt(u, u->wst.error, "Working-stack", instr);
