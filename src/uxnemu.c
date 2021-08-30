@@ -257,7 +257,6 @@ doctrl(Uxn *u, SDL_Event *event, int z)
 	case SDLK_F2: if(z) toggledebug(u); break;
 	case SDLK_F3: if(z) screencapture(); break;
 	}
-
 	/* clang-format on */
 	if(z) {
 		devctrl->dat[2] |= flag;
