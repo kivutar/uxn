@@ -46,13 +46,13 @@ static Uint16 devr16(Device *d, Uint16 a) { return (devr8(d, a) << 8) + devr8(d,
 
 /* Stack */
 static void op_lit(Uxn *u) { push8(u->src, peek8(u->ram.dat, u->ram.ptr++)); }
-static void op_inc(Uxn *u) { Uint8 a = pop8(u->src); push8(u->src, a + 1); }
-static void op_pop(Uxn *u) { pop8(u->src); }
-static void op_dup(Uxn *u) { Uint8 a = pop8(u->src); push8(u->src, a); push8(u->src, a); }
-static void op_nip(Uxn *u) { Uint8 a = pop8(u->src); pop8(u->src); push8(u->src, a); }
-static void op_swp(Uxn *u) { Uint8 a = pop8(u->src), b = pop8(u->src); push8(u->src, a); push8(u->src, b); }
-static void op_ovr(Uxn *u) { Uint8 a = pop8(u->src), b = pop8(u->src); push8(u->src, b); push8(u->src, a); push8(u->src, b); }
-static void op_rot(Uxn *u) { Uint8 a = pop8(u->src), b = pop8(u->src), c = pop8(u->src); push8(u->src, b); push8(u->src, a); push8(u->src, c); }
+static void op_inc(Uxn *u) { Uint16 a = pop(u->src); push(u->src, a + 1); }
+static void op_pop(Uxn *u) { pop(u->src); }
+static void op_dup(Uxn *u) { Uint16 a = pop(u->src); push(u->src, a); push(u->src, a); }
+static void op_nip(Uxn *u) { Uint16 a = pop(u->src); pop(u->src); push(u->src, a); }
+static void op_swp(Uxn *u) { Uint16 a = pop(u->src), b = pop(u->src); push(u->src, a); push(u->src, b); }
+static void op_ovr(Uxn *u) { Uint16 a = pop(u->src), b = pop(u->src); push(u->src, b); push(u->src, a); push(u->src, b); }
+static void op_rot(Uxn *u) { Uint16 a = pop(u->src), b = pop(u->src), c = pop(u->src); push(u->src, b); push(u->src, a); push(u->src, c); }
 /* Logic */
 static void op_equ(Uxn *u) { Uint16 a = pop(u->src), b = pop(u->src); push8(u->src, b == a); }
 static void op_neq(Uxn *u) { Uint16 a = pop(u->src), b = pop(u->src); push8(u->src, b != a); }
@@ -61,12 +61,12 @@ static void op_lth(Uxn *u) { Uint16 a = pop(u->src), b = pop(u->src); push8(u->s
 static void op_jmp(Uxn *u) { Uint8 a = pop8(u->src); u->ram.ptr += (Sint8)a; }
 static void op_jnz(Uxn *u) { Uint8 a = pop8(u->src); if(pop8(u->src)) u->ram.ptr += (Sint8)a; }
 static void op_jsr(Uxn *u) { Uint8 a = pop8(u->src); push16(u->dst, u->ram.ptr); u->ram.ptr += (Sint8)a; }
-static void op_sth(Uxn *u) { Uint8 a = pop8(u->src); push8(u->dst, a); }
+static void op_sth(Uxn *u) { Uint16 a = pop(u->src); push(u->dst, a); }
 /* Memory */
 static void op_ldz(Uxn *u) { Uint8 a = pop8(u->src); push(u->src, peek(u->ram.dat, a)); }
 static void op_stz(Uxn *u) { Uint8 a = pop8(u->src); Uint16 b = pop(u->src); poke(u->ram.dat, a, b); }
-static void op_ldr(Uxn *u) { Uint8 a = pop8(u->src); push8(u->src, peek8(u->ram.dat, u->ram.ptr + (Sint8)a)); }
-static void op_str(Uxn *u) { Uint8 a = pop8(u->src); Uint8 b = pop8(u->src); poke8(u->ram.dat, u->ram.ptr + (Sint8)a, b); }
+static void op_ldr(Uxn *u) { Uint8 a = pop8(u->src); push(u->src, peek(u->ram.dat, u->ram.ptr + (Sint8)a)); }
+static void op_str(Uxn *u) { Uint8 a = pop8(u->src); Uint8 b = pop(u->src); poke(u->ram.dat, u->ram.ptr + (Sint8)a, b); }
 static void op_lda(Uxn *u) { Uint16 a = pop16(u->src); push(u->src, peek(u->ram.dat, a)); }
 static void op_sta(Uxn *u) { Uint16 a = pop16(u->src); Uint16 b = pop(u->src); poke(u->ram.dat, a, b); }
 static void op_dei(Uxn *u) { Uint8 a = pop8(u->src); push8(u->src, devr8(&u->dev[a >> 4], a)); }
@@ -82,21 +82,11 @@ static void op_eor(Uxn *u) { Uint16 a = pop(u->src), b = pop(u->src); push(u->sr
 static void op_sft(Uxn *u) { Uint16 a = pop8(u->src), b = pop(u->src); push(u->src, b >> (a & 0x07) << ((a & 0x70) >> 4)); }
 /* Stack(16-bits) */
 static void op_lit16(Uxn *u) { push16(u->src, peek16(u->ram.dat, u->ram.ptr++)); u->ram.ptr++; }
-static void op_inc16(Uxn *u) { Uint16 a = pop16(u->src); push16(u->src, a + 1); }
-static void op_pop16(Uxn *u) { pop16(u->src); }
-static void op_dup16(Uxn *u) { Uint16 a = pop16(u->src); push16(u->src, a); push16(u->src, a); }
-static void op_nip16(Uxn *u) { Uint16 a = pop16(u->src); pop16(u->src); push16(u->src, a); }
-static void op_swp16(Uxn *u) { Uint16 a = pop16(u->src), b = pop16(u->src); push16(u->src, a); push16(u->src, b); }
-static void op_ovr16(Uxn *u) { Uint16 a = pop16(u->src), b = pop16(u->src); push16(u->src, b); push16(u->src, a); push16(u->src, b); }
-static void op_rot16(Uxn *u) { Uint16 a = pop16(u->src), b = pop16(u->src), c = pop16(u->src); push16(u->src, b); push16(u->src, a); push16(u->src, c); }
 /* Logic(16-bits) */
 static void op_jmp16(Uxn *u) { u->ram.ptr = pop16(u->src); }
 static void op_jnz16(Uxn *u) { Uint16 a = pop16(u->src); if(pop8(u->src)) u->ram.ptr = a; }
 static void op_jsr16(Uxn *u) { push16(u->dst, u->ram.ptr); u->ram.ptr = pop16(u->src); }
-static void op_sth16(Uxn *u) { Uint16 a = pop16(u->src); push16(u->dst, a); }
 /* Memory(16-bits) */
-static void op_ldr16(Uxn *u) { Uint8 a = pop8(u->src); push16(u->src, peek16(u->ram.dat, u->ram.ptr + (Sint8)a)); }
-static void op_str16(Uxn *u) { Uint8 a = pop8(u->src); Uint16 b = pop16(u->src); poke16(u->ram.dat, u->ram.ptr + (Sint8)a, b); }
 static void op_dei16(Uxn *u) { Uint8 a = pop8(u->src); push16(u->src, devr16(&u->dev[a >> 4], a)); }
 static void op_deo16(Uxn *u) { Uint8 a = pop8(u->src); Uint16 b = pop16(u->src); devw16(&u->dev[a >> 4], a, b); }
 
@@ -106,9 +96,9 @@ static void (*ops[])(Uxn *u) = {
 	op_ldz, op_stz, op_ldr, op_str, op_lda, op_sta, op_dei, op_deo,
 	op_add, op_sub, op_mul, op_div, op_and, op_ora, op_eor, op_sft,
 	/* 16-bit */
-	op_lit16, op_inc16, op_pop16, op_dup16, op_nip16, op_swp16, op_ovr16, op_rot16,
-	op_equ, op_neq, op_gth, op_lth, op_jmp16, op_jnz16, op_jsr16, op_sth16, 
-	op_ldz, op_stz, op_ldr16, op_str16, op_lda, op_sta, op_dei16, op_deo16, 
+	op_lit16, op_inc, op_pop, op_dup, op_nip, op_swp, op_ovr, op_rot,
+	op_equ, op_neq, op_gth, op_lth, op_jmp16, op_jnz16, op_jsr16, op_sth, 
+	op_ldz, op_stz, op_ldr, op_str, op_lda, op_sta, op_dei16, op_deo16, 
 	op_add, op_sub, op_mul, op_div, op_and, op_ora, op_eor, op_sft
 };
 
