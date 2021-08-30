@@ -167,22 +167,22 @@ main(int argc, char **argv)
 	if(!load(&u, argv[1]))
 		return error("Load", "Failed");
 
-	devsystem = uxn_port(&u, 0x0, "system", system_talk);
-	devconsole = uxn_port(&u, 0x1, "console", console_talk);
-	uxn_port(&u, 0x2, "empty", nil_talk);
-	uxn_port(&u, 0x3, "empty", nil_talk);
-	uxn_port(&u, 0x4, "empty", nil_talk);
-	uxn_port(&u, 0x5, "empty", nil_talk);
-	uxn_port(&u, 0x6, "empty", nil_talk);
-	uxn_port(&u, 0x7, "empty", nil_talk);
-	uxn_port(&u, 0x8, "empty", nil_talk);
-	uxn_port(&u, 0x9, "empty", nil_talk);
-	uxn_port(&u, 0xa, "file", file_talk);
-	uxn_port(&u, 0xb, "datetime", datetime_talk);
-	uxn_port(&u, 0xc, "empty", nil_talk);
-	uxn_port(&u, 0xd, "empty", nil_talk);
-	uxn_port(&u, 0xe, "empty", nil_talk);
-	uxn_port(&u, 0xf, "empty", nil_talk);
+	/* system   */ devsystem = uxn_port(&u, 0x0, system_talk);
+	/* console  */ devconsole = uxn_port(&u, 0x1, console_talk);
+	/* empty    */ uxn_port(&u, 0x2, nil_talk);
+	/* empty    */ uxn_port(&u, 0x3, nil_talk);
+	/* empty    */ uxn_port(&u, 0x4, nil_talk);
+	/* empty    */ uxn_port(&u, 0x5, nil_talk);
+	/* empty    */ uxn_port(&u, 0x6, nil_talk);
+	/* empty    */ uxn_port(&u, 0x7, nil_talk);
+	/* empty    */ uxn_port(&u, 0x8, nil_talk);
+	/* empty    */ uxn_port(&u, 0x9, nil_talk);
+	/* file     */ uxn_port(&u, 0xa, file_talk);
+	/* datetime */ uxn_port(&u, 0xb, datetime_talk);
+	/* empty    */ uxn_port(&u, 0xc, nil_talk);
+	/* empty    */ uxn_port(&u, 0xd, nil_talk);
+	/* empty    */ uxn_port(&u, 0xe, nil_talk);
+	/* empty    */ uxn_port(&u, 0xf, nil_talk);
 
 	run(&u);
 

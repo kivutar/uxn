@@ -525,24 +525,24 @@ main(int argc, char **argv)
 	if(!init())
 		return error("Init", "Failed to initialize emulator.");
 
-	devsystem = uxn_port(&u, 0x0, "system", system_talk);
-	devconsole = uxn_port(&u, 0x1, "console", console_talk);
-	devscreen = uxn_port(&u, 0x2, "screen", screen_talk);
-	devaudio0 = uxn_port(&u, 0x3, "audio0", audio_talk);
-	uxn_port(&u, 0x4, "audio1", audio_talk);
-	uxn_port(&u, 0x5, "audio2", audio_talk);
-	uxn_port(&u, 0x6, "audio3", audio_talk);
-	uxn_port(&u, 0x7, "---", nil_talk);
-	devctrl = uxn_port(&u, 0x8, "controller", nil_talk);
-	devmouse = uxn_port(&u, 0x9, "mouse", nil_talk);
-	uxn_port(&u, 0xa, "file", file_talk);
-	uxn_port(&u, 0xb, "datetime", datetime_talk);
-	uxn_port(&u, 0xc, "---", nil_talk);
-	uxn_port(&u, 0xd, "---", nil_talk);
-	uxn_port(&u, 0xe, "---", nil_talk);
-	uxn_port(&u, 0xf, "---", nil_talk);
+	/* system   */ devsystem = uxn_port(&u, 0x0, system_talk);
+	/* console  */ devconsole = uxn_port(&u, 0x1, console_talk);
+	/* screen   */ devscreen = uxn_port(&u, 0x2, screen_talk);
+	/* audio0   */ devaudio0 = uxn_port(&u, 0x3, audio_talk);
+	/* audio1   */ uxn_port(&u, 0x4, audio_talk);
+	/* audio2   */ uxn_port(&u, 0x5, audio_talk);
+	/* audio3   */ uxn_port(&u, 0x6, audio_talk);
+	/* unused   */ uxn_port(&u, 0x7, nil_talk);
+	/* control  */ devctrl = uxn_port(&u, 0x8, nil_talk);
+	/* mouse    */ devmouse = uxn_port(&u, 0x9, nil_talk);
+	/* file     */ uxn_port(&u, 0xa, file_talk);
+	/* datetime */ uxn_port(&u, 0xb, datetime_talk);
+	/* unused   */ uxn_port(&u, 0xc, nil_talk);
+	/* unused   */ uxn_port(&u, 0xd, nil_talk);
+	/* unused   */ uxn_port(&u, 0xe, nil_talk);
+	/* unused   */ uxn_port(&u, 0xf, nil_talk);
 
-	/* Write screen size to dev/screen */
+	/* Write screen size */
 	poke16(devscreen->dat, 2, ppu.width);
 	poke16(devscreen->dat, 4, ppu.height);
 

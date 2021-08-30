@@ -46,4 +46,4 @@ Uint16 peek16(Uint8 *m, Uint16 a);
 int uxn_boot(Uxn *c);
 int uxn_eval(Uxn *u, Uint16 vec);
 int uxn_halt(Uxn *u, Uint8 error, char *name, int id);
-Device *uxn_port(Uxn *u, Uint8 id, char *name, void (*talkfn)(Device *, Uint8, Uint8));
+Device *uxn_port(Uxn *u, Uint8 id, void (*talkfn)(Device *, Uint8, Uint8));

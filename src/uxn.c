@@ -41,10 +41,10 @@ static Uint16 devr8(Device *d, Uint8 a) { d->talk(d, a & 0x0f, 0); return d->dat
 static void   warp8(Uxn *u, Uint16 a){ u->ram.ptr += (Sint8)a; }
 static void   pull8(Uxn *u){ push8(u->src, peek8(u->ram.dat, u->ram.ptr++)); }
 /* short mode */
-void          poke16(Uint8 *m, Uint16 a, Uint16 b) { poke8(m, a, b >> 8); poke8(m, a + 1, b); }
-Uint16        peek16(Uint8 *m, Uint16 a) { return (peek8(m, a) << 8) + peek8(m, a + 1); }
 static void   push16(Stack *s, Uint16 a) { push8(s, a >> 8); push8(s, a); }
 static Uint16 pop16(Stack *s) { Uint8 a = pop8(s), b = pop8(s); return a + (b << 8); }
+	   void   poke16(Uint8 *m, Uint16 a, Uint16 b) { poke8(m, a, b >> 8); poke8(m, a + 1, b); }
+	   Uint16 peek16(Uint8 *m, Uint16 a) { return (peek8(m, a) << 8) + peek8(m, a + 1); }
 static void   devw16(Device *d, Uint8 a, Uint16 b) { devw8(d, a, b >> 8); devw8(d, a + 1, b); }
 static Uint16 devr16(Device *d, Uint8 a) { return (devr8(d, a) << 8) + devr8(d, a + 1); }
 static void   warp16(Uxn *u, Uint16 a){ u->ram.ptr = a; }
@@ -148,13 +148,12 @@ uxn_boot(Uxn *u)
 }
 
 Device *
-uxn_port(Uxn *u, Uint8 id, char *name, void (*talkfn)(Device *d, Uint8 b0, Uint8 w))
+uxn_port(Uxn *u, Uint8 id, void (*talkfn)(Device *d, Uint8 b0, Uint8 w))
 {
 	Device *d = &u->dev[id];
 	d->addr = id * 0x10;
 	d->u = u;
 	d->mem = u->ram.dat;
 	d->talk = talkfn;
-	(void)name;
 	return d;
 }
