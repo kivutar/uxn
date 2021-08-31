@@ -346,7 +346,7 @@ file_talk(Device *d, Uint8 b0, Uint8 w)
 		Uint16 result = 0, length = peek16(d->dat, 0xa);
 		long offset = (peek16(d->dat, 0x4) << 16) + peek16(d->dat, 0x6);
 		Uint16 addr = peek16(d->dat, b0 - 1);
-		FILE *f = fopen(name, read ? "r" : (offset ? "a" : "w"));
+		FILE *f = fopen(name, read ? "rb" : (offset ? "ab" : "wb"));
 		if(f) {
 			fprintf(stderr, "%s %s %s #%04x, ", read ? "Loading" : "Saving", name, read ? "to" : "from", addr);
 			if(fseek(f, offset, SEEK_SET) != -1)
