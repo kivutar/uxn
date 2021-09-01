@@ -359,7 +359,7 @@ pass2(FILE *f)
 				return 0;
 			continue;
 		}
-		if(w[1] == '&')
+		if(w[1] == '&' && (w[0] == '.' || w[0] == ',' || w[0] == ';' || w[0] == ':'))
 			scpy(sublabel(subw, scope, w + 2), w + 1, 64);
 		if(!parsetoken(w))
 			return error("Pass 2 - Unknown label", w);
