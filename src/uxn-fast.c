@@ -30,11 +30,11 @@ See etc/mkuxn-fast.moon for instructions.
 /* clang-format off */
 static void   poke8(Uint8 *m, Uint16 a, Uint8 b) { m[a] = b; }
 static Uint8  peek8(Uint8 *m, Uint16 a) { return m[a]; }
-static void   devw8(Device *d, Uint8 a, Uint8 b) { d->dat[a & 0xf] = b; d->talk(d, a & 0x0f, 1); }
+static int    devw8(Device *d, Uint8 a, Uint8 b) { d->dat[a & 0xf] = b; return d->talk(d, a & 0x0f, 1); }
 static Uint8  devr8(Device *d, Uint8 a) { d->talk(d, a & 0x0f, 0); return d->dat[a & 0xf];  }
 void   poke16(Uint8 *m, Uint16 a, Uint16 b) { poke8(m, a, b >> 8); poke8(m, a + 1, b); }
 Uint16 peek16(Uint8 *m, Uint16 a) { return (peek8(m, a) << 8) + peek8(m, a + 1); }
-static void   devw16(Device *d, Uint8 a, Uint16 b) { devw8(d, a, b >> 8); devw8(d, a + 1, b); }
+static int    devw16(Device *d, Uint8 a, Uint16 b) { return devw8(d, a, b >> 8) && devw8(d, a + 1, b); }
 
 /* clang-format on */
 
@@ -379,7 +379,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x17: /* DEO */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2];
-				devw8(&u->dev[a >> 4], a, b);
+				if(!devw8(&u->dev[a >> 4], a, b))
+					return 1;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 2, 0)) {
 					u->wst.error = 1;
@@ -854,7 +855,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
-				devw16(&u->dev[a >> 4], a, b);
+				if(!devw16(&u->dev[a >> 4], a, b))
+					return 1;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 3, 0)) {
 					u->wst.error = 1;
@@ -1310,7 +1312,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x57: /* DEOr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				devw8(&u->dev[a >> 4], a, b);
+				if(!devw8(&u->dev[a >> 4], a, b))
+					return 1;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 2, 0)) {
 					u->rst.error = 1;
@@ -1785,7 +1788,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				Uint16 b = (u->rst.dat[u->rst.ptr - 2] | (u->rst.dat[u->rst.ptr - 3] << 8));
-				devw16(&u->dev[a >> 4], a, b);
+				if(!devw16(&u->dev[a >> 4], a, b))
+					return 1;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 3, 0)) {
 					u->rst.error = 1;
@@ -2273,7 +2277,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0x97: /* DEOk */
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1], b = u->wst.dat[u->wst.ptr - 2];
-				devw8(&u->dev[a >> 4], a, b);
+				if(!devw8(&u->dev[a >> 4], a, b))
+					return 1;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 2, 0)) {
 					u->wst.error = 1;
@@ -2799,7 +2804,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->wst.dat[u->wst.ptr - 1];
 				Uint16 b = (u->wst.dat[u->wst.ptr - 2] | (u->wst.dat[u->wst.ptr - 3] << 8));
-				devw16(&u->dev[a >> 4], a, b);
+				if(!devw16(&u->dev[a >> 4], a, b))
+					return 1;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->wst.ptr < 3, 0)) {
 					u->wst.error = 1;
@@ -3318,7 +3324,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 		case 0xd7: /* DEOkr */
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1], b = u->rst.dat[u->rst.ptr - 2];
-				devw8(&u->dev[a >> 4], a, b);
+				if(!devw8(&u->dev[a >> 4], a, b))
+					return 1;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 2, 0)) {
 					u->rst.error = 1;
@@ -3844,7 +3851,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 			{
 				Uint8 a = u->rst.dat[u->rst.ptr - 1];
 				Uint16 b = (u->rst.dat[u->rst.ptr - 2] | (u->rst.dat[u->rst.ptr - 3] << 8));
-				devw16(&u->dev[a >> 4], a, b);
+				if(!devw16(&u->dev[a >> 4], a, b))
+					return 1;
 #ifndef NO_STACK_CHECKS
 				if(__builtin_expect(u->rst.ptr < 3, 0)) {
 					u->rst.error = 1;
@@ -4029,7 +4037,7 @@ uxn_boot(Uxn *u)
 }
 
 Device *
-uxn_port(Uxn *u, Uint8 id, void (*talkfn)(Device *d, Uint8 b0, Uint8 w))
+uxn_port(Uxn *u, Uint8 id, int (*talkfn)(Device *d, Uint8 b0, Uint8 w))
 {
 	Device *d = &u->dev[id];
 	d->addr = id * 0x10;

@@ -44,7 +44,7 @@ inspect(Stack *s, char *name)
 
 #pragma mark - Devices
 
-static void
+static int
 system_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	if(!w) { /* read */
@@ -60,19 +60,21 @@ system_talk(Device *d, Uint8 b0, Uint8 w)
 			inspect(&d->u->wst, "Working-stack");
 			inspect(&d->u->rst, "Return-stack");
 			break;
-		case 0xf: d->u->ram.ptr = 0x0000; break;
+		case 0xf: return 0;
 		}
 	}
+    return 1;
 }
 
-static void
+static int
 console_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	if(w && b0 > 0x7)
 		write(b0 - 0x7, (char *)&d->dat[b0], 1);
+    return 1;
 }
 
-static void
+static int
 file_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	Uint8 read = b0 == 0xd;
@@ -89,9 +91,10 @@ file_talk(Device *d, Uint8 b0, Uint8 w)
 		}
 		poke16(d->dat, 0x2, result);
 	}
+    return 1;
 }
 
-static void
+static int
 datetime_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	time_t seconds = time(NULL);
@@ -108,14 +111,16 @@ datetime_talk(Device *d, Uint8 b0, Uint8 w)
 	d->dat[0xa] = t->tm_isdst;
 	(void)b0;
 	(void)w;
+    return 1;
 }
 
-static void
+static int
 nil_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	(void)d;
 	(void)b0;
 	(void)w;
+    return 1;
 }
 
 #pragma mark - Generics
@@ -126,7 +131,6 @@ int
 uxn_halt(Uxn *u, Uint8 error, char *name, int id)
 {
 	fprintf(stderr, "Halted: %s %s#%04x, at 0x%04x\n", name, errors[error - 1], id, u->ram.ptr);
-	u->ram.ptr = 0;
 	return 0;
 }
 

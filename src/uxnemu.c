@@ -289,7 +289,7 @@ docolors(Device *d)
 
 #pragma mark - Devices
 
-static void
+static int
 system_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	if(!w) { /* read */
@@ -301,21 +301,23 @@ system_talk(Device *d, Uint8 b0, Uint8 w)
 		switch(b0) {
 		case 0x2: d->u->wst.ptr = d->dat[0x2]; break;
 		case 0x3: d->u->rst.ptr = d->dat[0x3]; break;
-		case 0xf: d->u->ram.ptr = 0x0000; break;
+		case 0xf: return 0;
 		}
 		if(b0 > 0x7 && b0 < 0xe)
 			docolors(d);
 	}
+    return 1;
 }
 
-static void
+static int
 console_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	if(w && b0 > 0x7)
 		write(b0 - 0x7, (char *)&d->dat[b0], 1);
+    return 1;
 }
 
-static void
+static int
 screen_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	if(w && b0 == 0xe) {
@@ -335,9 +337,10 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 			ppu_1bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] >> 0x4 & 0x1, d->dat[0xf] >> 0x5 & 0x1);
 		reqdraw = 1;
 	}
+    return 1;
 }
 
-static void
+static int
 file_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	Uint8 read = b0 == 0xd;
@@ -356,13 +359,14 @@ file_talk(Device *d, Uint8 b0, Uint8 w)
 		}
 		poke16(d->dat, 0x2, result);
 	}
+    return 1;
 }
 
-static void
+static int
 audio_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	Apu *c = &apu[d - devaudio0];
-	if(!audio_id) return;
+	if(!audio_id) return 1;
 	if(!w) {
 		if(b0 == 0x2)
 			poke16(d->dat, 0x2, c->i);
@@ -379,9 +383,10 @@ audio_talk(Device *d, Uint8 b0, Uint8 w)
 		SDL_UnlockAudioDevice(audio_id);
 		SDL_PauseAudioDevice(audio_id, 0);
 	}
+    return 1;
 }
 
-static void
+static int
 datetime_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	time_t seconds = time(NULL);
@@ -398,14 +403,16 @@ datetime_talk(Device *d, Uint8 b0, Uint8 w)
 	d->dat[0xa] = t->tm_isdst;
 	(void)b0;
 	(void)w;
+    return 1;
 }
 
-static void
+static int
 nil_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	(void)d;
 	(void)b0;
 	(void)w;
+    return 1;
 }
 
 #pragma mark - Generics
@@ -435,7 +442,6 @@ int
 uxn_halt(Uxn *u, Uint8 error, char *name, int id)
 {
 	fprintf(stderr, "Halted: %s %s#%04x, at 0x%04x\n", name, errors[error - 1], id, u->ram.ptr);
-	u->ram.ptr = 0;
 	return 0;
 }
 
