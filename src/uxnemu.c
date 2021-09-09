@@ -303,8 +303,7 @@ system_talk(Device *d, Uint8 b0, Uint8 w)
 		case 0x3: d->u->rst.ptr = d->dat[0x3]; break;
 		case 0xf: return 0;
 		}
-		if(b0 > 0x7 && b0 < 0xe)
-			docolors(d);
+		if(b0 > 0x7 && b0 < 0xe) docolors(d);
 	}
 	return 1;
 }
@@ -331,10 +330,16 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 		Uint16 y = peek16(d->dat, 0xa);
 		Uint8 layer = d->dat[0xf] >> 0x6 & 0x1;
 		Uint8 *addr = &d->mem[peek16(d->dat, 0xc)];
-		if(d->dat[0xf] >> 0x7 & 0x1)
+		/* Sprite byte */
+		if(d->dat[0xf] >> 0x7 & 0x6)
 			ppu_2bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] >> 0x4 & 0x1, d->dat[0xf] >> 0x5 & 0x1);
 		else
 			ppu_1bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] >> 0x4 & 0x1, d->dat[0xf] >> 0x5 & 0x1);
+		/* Auto byte */
+		if(d->dat[0x6] & 0x1) poke16(d->dat, 0x8, x + 8);
+		if(d->dat[0x6] & 0x2) poke16(d->dat, 0xa, y + 8);
+		if(d->dat[0x6] & 0x3) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 8);
+		if(d->dat[0x6] & 0x4) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 16);
 		reqdraw = 1;
 	}
 	return 1;
@@ -506,8 +511,7 @@ static int
 load(Uxn *u, char *filepath)
 {
 	FILE *f;
-	if(!(f = fopen(filepath, "rb")))
-		return 0;
+	if(!(f = fopen(filepath, "rb"))) return 0;
 	fread(u->ram.dat + PAGE_PROGRAM, sizeof(u->ram.dat) - PAGE_PROGRAM, 1, f);
 	fprintf(stderr, "Loaded %s\n", filepath);
 	return 1;
@@ -522,14 +526,10 @@ main(int argc, char **argv)
 	audio0_event = SDL_RegisterEvents(POLYPHONY);
 	SDL_CreateThread(stdin_handler, "stdin", NULL);
 
-	if(argc < 2)
-		return error("usage", "uxnemu file.rom");
-	if(!uxn_boot(&u))
-		return error("Boot", "Failed to start uxn.");
-	if(!load(&u, argv[1]))
-		return error("Load", "Failed to open rom.");
-	if(!init())
-		return error("Init", "Failed to initialize emulator.");
+	if(argc < 2) return error("usage", "uxnemu file.rom");
+	if(!uxn_boot(&u)) return error("Boot", "Failed to start uxn.");
+	if(!load(&u, argv[1])) return error("Load", "Failed to open rom.");
+	if(!init()) return error("Init", "Failed to initialize emulator.");
 
 	/* system   */ devsystem = uxn_port(&u, 0x0, system_talk);
 	/* console  */ devconsole = uxn_port(&u, 0x1, console_talk);
