@@ -306,7 +306,7 @@ system_talk(Device *d, Uint8 b0, Uint8 w)
 		if(b0 > 0x7 && b0 < 0xe)
 			docolors(d);
 	}
-    return 1;
+	return 1;
 }
 
 static int
@@ -314,7 +314,7 @@ console_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	if(w && b0 > 0x7)
 		write(b0 - 0x7, (char *)&d->dat[b0], 1);
-    return 1;
+	return 1;
 }
 
 static int
@@ -337,7 +337,7 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 			ppu_1bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] >> 0x4 & 0x1, d->dat[0xf] >> 0x5 & 0x1);
 		reqdraw = 1;
 	}
-    return 1;
+	return 1;
 }
 
 static int
@@ -359,7 +359,7 @@ file_talk(Device *d, Uint8 b0, Uint8 w)
 		}
 		poke16(d->dat, 0x2, result);
 	}
-    return 1;
+	return 1;
 }
 
 static int
@@ -383,7 +383,7 @@ audio_talk(Device *d, Uint8 b0, Uint8 w)
 		SDL_UnlockAudioDevice(audio_id);
 		SDL_PauseAudioDevice(audio_id, 0);
 	}
-    return 1;
+	return 1;
 }
 
 static int
@@ -403,7 +403,7 @@ datetime_talk(Device *d, Uint8 b0, Uint8 w)
 	d->dat[0xa] = t->tm_isdst;
 	(void)b0;
 	(void)w;
-    return 1;
+	return 1;
 }
 
 static int
@@ -412,7 +412,7 @@ nil_talk(Device *d, Uint8 b0, Uint8 w)
 	(void)d;
 	(void)b0;
 	(void)w;
-    return 1;
+	return 1;
 }
 
 #pragma mark - Generics

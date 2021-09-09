@@ -63,7 +63,7 @@ system_talk(Device *d, Uint8 b0, Uint8 w)
 		case 0xf: return 0;
 		}
 	}
-    return 1;
+	return 1;
 }
 
 static int
@@ -71,7 +71,7 @@ console_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	if(w && b0 > 0x7)
 		write(b0 - 0x7, (char *)&d->dat[b0], 1);
-    return 1;
+	return 1;
 }
 
 static int
@@ -91,7 +91,7 @@ file_talk(Device *d, Uint8 b0, Uint8 w)
 		}
 		poke16(d->dat, 0x2, result);
 	}
-    return 1;
+	return 1;
 }
 
 static int
@@ -111,7 +111,7 @@ datetime_talk(Device *d, Uint8 b0, Uint8 w)
 	d->dat[0xa] = t->tm_isdst;
 	(void)b0;
 	(void)w;
-    return 1;
+	return 1;
 }
 
 static int
@@ -120,7 +120,7 @@ nil_talk(Device *d, Uint8 b0, Uint8 w)
 	(void)d;
 	(void)b0;
 	(void)w;
-    return 1;
+	return 1;
 }
 
 #pragma mark - Generics

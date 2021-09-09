@@ -26,7 +26,7 @@ static Uint16 (*pop8)(Stack *s);
 static Uint16 (*pop)(Stack *s);
 static void   (*poke)(Uint8 *m, Uint16 a, Uint16 b);
 static Uint16 (*peek)(Uint8 *m, Uint16 a);
-static void   (*devw)(Device *d, Uint8 a, Uint16 b);
+static int    (*devw)(Device *d, Uint8 a, Uint16 b);
 static Uint16 (*devr)(Device *d, Uint8 a);
 static void   (*warp)(Uxn *u, Uint16 a);
 static void   (*pull)(Uxn *u);

@@ -33,6 +33,7 @@
 
 |00 @System     [ &vector $2 &wst      $1 &rst    $1 &pad   $4 &r      $2 &g     $2 &b      $2 ]
 |20 @Screen     [ &vector $2 &width    $2 &height $2 &pad   $2 &x      $2 &y      $2 &addr  $2 &pixel $1 &sprite $1 ]
+|30 @Audio0     [ &vector $2 &position $2 &output $1 &pad   $3 &adsr   $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
 |80 @Controller [ &vector $2 &button   $1 &key    $1 ]
 |90 @Mouse      [ &vector $2 &x        $2 &y      $2 &state $1 &wheel $1 ]
 
@@ -87,7 +88,7 @@ BRK
 	BANK2 STH2k GET-SIZE ++ STH2r
 	&clear-loop
 		DUP2 #0000 SWP2 STA2
-		#0002 ++ GTH2k ,&clear-loop JCN
+		INC2 INC2 GTH2k ,&clear-loop JCN
 	POP2 POP2
 
 	( run grid )
@@ -112,8 +113,7 @@ BRK
 	&copy-loop
 		DUP2 LDA2k
 		SWP2 #2000 -- STA2
-		#0002 ++ 
-		GTH2k ,&copy-loop JCN
+		INC2 INC2 GTH2k ,&copy-loop JCN
 	POP2 POP2
 
 	;draw-grid JSR2
