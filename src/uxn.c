@@ -127,10 +127,8 @@ uxn_eval(Uxn *u, Uint16 vec)
 			case 0x1e: /* EOR */ a = pop(u->src), b = pop(u->src); push(u->src, b ^ a); break;
 			case 0x1f: /* SFT */ a = pop8(u->src), b = pop(u->src); push(u->src, b >> (a & 0x0f) << ((a & 0xf0) >> 4)); break;
 		}
-		if(u->wst.error)
-			return uxn_halt(u, u->wst.error, "Working-stack", instr);
-		if(u->rst.error)
-			return uxn_halt(u, u->rst.error, "Return-stack", instr);
+		if(u->wst.error) return uxn_halt(u, u->wst.error, "Working-stack", instr);
+		if(u->rst.error) return uxn_halt(u, u->rst.error, "Return-stack", instr);
 	}
 	return 1;
 }

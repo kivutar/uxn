@@ -322,24 +322,25 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 	if(w && b0 == 0xe) {
 		Uint16 x = peek16(d->dat, 0x8);
 		Uint16 y = peek16(d->dat, 0xa);
-		Uint8 layer = d->dat[0xe] >> 4 & 0x1;
-		ppu_pixel(&ppu, layer, x, y, d->dat[0xe] & 0x3);
+		Uint8 layer = d->dat[0xe] & 0x40;
+		ppu_pixel(&ppu, !!layer, x, y, d->dat[0xe] & 0x3);
+		if(d->dat[0x6] & 0x1) poke16(d->dat, 0x8, x + 1); /* auto x+1 */
+		if(d->dat[0x6] & 0x2) poke16(d->dat, 0xa, y + 1); /* auto y+1 */
 		reqdraw = 1;
 	} else if(w && b0 == 0xf) {
 		Uint16 x = peek16(d->dat, 0x8);
 		Uint16 y = peek16(d->dat, 0xa);
-		Uint8 layer = d->dat[0xf] >> 0x6 & 0x1;
+		Uint8 layer = d->dat[0xf] & 0x40;
 		Uint8 *addr = &d->mem[peek16(d->dat, 0xc)];
-		/* Sprite byte */
-		if(d->dat[0xf] >> 0x7 & 0x6)
-			ppu_2bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] >> 0x4 & 0x1, d->dat[0xf] >> 0x5 & 0x1);
-		else
-			ppu_1bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] >> 0x4 & 0x1, d->dat[0xf] >> 0x5 & 0x1);
-		/* Auto byte */
-		if(d->dat[0x6] & 0x1) poke16(d->dat, 0x8, x + 8);
-		if(d->dat[0x6] & 0x2) poke16(d->dat, 0xa, y + 8);
-		if(d->dat[0x6] & 0x3) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 8);
-		if(d->dat[0x6] & 0x4) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 16);
+		if(d->dat[0xf] & 0x80) {
+			ppu_2bpp(&ppu, !!layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
+			if(d->dat[0x6] & 0x3) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 16); /* auto addr+16 */
+		} else {
+			ppu_1bpp(&ppu, !!layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
+			if(d->dat[0x6] & 0x3) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 8); /* auto addr+8 */
+		}
+		if(d->dat[0x6] & 0x1) poke16(d->dat, 0x8, x + 8); /* auto x+8 */
+		if(d->dat[0x6] & 0x2) poke16(d->dat, 0xa, y + 8); /* auto y+8 */
 		reqdraw = 1;
 	}
 	return 1;
