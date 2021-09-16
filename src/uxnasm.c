@@ -46,6 +46,7 @@ static char ops[][4] = {
 	"ADD", "SUB", "MUL", "DIV", "AND", "ORA", "EOR", "SFT"
 };
 
+static int   cpos(char *s, char a){ int i = 0; char c; while((c = s[i++])) if(c == a) return i; return -1; }
 static int   scmp(char *a, char *b, int len) { int i = 0; while(a[i] == b[i]) if(!a[i] || ++i >= len) return 1; return 0; } /* string compare */
 static int   sihx(char *s) { int i = 0; char c; while((c = s[i++])) if(!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f')) return 0; return i > 1; } /* string is hexadecimal */
 static int   shex(char *s) { int n = 0, i = 0; char c; while((c = s[i++])) if(c >= '0' && c <= '9') n = n * 16 + (c - '0'); else if(c >= 'a' && c <= 'f') n = n * 16 + 10 + (c - 'a'); return n; } /* string to num */
@@ -184,6 +185,18 @@ makelabel(char *name)
 }
 
 static int
+addref(Label *l)
+{
+	int pos = cpos(l->name, '/');
+	if(pos != -1) {
+		char root[64];
+		Label *rl = findlabel(scpy(l->name, root, pos));
+		++rl->refs;
+	}
+	return ++l->refs;
+}
+
+static int
 skipblock(char *w, int *cap, char a, char b)
 {
 	if(w[0] == b) {
@@ -231,19 +244,19 @@ parsetoken(char *w)
 		if(l->addr > 0xff)
 			return error("Address is not in zero page", w);
 		pushbyte(l->addr, 1);
-		return ++l->refs;
+		return addref(l);
 	} else if(w[0] == ',' && (l = findlabel(w + 1))) { /* relative */
 		int off = l->addr - p.ptr - 3;
 		if(off < -126 || off > 126)
 			return error("Address is too far", w);
 		pushbyte((Sint8)off, 1);
-		return ++l->refs;
+		return addref(l);
 	} else if(w[0] == ':' && (l = findlabel(w + 1))) { /* raw */
 		pushshort(l->addr, 0);
-		return ++l->refs;
+		return addref(l);
 	} else if(w[0] == ';' && (l = findlabel(w + 1))) { /* absolute */
 		pushshort(l->addr, 1);
-		return ++l->refs;
+		return addref(l);
 	} else if(findopcode(w) || scmp(w, "BRK", 4)) { /* opcode */
 		pushbyte(findopcode(w), 0);
 		return 1;
