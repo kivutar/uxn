@@ -25,14 +25,18 @@ WITH REGARD TO THIS SOFTWARE.
 #define POLYPHONY 4
 #define BENCH 0
 
-static SDL_AudioDeviceID audio_id;
 static SDL_Window *gWindow;
-static SDL_Surface *winSurface, *idxSurface, *rgbaSurface;
+static SDL_Surface *gSurface;
+static SDL_Texture *gTexture;
+static SDL_Renderer *gRenderer;
+static SDL_AudioDeviceID audio_id;
 static SDL_Rect gRect;
+
+/* devices */
 static Ppu ppu;
 static Apu apu[POLYPHONY];
 static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0, *devconsole;
-static Uint32 stdin_event, audio0_event;
+static Uint32 *ppu_screen, stdin_event, audio0_event, palette[4];
 
 static Uint8 zoom = 1, reqdraw = 0;
 
@@ -86,71 +90,79 @@ inspect(Ppu *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
 	Uint8 i, x, y, b;
 	for(i = 0; i < 0x20; ++i) { /* stack */
 		x = ((i % 8) * 3 + 1) * 8, y = (i / 8 + 1) * 8, b = stack[i];
-		ppu_1bpp(p, 1, x, y, font[(b >> 4) & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
-		ppu_1bpp(p, 1, x + 8, y, font[b & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
+		ppu_1bpp(p, ppu.fg, x, y, font[(b >> 4) & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
+		ppu_1bpp(p, ppu.fg, x + 8, y, font[b & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
 	}
 	/* return pointer */
-	ppu_1bpp(p, 1, 0x8, y + 0x10, font[(rptr >> 4) & 0xf], 0x2, 0, 0);
-	ppu_1bpp(p, 1, 0x10, y + 0x10, font[rptr & 0xf], 0x2, 0, 0);
+	ppu_1bpp(p, ppu.fg, 0x8, y + 0x10, font[(rptr >> 4) & 0xf], 0x2, 0, 0);
+	ppu_1bpp(p, ppu.fg, 0x10, y + 0x10, font[rptr & 0xf], 0x2, 0, 0);
 	for(i = 0; i < 0x20; ++i) { /* memory */
 		x = ((i % 8) * 3 + 1) * 8, y = 0x38 + (i / 8 + 1) * 8, b = memory[i];
-		ppu_1bpp(p, 1, x, y, font[(b >> 4) & 0xf], 3, 0, 0);
-		ppu_1bpp(p, 1, x + 8, y, font[b & 0xf], 3, 0, 0);
+		ppu_1bpp(p, ppu.fg, x, y, font[(b >> 4) & 0xf], 3, 0, 0);
+		ppu_1bpp(p, ppu.fg, x + 8, y, font[b & 0xf], 3, 0, 0);
 	}
 	for(x = 0; x < 0x10; ++x) { /* guides */
-		ppu_pixel(p, 1, x, p->height / 2, 2);
-		ppu_pixel(p, 1, p->width - x, p->height / 2, 2);
-		ppu_pixel(p, 1, p->width / 2, p->height - x, 2);
-		ppu_pixel(p, 1, p->width / 2, x, 2);
-		ppu_pixel(p, 1, p->width / 2 - 0x10 / 2 + x, p->height / 2, 2);
-		ppu_pixel(p, 1, p->width / 2, p->height / 2 - 0x10 / 2 + x, 2);
+		ppu_pixel(p, ppu.fg, x, p->height / 2, 2);
+		ppu_pixel(p, ppu.fg, p->width - x, p->height / 2, 2);
+		ppu_pixel(p, ppu.fg, p->width / 2, p->height - x, 2);
+		ppu_pixel(p, ppu.fg, p->width / 2, x, 2);
+		ppu_pixel(p, ppu.fg, p->width / 2 - 0x10 / 2 + x, p->height / 2, 2);
+		ppu_pixel(p, ppu.fg, p->width / 2, p->height / 2 - 0x10 / 2 + x, 2);
 	}
+}
+
+static Uint8
+get_pixel(int x, int y)
+{
+	int ch1, ch2, r = (y % 8) + ((x / 8 + y / 8 * ppu.width / 8) * 16);
+	ch1 = (ppu.fg[r] >> (7 - x % 8)) & 1;
+	ch2 = (ppu.fg[r + 8] >> (7 - x % 8)) & 1;
+	if(!ch1 && !ch2) {
+		ch1 = (ppu.bg[r] >> (7 - x % 8)) & 1;
+		ch2 = (ppu.bg[r + 8] >> (7 - x % 8)) & 1;
+	}
+	return ch1 + (ch2 << 1);
 }
 
 static void
 redraw(Uxn *u)
 {
+	Uint16 x, y;
 	if(devsystem->dat[0xe])
 		inspect(&ppu, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
-	if(rgbaSurface == NULL)
-		SDL_BlitScaled(idxSurface, NULL, winSurface, &gRect);
-	else if(zoom == 1)
-		SDL_BlitSurface(idxSurface, NULL, winSurface, &gRect);
-	else {
-		SDL_BlitSurface(idxSurface, NULL, rgbaSurface, NULL);
-		SDL_BlitScaled(rgbaSurface, NULL, winSurface, &gRect);
-	}
-	SDL_UpdateWindowSurface(gWindow);
+	for(y = 0; y < ppu.height; ++y)
+		for(x = 0; x < ppu.width; ++x)
+			ppu_screen[x + y * ppu.width] = palette[get_pixel(x, y)];
+	SDL_UpdateTexture(gTexture, &gRect, ppu_screen, ppu.width * sizeof(Uint32));
+	SDL_RenderClear(gRenderer);
+	SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
+	SDL_RenderPresent(gRenderer);
 	reqdraw = 0;
 }
 
 static void
-toggledebug(Uxn *u)
+toggle_debug(Uxn *u)
 {
 	devsystem->dat[0xe] = !devsystem->dat[0xe];
 	redraw(u);
 }
 
 static void
-togglezoom(Uxn *u)
+toggle_zoom(Uxn *u)
 {
 	zoom = zoom == 3 ? 1 : zoom + 1;
 	SDL_SetWindowSize(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
-	winSurface = SDL_GetWindowSurface(gWindow);
-	gRect.x = zoom * PAD;
-	gRect.y = zoom * PAD;
-	gRect.w = zoom * ppu.width;
-	gRect.h = zoom * ppu.height;
+	gSurface = SDL_GetWindowSurface(gWindow);
 	redraw(u);
 }
 
 static void
-screencapture(void)
+capture_screen(void)
 {
 	time_t t = time(NULL);
 	char fname[64];
 	strftime(fname, sizeof(fname), "screenshot-%Y%m%d-%H%M%S.bmp", localtime(&t));
-	SDL_SaveBMP(winSurface, fname);
+	SDL_SaveBMP(gSurface, fname);
 	fprintf(stderr, "Saved %s\n", fname);
 }
 
@@ -158,9 +170,11 @@ static void
 quit(void)
 {
 	SDL_UnlockAudioDevice(audio_id);
-	SDL_FreeSurface(winSurface);
-	SDL_FreeSurface(idxSurface);
-	if(rgbaSurface) SDL_FreeSurface(rgbaSurface);
+	SDL_FreeSurface(gSurface);
+	SDL_DestroyTexture(gTexture);
+	gTexture = NULL;
+	SDL_DestroyRenderer(gRenderer);
+	gRenderer = NULL;
 	SDL_DestroyWindow(gWindow);
 	SDL_Quit();
 	exit(0);
@@ -191,27 +205,25 @@ init(void)
 	gWindow = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom, SDL_WINDOW_SHOWN);
 	if(gWindow == NULL)
 		return error("sdl_window", SDL_GetError());
-	winSurface = SDL_GetWindowSurface(gWindow);
-	if(winSurface == NULL)
+	gSurface = SDL_GetWindowSurface(gWindow);
+	if(gSurface == NULL)
 		return error("sdl_surface win", SDL_GetError());
-	idxSurface = SDL_CreateRGBSurfaceWithFormat(0, ppu.width, ppu.height, 8, SDL_PIXELFORMAT_INDEX8);
-	if(idxSurface == NULL || SDL_SetSurfaceBlendMode(idxSurface, SDL_BLENDMODE_NONE))
-		return error("sdl_surface idx", SDL_GetError());
-	if(SDL_MUSTLOCK(idxSurface) == SDL_TRUE)
-		return error("sdl_surface idx", "demands locking");
-	gRect.x = zoom * PAD;
-	gRect.y = zoom * PAD;
-	gRect.w = zoom * ppu.width;
-	gRect.h = 2 * ppu.height; /* force non-1:1 scaling for BlitScaled test */
-	if(SDL_BlitScaled(idxSurface, NULL, winSurface, &gRect) < 0) {
-		rgbaSurface = SDL_CreateRGBSurfaceWithFormat(0, ppu.width, ppu.height, 32, SDL_PIXELFORMAT_RGB24);
-		if(rgbaSurface == NULL || SDL_SetSurfaceBlendMode(rgbaSurface, SDL_BLENDMODE_NONE))
-			return error("sdl_surface rgba", SDL_GetError());
-	}
-	gRect.h = zoom * ppu.height;
-	ppu.pixels = idxSurface->pixels;
+	gRenderer = SDL_CreateRenderer(gWindow, -1, 0);
+	if(gRenderer == NULL)
+		return error("sdl_renderer", SDL_GetError());
+	SDL_RenderSetLogicalSize(gRenderer, ppu.width + PAD * 2, ppu.height + PAD * 2);
+	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
+	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
+		return error("sdl_texture", SDL_GetError());
+	SDL_UpdateTexture(gTexture, NULL, ppu_screen, 4);
+	if(!(ppu_screen = malloc(ppu.width * ppu.height * sizeof(Uint32))))
+		return 0;
 	SDL_StartTextInput();
 	SDL_ShowCursor(SDL_DISABLE);
+	gRect.x = PAD;
+	gRect.y = PAD;
+	gRect.w = ppu.width;
+	gRect.h = ppu.height;
 	return 1;
 }
 
@@ -219,8 +231,8 @@ static void
 domouse(SDL_Event *event)
 {
 	Uint8 flag = 0x00;
-	Uint16 x = clamp(event->motion.x / zoom - PAD, 0, ppu.width - 1);
-	Uint16 y = clamp(event->motion.y / zoom - PAD, 0, ppu.height - 1);
+	Uint16 x = clamp(event->motion.x - PAD, 0, ppu.width - 1);
+	Uint16 y = clamp(event->motion.y - PAD, 0, ppu.height - 1);
 	poke16(devmouse->dat, 0x2, x);
 	poke16(devmouse->dat, 0x4, y);
 	switch(event->button.button) {
@@ -253,9 +265,9 @@ doctrl(Uxn *u, SDL_Event *event, int z)
 	case SDLK_DOWN: flag = 0x20; break;
 	case SDLK_LEFT: flag = 0x40; break;
 	case SDLK_RIGHT: flag = 0x80; break;
-	case SDLK_F1: if(z) togglezoom(u); break;
-	case SDLK_F2: if(z) toggledebug(u); break;
-	case SDLK_F3: if(z) screencapture(); break;
+	case SDLK_F1: if(z) toggle_zoom(u); break;
+	case SDLK_F2: if(z) toggle_debug(u); break;
+	case SDLK_F3: if(z) capture_screen(); break;
 	}
 	/* clang-format on */
 	if(z) {
@@ -268,22 +280,17 @@ doctrl(Uxn *u, SDL_Event *event, int z)
 		devctrl->dat[2] &= ~flag;
 }
 
-static void
-docolors(Device *d)
+void
+update_palette(Uint8 *addr)
 {
-	SDL_Color pal[16];
 	int i;
 	for(i = 0; i < 4; ++i) {
-		pal[i].r = ((d->dat[0x8 + i / 2] >> (!(i % 2) << 2)) & 0x0f) * 0x11;
-		pal[i].g = ((d->dat[0xa + i / 2] >> (!(i % 2) << 2)) & 0x0f) * 0x11;
-		pal[i].b = ((d->dat[0xc + i / 2] >> (!(i % 2) << 2)) & 0x0f) * 0x11;
+		Uint8
+			r = (*(addr + i / 2) >> (!(i % 2) << 2)) & 0x0f,
+			g = (*(addr + 2 + i / 2) >> (!(i % 2) << 2)) & 0x0f,
+			b = (*(addr + 4 + i / 2) >> (!(i % 2) << 2)) & 0x0f;
+		palette[i] = 0xff000000 | (r << 20) | (r << 16) | (g << 12) | (g << 8) | (b << 4) | b;
 	}
-	for(i = 4; i < 16; ++i) {
-		pal[i].r = pal[i / 4].r;
-		pal[i].g = pal[i / 4].g;
-		pal[i].b = pal[i / 4].b;
-	}
-	SDL_SetPaletteColors(idxSurface->format->palette, pal, 0, 16);
 	reqdraw = 1;
 }
 
@@ -303,7 +310,8 @@ system_talk(Device *d, Uint8 b0, Uint8 w)
 		case 0x3: d->u->rst.ptr = d->dat[0x3]; break;
 		case 0xf: return 0;
 		}
-		if(b0 > 0x7 && b0 < 0xe) docolors(d);
+		if(b0 > 0x7 && b0 < 0xe)
+			update_palette(&d->dat[0x8]);
 	}
 	return 1;
 }
@@ -323,7 +331,7 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 		Uint16 x = peek16(d->dat, 0x8);
 		Uint16 y = peek16(d->dat, 0xa);
 		Uint8 layer = d->dat[0xe] & 0x40;
-		ppu_pixel(&ppu, !!layer, x, y, d->dat[0xe] & 0x3);
+		ppu_pixel(&ppu, layer ? ppu.fg : ppu.bg, x, y, d->dat[0xe] & 0x3);
 		if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 1); /* auto x+1 */
 		if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 1); /* auto y+1 */
 		reqdraw = 1;
@@ -333,10 +341,10 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 		Uint8 layer = d->dat[0xf] & 0x40;
 		Uint8 *addr = &d->mem[peek16(d->dat, 0xc)];
 		if(d->dat[0xf] & 0x80) {
-			ppu_2bpp(&ppu, !!layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
+			ppu_2bpp(&ppu, layer ? ppu.fg : ppu.bg, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
 			if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 16); /* auto addr+16 */
 		} else {
-			ppu_1bpp(&ppu, !!layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
+			ppu_1bpp(&ppu, layer ? ppu.fg : ppu.bg, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
 			if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 8); /* auto addr+8 */
 		}
 		if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 8); /* auto x+8 */
@@ -488,7 +496,7 @@ run(Uxn *u)
 				if(event.window.event == SDL_WINDOWEVENT_EXPOSED)
 					redraw(u);
 				else if(event.window.event == SDL_WINDOWEVENT_RESIZED)
-					winSurface = SDL_GetWindowSurface(gWindow);
+					gSurface = SDL_GetWindowSurface(gWindow);
 				break;
 			default:
 				if(event.type == stdin_event) {

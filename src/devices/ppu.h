@@ -19,10 +19,10 @@ typedef unsigned int Uint32;
 
 typedef struct Ppu {
 	Uint16 width, height;
-	Uint8 *pixels;
+	Uint8 *pixels, *bg, *fg;
 } Ppu;
 
 int ppu_init(Ppu *p, Uint8 hor, Uint8 ver);
-void ppu_pixel(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 color);
-void ppu_1bpp(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy);
-void ppu_2bpp(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy);
+void ppu_pixel(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 color);
+void ppu_1bpp(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy);
+void ppu_2bpp(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy);

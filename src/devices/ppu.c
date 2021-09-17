@@ -20,15 +20,23 @@ static Uint8 blending[5][16] = {
 	{1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0}};
 
 void
-ppu_pixel(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 color)
+ppu_pixel(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 color)
 {
-	Uint8 *pixel = &p->pixels[y * p->width + x], shift = layer * 2;
-	if(x < p->width && y < p->height)
-		*pixel = (*pixel & ~(0x3 << shift)) | (color << shift);
+	int row = (y % 8) + ((x / 8 + y / 8 * p->width / 8) * 16), col = x % 8;
+	if(x >= p->width || y >= p->height)
+		return;
+	if(color == 0 || color == 2)
+		layer[row] &= ~(1UL << (7 - col));
+	else
+		layer[row] |= 1UL << (7 - col);
+	if(color == 0 || color == 1)
+		layer[row + 8] &= ~(1UL << (7 - col));
+	else
+		layer[row + 8] |= 1UL << (7 - col);
 }
 
 void
-ppu_1bpp(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
+ppu_1bpp(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
 {
 	Uint16 v, h;
 	for(v = 0; v < 8; v++)
@@ -44,7 +52,7 @@ ppu_1bpp(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Ui
 }
 
 void
-ppu_2bpp(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
+ppu_2bpp(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
 {
 	Uint16 v, h;
 	for(v = 0; v < 8; v++)
@@ -68,5 +76,7 @@ ppu_init(Ppu *p, Uint8 hor, Uint8 ver)
 {
 	p->width = 8 * hor;
 	p->height = 8 * ver;
+	p->bg = malloc(p->width / 4 * p->height * sizeof(Uint8));
+	p->fg = malloc(p->width / 4 * p->height * sizeof(Uint8));
 	return 1;
 }
