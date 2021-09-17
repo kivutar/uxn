@@ -26,7 +26,6 @@ WITH REGARD TO THIS SOFTWARE.
 #define BENCH 0
 
 static SDL_Window *gWindow;
-static SDL_Surface *gSurface;
 static SDL_Texture *gTexture;
 static SDL_Renderer *gRenderer;
 static SDL_AudioDeviceID audio_id;
@@ -152,17 +151,23 @@ toggle_zoom(Uxn *u)
 {
 	zoom = zoom == 3 ? 1 : zoom + 1;
 	SDL_SetWindowSize(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
-	gSurface = SDL_GetWindowSurface(gWindow);
 	redraw(u);
 }
 
 static void
 capture_screen(void)
 {
+	const Uint32 format = SDL_PIXELFORMAT_RGB24;
 	time_t t = time(NULL);
 	char fname[64];
+	int w, h;
+	SDL_Surface *surface;
+	SDL_GetRendererOutputSize(gRenderer, &w, &h);
+	surface = SDL_CreateRGBSurfaceWithFormat(0, w, h, 24, format);
+	SDL_RenderReadPixels(gRenderer, NULL, format, surface->pixels, surface->pitch);
 	strftime(fname, sizeof(fname), "screenshot-%Y%m%d-%H%M%S.bmp", localtime(&t));
-	SDL_SaveBMP(gSurface, fname);
+	SDL_SaveBMP(surface, fname);
+	SDL_FreeSurface(surface);
 	fprintf(stderr, "Saved %s\n", fname);
 }
 
@@ -170,7 +175,6 @@ static void
 quit(void)
 {
 	SDL_UnlockAudioDevice(audio_id);
-	SDL_FreeSurface(gSurface);
 	SDL_DestroyTexture(gTexture);
 	gTexture = NULL;
 	SDL_DestroyRenderer(gRenderer);
@@ -205,9 +209,6 @@ init(void)
 	gWindow = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom, SDL_WINDOW_SHOWN);
 	if(gWindow == NULL)
 		return error("sdl_window", SDL_GetError());
-	gSurface = SDL_GetWindowSurface(gWindow);
-	if(gSurface == NULL)
-		return error("sdl_surface win", SDL_GetError());
 	gRenderer = SDL_CreateRenderer(gWindow, -1, 0);
 	if(gRenderer == NULL)
 		return error("sdl_renderer", SDL_GetError());
@@ -495,8 +496,6 @@ run(Uxn *u)
 			case SDL_WINDOWEVENT:
 				if(event.window.event == SDL_WINDOWEVENT_EXPOSED)
 					redraw(u);
-				else if(event.window.event == SDL_WINDOWEVENT_RESIZED)
-					gSurface = SDL_GetWindowSurface(gWindow);
 				break;
 			default:
 				if(event.type == stdin_event) {
