@@ -216,7 +216,6 @@ init(void)
 	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
 	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
 		return error("sdl_texture", SDL_GetError());
-	SDL_UpdateTexture(gTexture, NULL, ppu_screen, 4);
 	if(!(ppu_screen = malloc(ppu.width * ppu.height * sizeof(Uint32))))
 		return 0;
 	SDL_StartTextInput();
