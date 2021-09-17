@@ -19,7 +19,7 @@ typedef unsigned int Uint32;
 
 typedef struct Ppu {
 	Uint16 width, height;
-	Uint8 *pixels, *bg, *fg;
+	Uint8 *bg, *fg;
 } Ppu;
 
 int ppu_init(Ppu *p, Uint8 hor, Uint8 ver);

@@ -1,9 +1,9 @@
 </$objtype/mkfile
 
 TARG=bin/uxncli bin/uxnasm bin/uxnemu
-USM=`{walk -f projects/ | grep '\.tal$' | grep -v blank.tal}
+USM=`{walk -f projects/ | grep '\.tal$' | grep -v blank.tal | grep -v /library/}
 ROM=${USM:%.tal=%.rom}
-CFLAGS=$CFLAGS -D__plan9__ -DNO_PORTMIDI -I/sys/include/npe -I/sys/include/npe/SDL2
+CFLAGS=$CFLAGS -D__plan9__ -I/sys/include/npe -I/sys/include/npe/SDL2
 HFILES=\
 	/sys/include/npe/stdio.h\
 	src/devices/apu.h\

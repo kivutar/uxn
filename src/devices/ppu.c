@@ -76,7 +76,7 @@ ppu_init(Ppu *p, Uint8 hor, Uint8 ver)
 {
 	p->width = 8 * hor;
 	p->height = 8 * ver;
-	p->bg = malloc(p->width / 4 * p->height * sizeof(Uint8));
-	p->fg = malloc(p->width / 4 * p->height * sizeof(Uint8));
+	p->bg = calloc(1, p->width / 4 * p->height * sizeof(Uint8));
+	p->fg = calloc(1, p->width / 4 * p->height * sizeof(Uint8));
 	return 1;
 }
