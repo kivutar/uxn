@@ -1,0 +1,286 @@
+( a simple calculator )
+
+%+  { ADD } %-   { SUB }              %/   { DIV }
+%<  { LTH } %>   { GTH }  %=  { EQU } %!   { NEQ }
+%++ { ADD2 } %-- { SUB2 }              %// { DIV2 }
+%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
+
+%4/   { #02 SFT }
+%2**  { #10 SFT2 } %2// { #01 SFT2 }
+%8**  { #30 SFT2 } %8// { #03 SFT2 }
+%10** { #40 SFT2 }
+
+%4MOD { #03 AND }
+
+%DEBUG  { ;print-hex/byte JSR2 #0a .Console/write DEO }
+%DEBUG2 { ;print-hex/short JSR2 #0a .Console/write DEO }
+
+%RTN { JMP2r }
+%SWP2? { #01 JCN SWP2 }
+%BRK? { #01 JCN BRK }
+%TOS { #00 SWP }
+
+( devices )
+
+|00 @System     [ &vector $2 &wst      $1 &rst    $1 &pad   $4 &r      $2 &g      $2 &b    $2 &debug  $1 &halt $1 ]
+|10 @Console    [ &vector $2 &read     $1 &pad    $5 &write $1 &error  $1 ]
+|20 @Screen     [ &vector $2 &width    $2 &height $2 &auto  $1 &pad    $1 &x      $2 &y      $2 &addr $2 &pixel  $1 &sprite $1 ]
+|30 @Audio0     [ &vector $2 &position $2 &output $1 &pad   $3 &adsr   $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
+|40 @Audio1     [ &vector $2 &position $2 &output $1 &pad   $3 &adsr   $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
+|50 @Audio2     [ &vector $2 &position $2 &output $1 &pad   $3 &adsr   $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
+|60 @Audio3     [ &vector $2 &position $2 &output $1 &pad   $3 &adsr   $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
+|80 @Controller [ &vector $2 &button   $1 &key    $1 ]
+|90 @Mouse      [ &vector $2 &x        $2 &y      $2 &state $1 &wheel  $1 ]
+|a0 @File       [ &vector $2 &success  $2 &offset-hs $2 &offset-ls $2 &name   $2 &length $2 &load $2 &save   $2 ]
+|b0 @DateTime   [ &year   $2 &month    $1 &day    $1 &hour  $1 &minute $1 &second $1 &dotw $1 &doty   $2 &isdst $1 ]
+
+( variables )
+
+|0000
+
+@center
+	&x $2 &y $2
+@rect
+	&x1 $2 &y1 $2 &x2 $2 &y2 $2
+@pointer
+	&x  $2 &y  $2 &lastx $2 &lasty $2 &state $1
+@keypad-frame
+	&x $2 &y $2 &x2 $2 &y2 $2
+@modpad-frame
+	&x $2 &y $2
+
+( program )
+
+|0100 ( -> )
+
+	( theme ) 
+	#0fef .System/r DEO2 
+	#0fc5 .System/g DEO2 
+	#0f25 .System/b DEO2
+
+	( center )
+	.Screen/width DEI2 2// .center/x STZ2
+	.Screen/height DEI2 2// .center/y STZ2
+
+	.center/x LDZ2 #0028 -- 
+	DUP2 .keypad-frame/x STZ2
+		#0040 ++ .keypad-frame/x2 STZ2
+	.center/y LDZ2 #0020 -- 
+	DUP2 .keypad-frame/y STZ2
+		#0040 ++ .keypad-frame/y2 STZ2
+
+	.keypad-frame/x LDZ2 #0040 ++ .modpad-frame/x STZ2
+	.keypad-frame/y LDZ2 .modpad-frame/y STZ2
+
+	;on-mouse .Mouse/vector DEO2
+
+	;redraw JSR2
+
+BRK
+
+@on-mouse ( -> )
+
+	;pointer_icn .Screen/addr DEO2
+	( clear last cursor )
+	.pointer/x LDZ2 .Screen/x DEO2
+	.pointer/y LDZ2 .Screen/y DEO2
+	#40 .Screen/sprite DEO
+
+	( record pointer positions )
+	.Mouse/x DEI2 .pointer/x STZ2 
+	.Mouse/y DEI2 .pointer/y STZ2
+
+	( draw new cursor )
+	.pointer/x LDZ2 .Screen/x DEO2
+	.pointer/y LDZ2 .Screen/y DEO2
+	#41 .Mouse/state DEI #01 = + .Screen/sprite DEO
+
+	.Mouse/state DEI BRK?
+
+	.Mouse/x DEI2 
+	.Mouse/y DEI2 
+	.keypad-frame 
+		;within-rect JSR2 ;click-keypad JCN2
+
+BRK
+
+@click-keypad ( -> )
+
+	#00 .Mouse/state DEO
+	#aa DEBUG
+
+BRK
+
+@redraw ( -- )
+
+	;draw-keypad JSR2
+	;draw-modpad JSR2
+
+RTN
+
+@draw-keypad ( -- )
+
+	( auto x addr ) #05 .Screen/auto DEO
+	#10 #00
+	&loop
+		( color ) DUP TOS ;keypad/color ++ LDA STH
+		( layout ) DUP TOS ;keypad/layout ++ LDA 
+			( layout addr ) TOS 8** ;font-hex ++ STH2
+		( x ) DUP 4MOD TOS 10** STH2
+		( y ) DUP 4/ TOS 10**
+		( origin-x ) STH2r .keypad-frame/x LDZ2 ++ SWP2 
+		( origin-y ) .keypad-frame/y LDZ2 ++
+			STH2r STHr ;draw-key JSR2
+		INC GTHk ,&loop JCN
+	POP2
+	( auto none ) #00 .Screen/auto DEO
+
+RTN
+
+@draw-modpad ( -- )
+
+	( auto x addr ) #05 .Screen/auto DEO
+	#04 #00
+	&loop
+		( color ) DUP TOS ;modpad/color ++ LDA STH
+		( layout ) DUP TOS 8** ;mod-icns ++ STH2
+		( x ) #0000 STH2
+		( y ) DUP TOS 10**
+		( origin-x ) STH2r .modpad-frame/x LDZ2 ++ SWP2 
+		( origin-y ) .modpad-frame/y LDZ2 ++
+			STH2r STHr ;draw-key JSR2
+		INC GTHk ,&loop JCN
+	POP2
+	( auto none ) #00 .Screen/auto DEO
+
+RTN
+
+@draw-key ( x* y* glyph* color -- )
+
+	( frame )
+	STH STH2 ROTr
+	.Screen/y DEO2
+	.Screen/x DEO2
+	;key-icns/bg .Screen/addr DEO2
+	STHkr .Screen/sprite DEO
+	STHkr .Screen/sprite DEO
+	.Screen/x DEI2 #0010 -- .Screen/x DEO2
+	.Screen/y DEI2 #0008 ++ .Screen/y DEO2
+	STHkr .Screen/sprite DEO
+	STHkr .Screen/sprite DEO
+	( glyph )
+	ROTr ROTr STH2r .Screen/addr DEO2
+	.Screen/x DEI2 #000c -- .Screen/x DEO2
+	.Screen/y DEI2 #0005 -- .Screen/y DEO2
+	STHr #04 MUL  .Screen/sprite DEO
+
+RTN
+
+@within-rect ( x* y* rect -- flag )
+	
+	STH
+	( y < rect.y1 ) DUP2 STHkr #02 ADD LDZ2 LTH2 ,&skip JCN
+	( y > rect.y2 ) DUP2 STHkr #06 ADD LDZ2 GTH2 ,&skip JCN
+	SWP2
+	( x < rect.x1 ) DUP2 STHkr LDZ2 LTH2 ,&skip JCN
+	( x > rect.x2 ) DUP2 STHkr #04 ADD LDZ2 GTH2 ,&skip JCN
+	POP2 POP2 POPr
+	#01 
+RTN
+	&skip
+	POP2 POP2 POPr
+	#00
+
+RTN
+
+@line-rect ( rect color -- )
+
+	STH STH
+	( y2 ) STHkr #06 + LDZ2
+	( y1 ) STHkr #02 + LDZ2 #0001 -- ( flip sign ) GTH2k SWP2?
+	&ver
+		( save ) DUP2 .Screen/y DEO2
+		( x1 ) STHkr LDZ2 #0001 -- .Screen/x DEO2 
+		OVRr STHr .Screen/pixel DEO
+		( x2 ) STHkr #04 + LDZ2 .Screen/x DEO2 
+		OVRr STHr .Screen/pixel DEO
+		( incr )
+		INC2 GTH2k ,&ver JCN
+	POP2
+	( x2 ) STHkr #04 + LDZ2
+	( x1 ) STHkr LDZ2 #0001 -- ( flip sign ) GTH2k SWP2?
+	&hor
+		( save ) DUP2 .Screen/x DEO2
+		( y1 ) STHkr #02 + LDZ2 #0001 -- .Screen/y DEO2 
+		OVRr STHr .Screen/pixel DEO
+		( y2 ) STHkr #06 + LDZ2 .Screen/y DEO2 
+		OVRr STHr .Screen/pixel DEO
+		( incr )
+		INC2 GTH2k ,&hor JCN
+	POP2
+	POPr 
+	.Screen/x DEO2
+	.Screen/y DEO2 
+	STHr .Screen/pixel DEO
+
+RTN
+
+@print-hex ( value* -- )
+	
+	&short ( value* -- )
+		SWP ,&echo JSR 
+	&byte ( value -- )
+		,&echo JSR
+	RTN
+
+	&echo ( value -- )
+	STHk #04 SFT ,&parse JSR .Console/write DEO
+	STHr #0f AND ,&parse JSR .Console/write DEO
+	RTN
+	&parse ( value -- char )
+		DUP #09 GTH ,&above JCN #30 + RTN &above #09 - #60 + RTN
+
+RTN
+
+@keypad
+	&layout
+		0708 090f
+		0405 060e
+		0102 030d
+		000a 0b0c
+	&color
+		0101 0102
+		0101 0102
+		0101 0102
+		0102 0202
+
+@modpad
+	&color
+		0303 0303
+		0303 0303
+
+@font-hex
+	007c 8282 8282 827c 0030 1010 1010 1010
+	007c 8202 7c80 80fe 007c 8202 1c02 827c
+	000c 1424 4484 fe04 00fe 8080 7c02 827c
+	007c 8280 fc82 827c 007c 8202 1e02 0202
+	007c 8282 7c82 827c 007c 8282 7e02 827c
+	007c 8202 7e82 827e 00fc 8282 fc82 82fc
+	007c 8280 8080 827c 00fc 8282 8282 82fc
+	007c 8280 f080 827c 007c 8280 f080 8080
+
+@mod-icns
+	0010 1010 fe10 1010
+	0000 0000 fe00 0000
+	0010 5428 c628 5410
+	0010 0000 fe00 0010
+
+@key-icns
+	&bg
+		3f7f ffff ffff ffff
+		f8fc fefe fefe fefe
+		ffff ffff ff7f 3f00
+		fefe fefe fefc f800
+
+@pointer_icn
+	80c0 e0f0 f8e0 1000
