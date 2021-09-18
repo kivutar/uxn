@@ -187,7 +187,6 @@ quit(void)
 static int
 init(void)
 {
-	int i;
 	SDL_AudioSpec as;
 	SDL_zero(as);
 	as.freq = SAMPLE_FREQUENCY;
@@ -217,10 +216,8 @@ init(void)
 	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
 	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
 		return error("sdl_texture", SDL_GetError());
-	if(!(ppu_screen = malloc(ppu.width * ppu.height * sizeof(Uint32))))
+	if(!(ppu_screen = calloc(1, ppu.width * ppu.height * sizeof(Uint32))))
 		return 0;
-	for(i = ppu.width + ppu.height + PAD * 4 - 1; i >= 0; --i)
-		ppu_screen[i] = 0;
 	SDL_UpdateTexture(gTexture, NULL, ppu_screen, sizeof(Uint32));
 	SDL_StartTextInput();
 	SDL_ShowCursor(SDL_DISABLE);
