@@ -6,9 +6,11 @@
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
 %4/   { #02 SFT }
+%4* { #20 SFT }
 %2**  { #10 SFT2 } %2// { #01 SFT2 }
+%4** { #20 SFT2 }
 %8**  { #30 SFT2 } %8// { #03 SFT2 }
-%10** { #40 SFT2 }
+%10** { #40 SFT2 } %10// { #04 SFT2 }
 
 %4MOD { #03 AND }
 
@@ -38,6 +40,8 @@
 
 |0000
 
+@input
+	&length $1 &value $2
 @center
 	&x $2 &y $2
 @rect
@@ -106,15 +110,42 @@ BRK
 
 @click-keypad ( -> )
 
-	#00 .Mouse/state DEO
-	#aa DEBUG
+	( get key )
+	.Mouse/x DEI2 .keypad-frame/x LDZ2 -- 10// 4MOD
+	.Mouse/y DEI2 .keypad-frame/y LDZ2 -- 10// 4**
+	++ ;keypad/layout ++ LDA ;push-key JSR2
+
+	( release mouse ) #00 .Mouse/state DEO
 
 BRK
+
+@push-key ( key -- )
+
+	TOS .input/value LDZ2 #40 SFT2 ++ .input/value STZ2
+	.input/length LDZ INC .input/length STZ
+	;draw-value JSR2
+
+RTN
 
 @redraw ( -- )
 
 	;draw-keypad JSR2
 	;draw-modpad JSR2
+	;draw-value JSR2
+
+RTN
+
+@draw-value ( -- )
+
+	.center/y LDZ2 #0030 -- .Screen/y DEO2
+	#04 #00
+	&loop
+		( x ) DUP TOS 8** .center/x LDZ2 SWP2 -- .Screen/x DEO2
+		( value ) STHk .input/value LDZ2 STHr 4* SFT2 #000f AND2
+		( value glyph ) 8** ;font-hex ++ .Screen/addr DEO2
+		#01 .Screen/sprite DEO
+		INC GTHk ,&loop JCN
+	POP2
 
 RTN
 
