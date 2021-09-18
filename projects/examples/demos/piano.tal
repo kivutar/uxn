@@ -54,6 +54,9 @@
 	;on-mouse   .Mouse/vector DEO2
 	;on-message .Console/vector DEO2
 
+	#0160 .Screen/width DEO2
+	#0100 .Screen/height DEO2
+
 	( find center )
 	.Screen/width DEI2 2// .center/x STZ2
 	.Screen/height DEI2 2// .center/y STZ2

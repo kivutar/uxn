@@ -78,5 +78,15 @@ ppu_init(Ppu *p, Uint8 hor, Uint8 ver)
 	p->height = 8 * ver;
 	p->bg = calloc(1, p->width / 4 * p->height * sizeof(Uint8));
 	p->fg = calloc(1, p->width / 4 * p->height * sizeof(Uint8));
-	return 1;
+	return p->bg && p->fg;
+}
+
+int
+ppu_resize(Ppu *p, Uint8 hor, Uint8 ver)
+{
+	p->width = 8 * hor;
+	p->height = 8 * ver;
+	p->bg = realloc(p->bg, p->width / 4 * p->height * sizeof(Uint8));
+	p->fg = realloc(p->fg, p->width / 4 * p->height * sizeof(Uint8));
+	return p->bg && p->fg;
 }

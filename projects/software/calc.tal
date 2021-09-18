@@ -62,6 +62,9 @@
 	#0fc5 .System/g DEO2 
 	#0f25 .System/b DEO2
 
+	#0100 .Screen/width DEO2
+	#0160 .Screen/height DEO2
+
 	( center )
 	.Screen/width DEI2 2// .center/x STZ2
 	.Screen/height DEI2 2// .center/y STZ2

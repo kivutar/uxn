@@ -298,6 +298,21 @@ update_palette(Uint8 *addr)
 	reqdraw = 1;
 }
 
+void
+set_size(Uxn *u, Uint16 width, Uint16 height)
+{
+	ppu_resize(&ppu, width / 8, height / 8);
+	gRect.w = ppu.width;
+	gRect.h = ppu.height;
+	if(!(ppu_screen = realloc(ppu_screen, ppu.width * ppu.height * sizeof(Uint32))))
+		return;
+	SDL_DestroyTexture(gTexture);
+	SDL_RenderSetLogicalSize(gRenderer, ppu.width + PAD * 2, ppu.height + PAD * 2);
+	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
+	SDL_SetWindowSize(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
+	redraw(u);
+}
+
 #pragma mark - Devices
 
 static int
@@ -331,7 +346,13 @@ console_talk(Device *d, Uint8 b0, Uint8 w)
 static int
 screen_talk(Device *d, Uint8 b0, Uint8 w)
 {
-	if(w && b0 == 0xe) {
+	if(!w)
+		return 1;
+	if(b0 == 0x3)
+		set_size(d->u, peek16(d->dat, 0x2), ppu.height);
+	else if(b0 == 0x5)
+		set_size(d->u, ppu.width, peek16(d->dat, 0x4));
+	else if(b0 == 0xe) {
 		Uint16 x = peek16(d->dat, 0x8);
 		Uint16 y = peek16(d->dat, 0xa);
 		Uint8 layer = d->dat[0xe] & 0x40;
@@ -339,7 +360,7 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 		if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 1); /* auto x+1 */
 		if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 1); /* auto y+1 */
 		reqdraw = 1;
-	} else if(w && b0 == 0xf) {
+	} else if(b0 == 0xf) {
 		Uint16 x = peek16(d->dat, 0x8);
 		Uint16 y = peek16(d->dat, 0xa);
 		Uint8 layer = d->dat[0xf] & 0x40;
