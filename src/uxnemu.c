@@ -351,11 +351,8 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 		}
 	else
 		switch(b0) {
-		case 0x3:
-			set_size(peek16(d->dat, 0x2), ppu.height);
-			break;
 		case 0x5:
-			set_size(ppu.width, peek16(d->dat, 0x4));
+			set_size(peek16(d->dat, 0x2), peek16(d->dat, 0x4));
 			break;
 		case 0xe: {
 			Uint16 x = peek16(d->dat, 0x8);
