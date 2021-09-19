@@ -31,54 +31,63 @@ ppu_clear(Ppu *p)
 	}
 }
 
-void
+int
 ppu_pixel(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 color)
 {
-	int row = (y % 8) + ((x / 8 + y / 8 * p->width / 8) * 16), col = x % 8;
+	int row = (y % 8) + ((x / 8 + y / 8 * p->width / 8) * 16), col = x % 8, ret;
+	Uint8 w;
 	if(x >= p->width || y >= p->height)
-		return;
+		return 0;
+	w = layer[row];
 	if(color == 0 || color == 2)
 		layer[row] &= ~(1UL << (7 - col));
 	else
 		layer[row] |= 1UL << (7 - col);
+	ret = w ^ layer[row];
+	w = layer[row + 8];
 	if(color == 0 || color == 1)
 		layer[row + 8] &= ~(1UL << (7 - col));
 	else
 		layer[row + 8] |= 1UL << (7 - col);
+	return ret | (w ^ layer[row + 8]);
 }
 
-void
+int
 ppu_1bpp(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
 {
 	Uint16 v, h;
+	int ret = 0;
 	for(v = 0; v < 8; v++)
 		for(h = 0; h < 8; h++) {
 			Uint8 ch1 = (sprite[v] >> (7 - h)) & 0x1;
 			if(ch1 || blending[4][color])
-				ppu_pixel(p,
+				ret |= ppu_pixel(p,
 					layer,
 					x + (flipx ? 7 - h : h),
 					y + (flipy ? 7 - v : v),
 					blending[ch1][color]);
 		}
+	return ret;
 }
 
-void
+int
 ppu_2bpp(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
 {
 	Uint16 v, h;
+	int ret = 0;
 	for(v = 0; v < 8; v++)
 		for(h = 0; h < 8; h++) {
 			Uint8 ch1 = ((sprite[v] >> (7 - h)) & 0x1);
 			Uint8 ch2 = ((sprite[v + 8] >> (7 - h)) & 0x1);
 			Uint8 ch = ch1 + ch2 * 2;
 			if(ch || blending[4][color])
-				ppu_pixel(p,
+				ret |= ppu_pixel(p,
 					layer,
 					x + (flipx ? 7 - h : h),
 					y + (flipy ? 7 - v : v),
 					blending[ch][color]);
 		}
+	return ret;
 }
 
 /* output */
