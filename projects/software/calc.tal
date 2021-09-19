@@ -52,6 +52,8 @@
 	&x $2 &y $2 &x2 $2 &y2 $2
 @modpad-frame
 	&x $2 &y $2
+@input-frame
+	&x $2 &y $2
 
 ( program )
 
@@ -62,7 +64,7 @@
 	#0fc5 .System/g DEO2 
 	#0f25 .System/b DEO2
 
-	#0100 .Screen/width DEO2
+	#0120 .Screen/width DEO2
 	#0160 .Screen/height DEO2
 
 	( center )
@@ -79,6 +81,9 @@
 	.keypad-frame/x LDZ2 #0040 ++ .modpad-frame/x STZ2
 	.keypad-frame/y LDZ2 .modpad-frame/y STZ2
 
+	.center/x LDZ2 #0010 -- .input-frame/x STZ2
+	.center/y LDZ2 #0030 -- .input-frame/y STZ2
+
 	;on-mouse .Mouse/vector DEO2
 
 	;redraw JSR2
@@ -87,7 +92,7 @@ BRK
 
 @on-mouse ( -> )
 
-	;pointer_icn .Screen/addr DEO2
+	;pointer-icn .Screen/addr DEO2
 	( clear last cursor )
 	.pointer/x LDZ2 .Screen/x DEO2
 	.pointer/y LDZ2 .Screen/y DEO2
@@ -126,7 +131,7 @@ BRK
 
 	TOS .input/value LDZ2 #40 SFT2 ++ .input/value STZ2
 	.input/length LDZ INC .input/length STZ
-	;draw-value JSR2
+	;draw-input JSR2
 
 RTN
 
@@ -134,27 +139,49 @@ RTN
 
 	;draw-keypad JSR2
 	;draw-modpad JSR2
-	;draw-value JSR2
+	;draw-input JSR2
 
 RTN
 
-@draw-value ( -- )
+@draw-input ( -- )
 
-	.center/y LDZ2 #0030 -- .Screen/y DEO2
+	.input-frame/y LDZ2 #0002 ++ .Screen/y DEO2
 	#04 #00
 	&loop
-		( x ) DUP TOS 8** .center/x LDZ2 SWP2 -- .Screen/x DEO2
+		( x ) DUP TOS 8** .input-frame/x LDZ2 SWP2 -- .Screen/x DEO2
 		( value ) STHk .input/value LDZ2 STHr 4* SFT2 #000f AND2
 		( value glyph ) 8** ;font-hex ++ .Screen/addr DEO2
-		#01 .Screen/sprite DEO
+		( color ) DUP INC .input/value LDZ2 ;get-length JSR2 >
+		#01 + .Screen/sprite DEO
 		INC GTHk ,&loop JCN
 	POP2
+
+	( controls )
+	.input-frame/x LDZ2 #0018 ++
+	.input-frame/y LDZ2
+	;stack-icns/push 
+	;key-icns/outline #01
+		;draw-key JSR2
+
+	.input-frame/x LDZ2 #0028 ++
+	.input-frame/y LDZ2
+	;stack-icns/pop 
+	;key-icns/outline #02
+		;draw-key JSR2
+
+RTN
+
+@get-length ( short* -- length )
+
+	DUP2 #0fff << ,&no4 JCN POP2 #04 RTN &no4
+	DUP2 #00ff << ,&no3 JCN POP2 #03 RTN &no3
+	DUP2 #000f << ,&no2 JCN POP2 #02 RTN &no2
+	#0000 !!
 
 RTN
 
 @draw-keypad ( -- )
 
-	( auto x addr ) #05 .Screen/auto DEO
 	#10 #00
 	&loop
 		( color ) DUP TOS ;keypad/color ++ LDA STH
@@ -164,16 +191,14 @@ RTN
 		( y ) DUP 4/ TOS 10**
 		( origin-x ) STH2r .keypad-frame/x LDZ2 ++ SWP2 
 		( origin-y ) .keypad-frame/y LDZ2 ++
-			STH2r STHr ;draw-key JSR2
+			STH2r ;key-icns/full STHr ;draw-key JSR2
 		INC GTHk ,&loop JCN
 	POP2
-	( auto none ) #00 .Screen/auto DEO
 
 RTN
 
 @draw-modpad ( -- )
 
-	( auto x addr ) #05 .Screen/auto DEO
 	#04 #00
 	&loop
 		( color ) DUP TOS ;modpad/color ++ LDA STH
@@ -182,20 +207,21 @@ RTN
 		( y ) DUP TOS 10**
 		( origin-x ) STH2r .modpad-frame/x LDZ2 ++ SWP2 
 		( origin-y ) .modpad-frame/y LDZ2 ++
-			STH2r STHr ;draw-key JSR2
+			STH2r ;key-icns/full STHr ;draw-key JSR2
 		INC GTHk ,&loop JCN
 	POP2
-	( auto none ) #00 .Screen/auto DEO
 
 RTN
 
-@draw-key ( x* y* glyph* color -- )
+@draw-key ( x* y* glyph* style* color -- )
 
+	( auto x addr ) #05 .Screen/auto DEO
 	( frame )
-	STH STH2 ROTr
+	STH 
+	( style ) .Screen/addr DEO2 
+	STH2 ROTr
 	.Screen/y DEO2
 	.Screen/x DEO2
-	;key-icns/bg .Screen/addr DEO2
 	STHkr .Screen/sprite DEO
 	STHkr .Screen/sprite DEO
 	.Screen/x DEI2 #0010 -- .Screen/x DEO2
@@ -207,6 +233,7 @@ RTN
 	.Screen/x DEI2 #000c -- .Screen/x DEO2
 	.Screen/y DEI2 #0005 -- .Screen/y DEO2
 	STHr #04 MUL  .Screen/sprite DEO
+	( auto none ) #00 .Screen/auto DEO
 
 RTN
 
@@ -310,11 +337,32 @@ RTN
 	0010 0000 fe00 0010
 
 @key-icns
-	&bg
+	&full
 		3f7f ffff ffff ffff
 		f8fc fefe fefe fefe
 		ffff ffff ff7f 3f00
 		fefe fefe fefc f800
+	&outline
+		3f40 8080 8080 8080
+		f804 0202 0202 0202
+		8080 8080 8040 3f00
+		0202 0202 0204 f800
 
-@pointer_icn
+@stack-icns
+	&push
+		ffff ffef d7bb ffff
+	&pop
+		ffff efc7 83c7 efff
+
+@input-icn
+	3f40 8080 8080 8080
+	ff00 0000 0000 0000
+	ff00 0000 0000 0000
+	f804 0202 0202 0202
+	8080 8080 8040 3f00
+	0000 0000 0000 ff00
+	0000 0000 0000 ff00
+	0202 0202 0204 f800
+
+@pointer-icn
 	80c0 e0f0 f8e0 1000
