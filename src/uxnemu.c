@@ -296,8 +296,13 @@ update_palette(Uint8 *addr)
 }
 
 void
-set_size(Uxn *u, Uint16 width, Uint16 height)
+set_size(Uint16 width, Uint16 height)
 {
+	int i;
+	/* clear */
+	for(i = 0; i < ppu.height * ppu.width; ++i)
+		ppu_screen[i] = palette[0];
+	/* resize */
 	ppu_resize(&ppu, width / 8, height / 8);
 	gRect.w = ppu.width;
 	gRect.h = ppu.height;
@@ -307,7 +312,7 @@ set_size(Uxn *u, Uint16 width, Uint16 height)
 	SDL_RenderSetLogicalSize(gRenderer, ppu.width + PAD * 2, ppu.height + PAD * 2);
 	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
 	SDL_SetWindowSize(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
-	redraw(u);
+	reqdraw = 1;
 }
 
 #pragma mark - Devices
@@ -346,9 +351,9 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 	if(!w)
 		return 1;
 	if(b0 == 0x3)
-		set_size(d->u, peek16(d->dat, 0x2), ppu.height);
+		set_size(peek16(d->dat, 0x2), ppu.height);
 	else if(b0 == 0x5)
-		set_size(d->u, ppu.width, peek16(d->dat, 0x4));
+		set_size(ppu.width, peek16(d->dat, 0x4));
 	else if(b0 == 0xe) {
 		Uint16 x = peek16(d->dat, 0x8);
 		Uint16 y = peek16(d->dat, 0xa);
