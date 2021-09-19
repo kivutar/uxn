@@ -5,11 +5,10 @@
 %++ { ADD2 } %-- { SUB2 }              %// { DIV2 }
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 
-%2* { #10 SFT } 
-%4/ { #02 SFT }
-%4* { #20 SFT }
+%2*   { #10 SFT } 
+%4*   { #20 SFT } %4/ { #02 SFT }
 %2**  { #10 SFT2 } %2// { #01 SFT2 }
-%4** { #20 SFT2 }
+%4**  { #20 SFT2 }
 %8**  { #30 SFT2 } %8// { #03 SFT2 }
 %10** { #40 SFT2 } %10// { #04 SFT2 }
 
@@ -164,10 +163,14 @@ BRK
 	POP2
 	.input-frame/x LDZ2 #0008 ++ -- 10// NIP
 	DUP #01 ! ,&no-push JCN
-		.input/value LDZ2 ;push JSR2
+		.input/value LDZ2 #0001 << ,&no-push-empty JCN
+			.input/value LDZ2 ;push JSR2
+			&no-push-empty
 		&no-push
 	DUP #02 ! ,&no-pop JCN
-		;pop JSR2 POP2
+		.stack/length LDZ #01 < ,&no-pop-empty JCN
+			;pop JSR2 POP2
+			&no-pop-empty
 		&no-pop
 	POP
 
@@ -216,9 +219,10 @@ RTN
 
 	#08 #00
 	&loop
+		( color ) DUP .stack/length LDZ < STH
 		( value ) DUP 2* .stack/items + LDZ2 STH2
 		( y ) DUP TOS 8** #0070 SWP2 -- STH2
-		( x ) #0088 STH2r STH2r #01 ;draw-short JSR2
+		( x ) #0088 STH2r STH2r STHr ;draw-short JSR2
 		INC GTHk ,&loop JCN
 	POP2
 
@@ -226,19 +230,18 @@ RTN
 
 @draw-short ( x* y* value* color -- )
 
-	POP STH2
+	STH STH2
 	.Screen/y DEO2
 	.Screen/x DEO2
-
 	#04 #00
 	&loop
 		.Screen/x DEI2 #0008 -- .Screen/x DEO2
 		( value ) DUP STH2kr ROT 4* SFT2 #000f AND2
 		( value glyph ) 8** ;font-hex ++ .Screen/addr DEO2
-		#01 .Screen/sprite DEO
+		ROTr STHkr ROTr ROTr .Screen/sprite DEO
 		INC GTHk ,&loop JCN
 	POP2
-	POP2r
+	POP2r POPr
 
 RTN
 
