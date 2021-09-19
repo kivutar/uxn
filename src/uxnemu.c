@@ -343,8 +343,12 @@ console_talk(Device *d, Uint8 b0, Uint8 w)
 static int
 screen_talk(Device *d, Uint8 b0, Uint8 w)
 {
-	if(!w)
-		return 1;
+	if(!w) switch(b0) {
+		case 0x2: d->dat[0x2] = ppu.width >> 8; break;
+		case 0x3: d->dat[0x3] = ppu.width; break;
+		case 0x4: d->dat[0x4] = ppu.height >> 8; break;
+		case 0x5: d->dat[0x5] = ppu.height; break;
+		}
 	else
 		switch(b0) {
 		case 0x3:
@@ -582,10 +586,6 @@ main(int argc, char **argv)
 	/* unused   */ uxn_port(&u, 0xd, nil_talk);
 	/* unused   */ uxn_port(&u, 0xe, nil_talk);
 	/* unused   */ uxn_port(&u, 0xf, nil_talk);
-
-	/* Write screen size */
-	poke16(devscreen->dat, 2, ppu.width);
-	poke16(devscreen->dat, 4, ppu.height);
 
 	run(&u);
 	quit();
