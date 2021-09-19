@@ -22,6 +22,7 @@ WITH REGARD TO THIS SOFTWARE.
 */
 
 #define PAD 4
+#define FIXED_SIZE 0
 #define POLYPHONY 4
 #define BENCH 0
 
@@ -352,7 +353,7 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 	else
 		switch(b0) {
 		case 0x5:
-			set_size(peek16(d->dat, 0x2), peek16(d->dat, 0x4));
+			if(!FIXED_SIZE) set_size(peek16(d->dat, 0x2), peek16(d->dat, 0x4));
 			break;
 		case 0xe: {
 			Uint16 x = peek16(d->dat, 0x8);
