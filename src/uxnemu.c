@@ -90,38 +90,32 @@ inspect(Ppu *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
 	Uint8 i, x, y, b;
 	for(i = 0; i < 0x20; ++i) { /* stack */
 		x = ((i % 8) * 3 + 1) * 8, y = (i / 8 + 1) * 8, b = stack[i];
-		ppu_1bpp(p, ppu.fg, x, y, font[(b >> 4) & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
-		ppu_1bpp(p, ppu.fg, x + 8, y, font[b & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
+		ppu_1bpp(p, 1, x, y, font[(b >> 4) & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
+		ppu_1bpp(p, 1, x + 8, y, font[b & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
 	}
 	/* return pointer */
-	ppu_1bpp(p, ppu.fg, 0x8, y + 0x10, font[(rptr >> 4) & 0xf], 0x2, 0, 0);
-	ppu_1bpp(p, ppu.fg, 0x10, y + 0x10, font[rptr & 0xf], 0x2, 0, 0);
+	ppu_1bpp(p, 1, 0x8, y + 0x10, font[(rptr >> 4) & 0xf], 0x2, 0, 0);
+	ppu_1bpp(p, 1, 0x10, y + 0x10, font[rptr & 0xf], 0x2, 0, 0);
 	for(i = 0; i < 0x20; ++i) { /* memory */
 		x = ((i % 8) * 3 + 1) * 8, y = 0x38 + (i / 8 + 1) * 8, b = memory[i];
-		ppu_1bpp(p, ppu.fg, x, y, font[(b >> 4) & 0xf], 3, 0, 0);
-		ppu_1bpp(p, ppu.fg, x + 8, y, font[b & 0xf], 3, 0, 0);
+		ppu_1bpp(p, 1, x, y, font[(b >> 4) & 0xf], 3, 0, 0);
+		ppu_1bpp(p, 1, x + 8, y, font[b & 0xf], 3, 0, 0);
 	}
 	for(x = 0; x < 0x10; ++x) { /* guides */
-		ppu_pixel(p, ppu.fg, x, p->height / 2, 2);
-		ppu_pixel(p, ppu.fg, p->width - x, p->height / 2, 2);
-		ppu_pixel(p, ppu.fg, p->width / 2, p->height - x, 2);
-		ppu_pixel(p, ppu.fg, p->width / 2, x, 2);
-		ppu_pixel(p, ppu.fg, p->width / 2 - 0x10 / 2 + x, p->height / 2, 2);
-		ppu_pixel(p, ppu.fg, p->width / 2, p->height / 2 - 0x10 / 2 + x, 2);
+		ppu_pixel(p, 1, x, p->height / 2, 2);
+		ppu_pixel(p, 1, p->width - x, p->height / 2, 2);
+		ppu_pixel(p, 1, p->width / 2, p->height - x, 2);
+		ppu_pixel(p, 1, p->width / 2, x, 2);
+		ppu_pixel(p, 1, p->width / 2 - 0x10 / 2 + x, p->height / 2, 2);
+		ppu_pixel(p, 1, p->width / 2, p->height / 2 - 0x10 / 2 + x, 2);
 	}
 }
 
 static Uint8
 get_pixel(int x, int y)
 {
-	int ch1, ch2, r = (y % 8) + ((x / 8 + y / 8 * ppu.width / 8) * 16);
-	ch1 = (ppu.fg[r] >> (7 - x % 8)) & 1;
-	ch2 = (ppu.fg[r + 8] >> (7 - x % 8)) & 1;
-	if(!ch1 && !ch2) {
-		ch1 = (ppu.bg[r] >> (7 - x % 8)) & 1;
-		ch2 = (ppu.bg[r + 8] >> (7 - x % 8)) & 1;
-	}
-	return ch1 + (ch2 << 1);
+	unsigned int i = (x + y * ppu.width) / 2, shift = (x % 2) * 4;
+	return (ppu.dat[i] >> shift) & 0xf;
 }
 
 static void
@@ -356,7 +350,7 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 			Uint16 x = peek16(d->dat, 0x8);
 			Uint16 y = peek16(d->dat, 0xa);
 			Uint8 layer = d->dat[0xe] & 0x40;
-			reqdraw |= ppu_pixel(&ppu, layer ? ppu.fg : ppu.bg, x, y, d->dat[0xe] & 0x3);
+			reqdraw |= ppu_pixel(&ppu, layer, x, y, d->dat[0xe] & 0x3);
 			if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 1); /* auto x+1 */
 			if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 1); /* auto y+1 */
 			break;
@@ -367,10 +361,10 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 			Uint8 layer = d->dat[0xf] & 0x40;
 			Uint8 *addr = &d->mem[peek16(d->dat, 0xc)];
 			if(d->dat[0xf] & 0x80) {
-				reqdraw |= ppu_2bpp(&ppu, layer ? ppu.fg : ppu.bg, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
+				reqdraw |= ppu_2bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
 				if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 16); /* auto addr+16 */
 			} else {
-				reqdraw |= ppu_1bpp(&ppu, layer ? ppu.fg : ppu.bg, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
+				reqdraw |= ppu_1bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
 				if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 8); /* auto addr+8 */
 			}
 			if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 8); /* auto x+8 */
