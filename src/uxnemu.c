@@ -186,8 +186,31 @@ quit(void)
 }
 
 static int
+set_size(Uint16 width, Uint16 height, int is_resize)
+{
+	ppu_set_size(&ppu, width, height);
+	gRect.x = PAD;
+	gRect.y = PAD;
+	gRect.w = ppu.width;
+	gRect.h = ppu.height;
+	if(!(ppu_screen = realloc(ppu_screen, ppu.width * ppu.height * sizeof(Uint32))))
+		return error("ppu_screen", "Memory failure");
+	memset(ppu_screen, 0, ppu.width * ppu.height * sizeof(Uint32));
+	if(gTexture != NULL) SDL_DestroyTexture(gTexture);
+	SDL_RenderSetLogicalSize(gRenderer, ppu.width + PAD * 2, ppu.height + PAD * 2);
+	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
+	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
+		return error("sdl_texture", SDL_GetError());
+	SDL_UpdateTexture(gTexture, NULL, ppu_screen, sizeof(Uint32));
+	if(is_resize) SDL_SetWindowSize(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
+	reqdraw = 1;
+	return 1;
+}
+
+static int
 init(void)
 {
+	const Uint16 width = 64 * 8, height = 40 * 8;
 	SDL_AudioSpec as;
 	SDL_zero(as);
 	as.freq = SAMPLE_FREQUENCY;
@@ -196,8 +219,6 @@ init(void)
 	as.callback = audio_callback;
 	as.samples = 512;
 	as.userdata = NULL;
-	if(!ppu_init(&ppu, 64, 40))
-		return error("ppu", "Init failure");
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
 		error("sdl", SDL_GetError());
 		if(SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -207,25 +228,16 @@ init(void)
 		if(!audio_id)
 			error("sdl_audio", SDL_GetError());
 	}
-	gWindow = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom, SDL_WINDOW_SHOWN);
+	gWindow = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (width + PAD * 2) * zoom, (height + PAD * 2) * zoom, SDL_WINDOW_SHOWN);
 	if(gWindow == NULL)
 		return error("sdl_window", SDL_GetError());
 	gRenderer = SDL_CreateRenderer(gWindow, -1, 0);
 	if(gRenderer == NULL)
 		return error("sdl_renderer", SDL_GetError());
-	SDL_RenderSetLogicalSize(gRenderer, ppu.width + PAD * 2, ppu.height + PAD * 2);
-	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
-	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
-		return error("sdl_texture", SDL_GetError());
-	if(!(ppu_screen = calloc(1, ppu.width * ppu.height * sizeof(Uint32))))
+	if(!set_size(width, height, 0))
 		return 0;
-	SDL_UpdateTexture(gTexture, NULL, ppu_screen, sizeof(Uint32));
 	SDL_StartTextInput();
 	SDL_ShowCursor(SDL_DISABLE);
-	gRect.x = PAD;
-	gRect.y = PAD;
-	gRect.w = ppu.width;
-	gRect.h = ppu.height;
 	return 1;
 }
 
@@ -296,21 +308,6 @@ update_palette(Uint8 *addr)
 	reqdraw = 1;
 }
 
-void
-set_size(Uint16 width, Uint16 height)
-{
-	ppu_resize(&ppu, width / 8, height / 8);
-	gRect.w = ppu.width;
-	gRect.h = ppu.height;
-	if(!(ppu_screen = realloc(ppu_screen, ppu.width * ppu.height * sizeof(Uint32))))
-		return;
-	SDL_DestroyTexture(gTexture);
-	SDL_RenderSetLogicalSize(gRenderer, ppu.width + PAD * 2, ppu.height + PAD * 2);
-	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
-	SDL_SetWindowSize(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
-	reqdraw = 1;
-}
-
 #pragma mark - Devices
 
 static int
@@ -353,7 +350,7 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 	else
 		switch(b0) {
 		case 0x5:
-			if(!FIXED_SIZE) set_size(peek16(d->dat, 0x2), peek16(d->dat, 0x4));
+			if(!FIXED_SIZE) return set_size(peek16(d->dat, 0x2), peek16(d->dat, 0x4), 1);
 			break;
 		case 0xe: {
 			Uint16 x = peek16(d->dat, 0x8);

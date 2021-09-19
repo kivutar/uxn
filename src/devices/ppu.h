@@ -22,8 +22,7 @@ typedef struct Ppu {
 	Uint8 *bg, *fg;
 } Ppu;
 
-int ppu_init(Ppu *p, Uint8 hor, Uint8 ver);
-int ppu_resize(Ppu *p, Uint8 hor, Uint8 ver);
+int ppu_set_size(Ppu *p, Uint16 width, Uint16 height);
 int ppu_pixel(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 color);
 int ppu_1bpp(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy);
 int ppu_2bpp(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy);

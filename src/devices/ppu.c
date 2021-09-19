@@ -93,22 +93,13 @@ ppu_2bpp(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, U
 /* output */
 
 int
-ppu_init(Ppu *p, Uint8 hor, Uint8 ver)
+ppu_set_size(Ppu *p, Uint16 width, Uint16 height)
 {
-	p->width = 8 * hor;
-	p->height = 8 * ver;
-	p->bg = calloc(1, p->width / 4 * p->height * sizeof(Uint8));
-	p->fg = calloc(1, p->width / 4 * p->height * sizeof(Uint8));
-	ppu_clear(p);
-	return p->bg && p->fg;
-}
-
-int
-ppu_resize(Ppu *p, Uint8 hor, Uint8 ver)
-{
-	ppu_clear(p);
-	p->width = 8 * hor;
-	p->height = 8 * ver;
+	/* round width and height up to nearest multiple of 8 */
+	width = ((width - 1) | 0x7) + 1;
+	height = ((height - 1) | 0x7) + 1;
+	p->width = width;
+	p->height = height;
 	p->bg = realloc(p->bg, p->width / 4 * p->height * sizeof(Uint8));
 	p->fg = realloc(p->fg, p->width / 4 * p->height * sizeof(Uint8));
 	ppu_clear(p);
