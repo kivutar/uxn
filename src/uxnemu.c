@@ -345,32 +345,40 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	if(!w)
 		return 1;
-	if(b0 == 0x3)
-		set_size(peek16(d->dat, 0x2), ppu.height);
-	else if(b0 == 0x5)
-		set_size(ppu.width, peek16(d->dat, 0x4));
-	else if(b0 == 0xe) {
-		Uint16 x = peek16(d->dat, 0x8);
-		Uint16 y = peek16(d->dat, 0xa);
-		Uint8 layer = d->dat[0xe] & 0x40;
-		reqdraw |= ppu_pixel(&ppu, layer ? ppu.fg : ppu.bg, x, y, d->dat[0xe] & 0x3);
-		if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 1); /* auto x+1 */
-		if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 1); /* auto y+1 */
-	} else if(b0 == 0xf) {
-		Uint16 x = peek16(d->dat, 0x8);
-		Uint16 y = peek16(d->dat, 0xa);
-		Uint8 layer = d->dat[0xf] & 0x40;
-		Uint8 *addr = &d->mem[peek16(d->dat, 0xc)];
-		if(d->dat[0xf] & 0x80) {
-			reqdraw |= ppu_2bpp(&ppu, layer ? ppu.fg : ppu.bg, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
-			if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 16); /* auto addr+16 */
-		} else {
-			reqdraw |= ppu_1bpp(&ppu, layer ? ppu.fg : ppu.bg, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
-			if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 8); /* auto addr+8 */
+	else
+		switch(b0) {
+		case 0x3:
+			set_size(peek16(d->dat, 0x2), ppu.height);
+			break;
+		case 0x5:
+			set_size(ppu.width, peek16(d->dat, 0x4));
+			break;
+		case 0xe: {
+			Uint16 x = peek16(d->dat, 0x8);
+			Uint16 y = peek16(d->dat, 0xa);
+			Uint8 layer = d->dat[0xe] & 0x40;
+			reqdraw |= ppu_pixel(&ppu, layer ? ppu.fg : ppu.bg, x, y, d->dat[0xe] & 0x3);
+			if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 1); /* auto x+1 */
+			if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 1); /* auto y+1 */
+			break;
 		}
-		if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 8); /* auto x+8 */
-		if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 8); /* auto y+8 */
-	}
+		case 0xf: {
+			Uint16 x = peek16(d->dat, 0x8);
+			Uint16 y = peek16(d->dat, 0xa);
+			Uint8 layer = d->dat[0xf] & 0x40;
+			Uint8 *addr = &d->mem[peek16(d->dat, 0xc)];
+			if(d->dat[0xf] & 0x80) {
+				reqdraw |= ppu_2bpp(&ppu, layer ? ppu.fg : ppu.bg, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
+				if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 16); /* auto addr+16 */
+			} else {
+				reqdraw |= ppu_1bpp(&ppu, layer ? ppu.fg : ppu.bg, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
+				if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 8); /* auto addr+8 */
+			}
+			if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 8); /* auto x+8 */
+			if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 8); /* auto y+8 */
+			break;
+		}
+		}
 	return 1;
 }
 
