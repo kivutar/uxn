@@ -298,11 +298,6 @@ update_palette(Uint8 *addr)
 void
 set_size(Uint16 width, Uint16 height)
 {
-	int i;
-	/* clear */
-	for(i = 0; i < ppu.height * ppu.width; ++i)
-		ppu_screen[i] = palette[0];
-	/* resize */
 	ppu_resize(&ppu, width / 8, height / 8);
 	gRect.w = ppu.width;
 	gRect.h = ppu.height;

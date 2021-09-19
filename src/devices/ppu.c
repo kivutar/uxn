@@ -19,6 +19,18 @@ static Uint8 blending[5][16] = {
 	{2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2},
 	{1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0}};
 
+static void
+ppu_clear(Ppu *p)
+{
+	int x, y;
+	for(y = 0; y < p->height; ++y) {
+		for(x = 0; x < p->width; ++x) {
+			ppu_pixel(p, p->bg, x, y, 0);
+			ppu_pixel(p, p->fg, x, y, 0);
+		}
+	}
+}
+
 void
 ppu_pixel(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 color)
 {
@@ -78,15 +90,18 @@ ppu_init(Ppu *p, Uint8 hor, Uint8 ver)
 	p->height = 8 * ver;
 	p->bg = calloc(1, p->width / 4 * p->height * sizeof(Uint8));
 	p->fg = calloc(1, p->width / 4 * p->height * sizeof(Uint8));
+	ppu_clear(p);
 	return p->bg && p->fg;
 }
 
 int
 ppu_resize(Ppu *p, Uint8 hor, Uint8 ver)
 {
+	ppu_clear(p);
 	p->width = 8 * hor;
 	p->height = 8 * ver;
 	p->bg = realloc(p->bg, p->width / 4 * p->height * sizeof(Uint8));
 	p->fg = realloc(p->fg, p->width / 4 * p->height * sizeof(Uint8));
+	ppu_clear(p);
 	return p->bg && p->fg;
 }
