@@ -38,7 +38,8 @@ static Apu apu[POLYPHONY];
 static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0, *devconsole;
 static Uint32 *ppu_screen, stdin_event, audio0_event, palette[4];
 
-static Uint8 zoom = 1, reqdraw = 0;
+static Uint8 zoom = 1;
+static unsigned int reqdraw = 0;
 
 static Uint8 font[][8] = {
 	{0x00, 0x7c, 0x82, 0x82, 0x82, 0x82, 0x82, 0x7c},
@@ -114,7 +115,7 @@ inspect(Ppu *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
 static Uint8
 get_pixel(int x, int y)
 {
-	unsigned int i = (x + y * ppu.width) / 2, shift = (x % 2) * 4;
+	unsigned int i = x / PPW + y * ppu.stride, shift = x % PPW * 4;
 	return (ppu.dat[i] >> shift) & 0xf;
 }
 

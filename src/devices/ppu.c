@@ -23,22 +23,22 @@ static void
 ppu_clear(Ppu *p)
 {
 	int i;
-	for(i = 0; i < p->width / 2 * p->height; ++i)
+	for(i = 0; i < p->stride * p->height; ++i)
 		p->dat[i] = 0;
 }
 
-int
+unsigned int
 ppu_pixel(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 color)
 {
-	unsigned int i = (x + y * p->width) / 2, shift = (x % 2) * 4;
-	int ret = p->dat[i];
+	unsigned int i = x / PPW + y * p->stride, shift = x % PPW * 4;
+	unsigned int ret = p->dat[i];
 	if(fg) shift += 2;
 	p->dat[i] &= ~(3 << shift);
 	p->dat[i] |= color << shift;
 	return ret ^ p->dat[i];
 }
 
-int
+unsigned int
 ppu_1bpp(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
 {
 	Uint16 v, h;
@@ -56,7 +56,7 @@ ppu_1bpp(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 f
 	return ret;
 }
 
-int
+unsigned int
 ppu_2bpp(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
 {
 	Uint16 v, h;
@@ -81,11 +81,10 @@ ppu_2bpp(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 f
 int
 ppu_set_size(Ppu *p, Uint16 width, Uint16 height)
 {
-	/* round width up to nearest multiple of 2 */
-	width += width % 2;
 	p->width = width;
+	p->stride = (width + PPW - 1) / PPW;
 	p->height = height;
-	p->dat = realloc(p->dat, p->width / 2 * p->height);
+	p->dat = realloc(p->dat, p->stride * p->height * sizeof(unsigned int));
 	if(p->dat == NULL) return 0;
 	ppu_clear(p);
 	return 1;
