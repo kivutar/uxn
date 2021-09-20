@@ -22,7 +22,7 @@ static Uint8 blending[5][16] = {
 static void
 ppu_clear(Ppu *p)
 {
-	int i;
+	unsigned int i;
 	for(i = 0; i < p->stride * p->height; ++i)
 		p->dat[i] = 0;
 }
@@ -30,8 +30,10 @@ ppu_clear(Ppu *p)
 unsigned int
 ppu_pixel(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 color)
 {
-	unsigned int i = x / PPW + y * p->stride, shift = x % PPW * 4;
-	unsigned int ret = p->dat[i];
+	unsigned int ret, i = x / PPW + y * p->stride, shift = x % PPW * 4;
+	if(x >= p->width || y >= p->height)
+		return 0;
+	ret = p->dat[i];
 	if(fg) shift += 2;
 	p->dat[i] &= ~(3 << shift);
 	p->dat[i] |= color << shift;
