@@ -260,7 +260,12 @@ RTN
 
 @do-add ( -- )
 
-	.stack/length LDZ #01 > RTN?
+	.input/value LDZ2 #0000 == ,&no-push JCN
+		;do-push JSR2
+		&no-push
+
+	( stack empty ) .stack/length LDZ #01 > RTN?
+
 	#00 ;draw-modpad JSR2
 	;pop JSR2 ;pop JSR2 SWP2 ADD2 ;push JSR2
 
@@ -268,7 +273,11 @@ RTN
 
 @do-sub ( -- )
 
-	.stack/length LDZ #01 > RTN?
+	.input/value LDZ2 #0000 == ,&no-push JCN
+		;do-push JSR2
+		&no-push
+
+	( stack empty ) .stack/length LDZ #01 > RTN?
 	#01 ;draw-modpad JSR2
 	;pop JSR2 ;pop JSR2 SWP2 SUB2 ;push JSR2
 
@@ -276,7 +285,11 @@ RTN
 
 @do-mul ( -- )
 
-	.stack/length LDZ #01 > RTN?
+	.input/value LDZ2 #0000 == ,&no-push JCN
+		;do-push JSR2
+		&no-push
+
+	( stack empty ) .stack/length LDZ #01 > RTN?
 	#02 ;draw-modpad JSR2
 	;pop JSR2 ;pop JSR2 SWP2 MUL2 ;push JSR2
 
@@ -284,7 +297,11 @@ RTN
 
 @do-div ( -- )
 
-	.stack/length LDZ #01 > RTN?
+	.input/value LDZ2 #0000 == ,&no-push JCN
+		;do-push JSR2
+		&no-push
+
+	( stack empty ) .stack/length LDZ #01 > RTN?
 	#03 ;draw-modpad JSR2
 	;pop JSR2 ;pop JSR2 SWP2 DIV2 ;push JSR2
 
