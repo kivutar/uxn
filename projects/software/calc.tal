@@ -414,7 +414,7 @@ RTN
 	STH
 	#04 #00
 	&loop
-		( color ) DUP TOS ;modpad/color ++ LDA STH
+		( color ) #03 STH
 		( state ) DUP OVRr STHr = STH
 		( layout ) DUP TOS 8** ;mod-icns ++ STH2
 		( x ) #0000 STH2
@@ -431,11 +431,9 @@ RTN
 @draw-key ( x* y* glyph* state color -- )
 
 	( auto x addr ) #05 .Screen/auto DEO
-
 	( color ) ,&color STR
 	( state ) ,&state STR
 	( glyph ) ,&glyph STR2
-
 	( state ) ;button-icns [ #00 ,&state LDR 20** ++ ] .Screen/addr DEO2 
 	( y* ) .Screen/y DEO2
 	( x* ) .Screen/x DEO2
@@ -485,39 +483,6 @@ RTN
 
 RTN
 
-
-@line-rect ( rect color -- )
-
-	STH STH
-	( y2 ) STHkr #06 + LDZ2
-	( y1 ) STHkr #02 + LDZ2 #0001 -- ( flip sign ) GTH2k SWP2?
-	&ver
-		( save ) DUP2 .Screen/y DEO2
-		( x1 ) STHkr LDZ2 #0001 -- .Screen/x DEO2 
-		OVRr STHr .Screen/pixel DEO
-		( x2 ) STHkr #04 + LDZ2 .Screen/x DEO2 
-		OVRr STHr .Screen/pixel DEO
-		( incr )
-		INC2 GTH2k ,&ver JCN
-	POP2
-	( x2 ) STHkr #04 + LDZ2
-	( x1 ) STHkr LDZ2 #0001 -- ( flip sign ) GTH2k SWP2?
-	&hor
-		( save ) DUP2 .Screen/x DEO2
-		( y1 ) STHkr #02 + LDZ2 #0001 -- .Screen/y DEO2 
-		OVRr STHr .Screen/pixel DEO
-		( y2 ) STHkr #06 + LDZ2 .Screen/y DEO2 
-		OVRr STHr .Screen/pixel DEO
-		( incr )
-		INC2 GTH2k ,&hor JCN
-	POP2
-	POPr 
-	.Screen/x DEO2
-	.Screen/y DEO2 
-	STHr .Screen/pixel DEO
-
-RTN
-
 @print-hex ( value* -- )
 	
 	&short ( value* -- )
@@ -551,11 +516,6 @@ RTN
 		0101 0102
 		0101 0102
 		0102 0202
-
-@modpad
-	&color
-		0303 0303
-		0303 0303
 
 @font-hex
 	007c 8282 8282 827c 0030 1010 1010 1010
