@@ -67,8 +67,13 @@
 	#0fc5 .System/g DEO2 
 	#0f25 .System/b DEO2
 
+	( size )
 	#0120 .Screen/width DEO2
 	#0160 .Screen/height DEO2
+
+	( vectors )
+	;on-mouse .Mouse/vector DEO2
+	;on-button .Controller/vector DEO2
 
 	( center )
 	.Screen/width DEI2 2// .center/x STZ2
@@ -95,9 +100,26 @@
 	DUP2 .input-frame/y STZ2
 		#0010 ++ .input-frame/y2 STZ2
 
-	;on-mouse .Mouse/vector DEO2
-
 	;redraw JSR2
+
+BRK
+
+@on-button ( -> )
+
+	.Controller/key DEI BRK?
+
+	.Controller/key DEI 
+	DUP #0d ! ,&no-enter JCN
+		;send-input JSR2 POP BRK
+		&no-enter
+	DUP LIT '+ ! ,&no-add JCN ;do-add JSR2 POP BRK &no-add
+	DUP LIT '- ! ,&no-sub JCN ;do-sub JSR2 POP BRK &no-sub
+	DUP LIT '* ! ,&no-mul JCN ;do-mul JSR2 POP BRK &no-mul
+	DUP LIT '/ ! ,&no-div JCN ;do-div JSR2 POP BRK &no-div
+	DUP #1b ! ,&no-esc JCN
+		;do-pop JSR2 POP BRK
+		&no-esc
+	;key-value JSR2 ;push-input JSR2
 
 BRK
 
@@ -136,7 +158,7 @@ BRK
 	( get key )
 	.keypad-frame/y LDZ2 -- 10// 4**
 	SWP2 .keypad-frame/x LDZ2 -- 10// #0003 AND2
-	++ ;keypad/layout ++ LDA ;push-key JSR2
+	++ ;keypad/layout ++ LDA ;push-input JSR2
 
 	( release mouse ) #00 .Mouse/state DEO
 
@@ -147,11 +169,8 @@ BRK
 	NIP2
 	( get key )
 	.modpad-frame/y LDZ2 -- 10// NIP
-	DUP #00 ! ,&no-add JCN
-		;pop JSR2
-		;pop JSR2
-		ADD2 ;push JSR2
-		&no-add
+	DUP #00 ! ,&no-add JCN ;do-add JSR2 &no-add
+	DUP #01 ! ,&no-sub JCN ;do-sub JSR2 &no-sub
 	POP
 
 	( release mouse ) #00 .Mouse/state DEO
@@ -164,13 +183,11 @@ BRK
 	.input-frame/x LDZ2 #0008 ++ -- 10// NIP
 	DUP #01 ! ,&no-push JCN
 		.input/value LDZ2 #0001 << ,&no-push-empty JCN
-			.input/value LDZ2 ;push JSR2
+			;send-input JSR2
 			&no-push-empty
 		&no-push
 	DUP #02 ! ,&no-pop JCN
-		.stack/length LDZ #01 < ,&no-pop-empty JCN
-			;pop JSR2 POP2
-			&no-pop-empty
+		;do-pop JSR2
 		&no-pop
 	POP
 
@@ -178,11 +195,17 @@ BRK
 
 BRK
 
-@push-key ( key -- )
+@push-input ( key -- )
 
 	TOS .input/value LDZ2 #40 SFT2 ++ .input/value STZ2
 	.input/length LDZ INC .input/length STZ
 	;draw-input JSR2
+
+RTN
+
+@send-input ( -- )
+
+	.input/value LDZ2 ;push JSR2
 
 RTN
 
@@ -203,6 +226,58 @@ RTN
 	( incr ) .stack/length LDZ #01 - .stack/length STZ
 	;draw-input JSR2
 	;draw-stack JSR2
+
+RTN
+
+@do-pop ( -- )
+
+	.stack/length LDZ BRK?
+	;pop JSR2 POP2
+	;draw-input JSR2
+	;draw-stack JSR2
+
+RTN
+
+@do-add ( -- )
+
+	.stack/length LDZ #01 > BRK?
+	;pop JSR2 ;pop JSR2 ADD2 ;push JSR2
+
+RTN
+
+@do-sub ( -- )
+
+	.stack/length LDZ #01 > BRK?
+	;pop JSR2 ;pop JSR2 SUB2 ;push JSR2
+
+RTN
+
+@do-mul ( -- )
+
+	.stack/length LDZ #01 > BRK?
+	;pop JSR2 ;pop JSR2 MUL2 ;push JSR2
+
+RTN
+
+@do-div ( -- )
+
+	.stack/length LDZ #01 > BRK?
+	;pop JSR2 ;pop JSR2 DIV2 ;push JSR2
+
+RTN
+
+@key-value ( key -- value )
+
+	DUP #2f > OVR #3a < #0101 !! ,&no-num JCN
+		#30 - RTN
+		&no-num
+	DUP #60 > OVR #67 < #0101 !! ,&no-lc JCN
+		#57 - RTN ( #61 - #0a + )
+		&no-lc
+	DUP #40 > OVR #47 < #0101 !! ,&no-uc JCN
+		#37 - RTN ( #41 - #0a + )
+		&no-uc
+	POP #00
 
 RTN
 
