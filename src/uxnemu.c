@@ -36,7 +36,7 @@ static SDL_Rect gRect;
 static Ppu ppu;
 static Apu apu[POLYPHONY];
 static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0, *devconsole;
-static Uint32 *ppu_screen, stdin_event, audio0_event, palette[4];
+static Uint32 *ppu_screen, stdin_event, audio0_event, palette[16];
 
 static Uint8 zoom = 1;
 static unsigned int reqdraw = 0;
@@ -300,6 +300,8 @@ update_palette(Uint8 *addr)
 			b = (*(addr + 4 + i / 2) >> (!(i % 2) << 2)) & 0x0f;
 		palette[i] = 0xff000000 | (r << 20) | (r << 16) | (g << 12) | (g << 8) | (b << 4) | b;
 	}
+	for(i = 4; i < 16; ++i)
+		palette[i] = palette[i / 4];
 	reqdraw = 1;
 }
 
