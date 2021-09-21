@@ -86,6 +86,23 @@ audio_callback(void *u, Uint8 *stream, int len)
 }
 
 static void
+set_window_size(SDL_Window *window, int w, int h)
+{
+	int win_x, win_y;
+	int win_cent_x, win_cent_y;
+	int old_win_sz_x, old_win_sz_y;
+
+	SDL_GetWindowPosition(window, &win_x, &win_y);
+	SDL_GetWindowSize(window, &old_win_sz_x, &old_win_sz_y);
+
+	win_cent_x = win_x + old_win_sz_x / 2;
+	win_cent_y = win_y + old_win_sz_y / 2;
+
+	SDL_SetWindowPosition(window, win_cent_x - w / 2, win_cent_y - h / 2);
+	SDL_SetWindowSize(window, w, h);
+}
+
+static void
 inspect(Ppu *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
 {
 	Uint8 i, x, y, b;
@@ -154,7 +171,7 @@ static void
 toggle_zoom(Uxn *u)
 {
 	zoom = zoom == 3 ? 1 : zoom + 1;
-	SDL_SetWindowSize(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
+	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
 	redraw(u);
 }
 
@@ -205,7 +222,7 @@ set_size(Uint16 width, Uint16 height, int is_resize)
 	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
 		return error("sdl_texture", SDL_GetError());
 	SDL_UpdateTexture(gTexture, NULL, ppu_screen, sizeof(Uint32));
-	if(is_resize) SDL_SetWindowSize(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
+	if(is_resize) set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
 	reqdraw = 1;
 	return 1;
 }
