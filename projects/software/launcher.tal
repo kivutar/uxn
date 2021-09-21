@@ -102,9 +102,8 @@ RTN
 @launch ( path* -- )
 
 	.File/name DEO2
-	#ffff .File/length DEO2
-	#0000 .File/load DEO2
-	#0100 JMP2
+	#ff00 .File/length DEO2
+	#0100 .File/load DEO2
 
 RTN
 
