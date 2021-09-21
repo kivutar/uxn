@@ -122,17 +122,25 @@ get_pixel(int x, int y)
 static void
 redraw(Uxn *u)
 {
-	Uint16 x, y;
+	Uint16 x, y, y0 = 0, y1 = ppu.height;
+	SDL_Rect up = gRect;
 	if(devsystem->dat[0xe])
 		inspect(&ppu, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
-	for(y = 0; y < ppu.height; ++y)
+	if(ppu.redraw) {
+		y0 = ppu.i0 / ppu.stride;
+		y1 = ppu.i1 / ppu.stride + 1;
+		up.y += y0;
+		up.h = y1 - y0;
+	}
+	for(y = y0; y < y1; ++y)
 		for(x = 0; x < ppu.width; ++x)
 			ppu_screen[x + y * ppu.width] = palette[get_pixel(x, y)];
-	SDL_UpdateTexture(gTexture, &gRect, ppu_screen, ppu.width * sizeof(Uint32));
+	SDL_UpdateTexture(gTexture, &up, ppu_screen + y0 * ppu.width, ppu.width * sizeof(Uint32));
 	SDL_RenderClear(gRenderer);
 	SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
 	SDL_RenderPresent(gRenderer);
 	reqdraw = 0;
+	ppu_frame(&ppu);
 }
 
 static void
@@ -353,7 +361,7 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 			Uint16 x = peek16(d->dat, 0x8);
 			Uint16 y = peek16(d->dat, 0xa);
 			Uint8 layer = d->dat[0xe] & 0x40;
-			reqdraw |= ppu_pixel(&ppu, layer, x, y, d->dat[0xe] & 0x3);
+			ppu_pixel(&ppu, layer, x, y, d->dat[0xe] & 0x3);
 			if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 1); /* auto x+1 */
 			if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 1); /* auto y+1 */
 			break;
@@ -364,10 +372,10 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 			Uint8 layer = d->dat[0xf] & 0x40;
 			Uint8 *addr = &d->mem[peek16(d->dat, 0xc)];
 			if(d->dat[0xf] & 0x80) {
-				reqdraw |= ppu_2bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
+				ppu_2bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
 				if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 16); /* auto addr+16 */
 			} else {
-				reqdraw |= ppu_1bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
+				ppu_1bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
 				if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 8); /* auto addr+8 */
 			}
 			if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 8); /* auto x+8 */
@@ -529,7 +537,7 @@ run(Uxn *u)
 			}
 		}
 		uxn_eval(u, peek16(devscreen->dat, 0));
-		if(reqdraw || devsystem->dat[0xe])
+		if(reqdraw || ppu.redraw || devsystem->dat[0xe])
 			redraw(u);
 		if(!BENCH) {
 			elapsed = (SDL_GetPerformanceCounter() - start) / (double)SDL_GetPerformanceFrequency() * 1000.0f;
