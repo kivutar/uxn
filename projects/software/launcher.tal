@@ -13,6 +13,8 @@
 %DEBUG  { ;print-hex/byte JSR2 #0a .Console/write DEO }
 %DEBUG2 { ;print-hex/short JSR2 #0a .Console/write DEO }
 
+%HEX-CHAR { DUP #09 GTH #04 JCN #30 + RTN #57 + }
+
 ( devices )
 
 |00 @System  &vector $2 &pad     $6 &r      $2 &g     $2 &b      $2
@@ -21,12 +23,14 @@
 |80 @Controller [ &vector $2 &button $1 &key    $1 ]
 |90 @Mouse      [ &vector $2 &x        $2 &y      $2 &state $1 &wheel  $1 ]
 |a0 @File    &vector $2 &success $2 &offset-hs $2 &offset-ls $2 &name $2 &length $2 &load $2 &save $2
+|b0 @DateTime   [ &year   $2 &month    $1 &day    $1 &hour  $1 &minute $1 &second $1 &dotw $1 &doty $2 &isdst $1 ]
 
 ( variables )
 
 |0000
 
 @input $30
+@second $1
 @pointer
 	&x  $2 &y  $2
 
@@ -40,12 +44,20 @@
 	#e02a .System/b DEO2
 
 	( vectors )
+	;on-frame .Screen/vector DEO2
 	;on-button .Controller/vector DEO2
 	;on-mouse .Mouse/vector DEO2
 
 	( theme support )
 	;load-theme JSR2
 	
+BRK
+
+@on-frame ( -> )
+
+	.DateTime/second DEI .second LDZ ! BRK?
+	.DateTime/second DEI .second STZ ;draw-time JSR2
+
 BRK
 
 @on-mouse ( -> )
@@ -81,18 +93,6 @@ BRK
 	;form/append JSR2
 
 BRK
-
-@redraw ( -- )
-
-	#0018 #0020 #0040 #0040 ;logo-icn #03 ;draw-icn JSR2
-	#0020 #0070 ;welcome-txt #01 ;draw-label JSR2
-
-	#0020 #0080 ;today-txt #01 ;draw-label JSR2
-	#0020 #00b0 ;prompt-txt #01 ;draw-label JSR2
-	#0020 #00c0 ;do-txt #03 ;draw-label JSR2
-	#03 ;form/draw JSR2
-
-RTN
 
 @form ( -- )
 
@@ -136,9 +136,57 @@ RTN
 
 @launch ( path* -- )
 
-	.File/name DEO2
-	#ff00 .File/length DEO2
-	#0100 .File/load DEO2
+	POP2
+
+	#0020 #00e0 ;error-txt #08 ;draw-label JSR2
+
+RTN
+
+@redraw ( -- )
+
+	#0018 #0020 #0040 #0040 ;logo-icn #03 ;draw-icn JSR2
+	#0020 #0070 ;welcome-txt #01 ;draw-label JSR2
+	;draw-time JSR2
+	#0020 #00b0 ;prompt-txt #01 ;draw-label JSR2
+	#0020 #00c0 ;do-txt #03 ;draw-label JSR2
+	#03 ;form/draw JSR2
+
+RTN
+
+@draw-time ( -- )
+
+	.DateTime/day DEI
+		DUP #0f AND ;hex-char JSR2 ;&date-str #0009 ++ STA
+		#04 SFT ;hex-char JSR2 ;&date-str #0008 ++ STA
+	.DateTime/month DEI
+		DUP #0f AND ;hex-char JSR2 ;&date-str #0006 ++ STA
+		#04 SFT ;hex-char JSR2 ;&date-str #0005 ++ STA
+	.DateTime/year DEI2
+		DUP #0f AND ;hex-char JSR2 ;&date-str #0003 ++ STA
+		#04 SFT ;hex-char JSR2 ;&date-str #0002 ++ STA
+		DUP #0f AND ;hex-char JSR2 ;&date-str INC2 STA
+		#04 SFT ;hex-char JSR2 ;&date-str STA
+
+	.DateTime/second DEI
+		DUP #0f AND ;hex-char JSR2 ;&time-str #0007 ++ STA
+		#04 SFT ;hex-char JSR2 ;&time-str #0006 ++ STA
+	.DateTime/minute DEI
+		DUP #0f AND ;hex-char JSR2 ;&time-str #0004 ++ STA
+		#04 SFT ;hex-char JSR2 ;&time-str #0003 ++ STA
+	.DateTime/hour DEI
+		DUP #0f AND ;hex-char JSR2 ;&time-str INC2 STA
+		#04 SFT ;hex-char JSR2 ;&time-str STA
+
+	#0020 #0080 ;&date-str #01 ;draw-label JSR2
+	#0080 #0080 ;&time-str #02 ;draw-label JSR2
+
+RTN
+	&date-str "0000-00-00 $1
+	&time-str "00:00:00 $1
+
+@hex-char ( hex -- char )
+
+	HEX-CHAR
 
 RTN
 
@@ -232,11 +280,14 @@ RTN
 @welcome-txt
 	"Welcome 20 "to 20 "your 20 "UXN 20 "Ordinator $1
 @today-txt
-	"Today 20 "is 20 "21Q04 ". $1
+	"Today 20 "is 20 "0000-00-00 ", 20 "the 20 "time 20 "is 20 "00:00:00 $1
 @prompt-txt
 	"What 20 "shall 20 "we 20 "do? $1
 @do-txt
 	"$: $1
+
+@error-txt
+	"Sorry, 20 "ROM 20 "not 20 "found. $1
 
 @pointer-icn
 	80c0 e0f0 f8e0 1000
