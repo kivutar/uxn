@@ -73,8 +73,8 @@
 	;on-button .Controller/vector DEO2
 
 	( setup synth )
-	#0208 .Audio0/adsr DEO2
-	;saw-wav .Audio0/addr DEO2
+	#0110 .Audio0/adsr DEO2
+	;sin-pcm .Audio0/addr DEO2
 	#0100 .Audio0/length DEO2
 	#dd .Audio0/volume DEO ( TODO: turn ON )
 
@@ -103,7 +103,8 @@
 	DUP2 .input-frame/y STZ2
 		#0010 ++ .input-frame/y2 STZ2
 
-	;redraw JSR2
+	( theme support )
+	;load-theme JSR2
 
 BRK
 
@@ -214,7 +215,7 @@ BRK
 
 @push-input ( key -- )
 
-	DUP TOS ;keypad/notes ++ LDA .Audio0/pitch DEO
+	DUP #50 + .Audio0/pitch DEO
 	DUP TOS ;keypad/series ++ LDA ;draw-keypad JSR2
 	TOS .input/value LDZ2 #40 SFT2 ++ .input/value STZ2
 	.input/length LDZ INC .input/length STZ
@@ -247,6 +248,7 @@ RTN
 	.stack/length LDZ #07 < ,&continue JCN
 		RTN
 		&continue
+	#40 .Audio0/pitch DEO
 	.input/value LDZ2 ;push JSR2
 
 RTN
@@ -255,6 +257,7 @@ RTN
 
 	#0000 .input/value STZ2
 	.stack/length LDZ #00 = ,&continue JCN
+		#41 .Audio0/pitch DEO
 		;pop JSR2 POP2
 		;draw-stack JSR2
 		&continue
@@ -270,6 +273,7 @@ RTN
 
 	( stack empty ) .stack/length LDZ #01 > RTN?
 
+	#42 .Audio0/pitch DEO
 	#00 ;draw-modpad JSR2
 	;pop JSR2 ;pop JSR2 SWP2 ADD2 ;push JSR2
 
@@ -282,6 +286,8 @@ RTN
 		&no-push
 
 	( stack empty ) .stack/length LDZ #01 > RTN?
+
+	#43 .Audio0/pitch DEO
 	#01 ;draw-modpad JSR2
 	;pop JSR2 ;pop JSR2 SWP2 SUB2 ;push JSR2
 
@@ -294,6 +300,8 @@ RTN
 		&no-push
 
 	( stack empty ) .stack/length LDZ #01 > RTN?
+
+	#44 .Audio0/pitch DEO
 	#02 ;draw-modpad JSR2
 	;pop JSR2 ;pop JSR2 SWP2 MUL2 ;push JSR2
 
@@ -306,6 +314,8 @@ RTN
 		&no-push
 
 	( stack empty ) .stack/length LDZ #01 > RTN?
+
+	#45 .Audio0/pitch DEO
 	#03 ;draw-modpad JSR2
 	;pop JSR2 ;pop JSR2 SWP2 DIV2 ;push JSR2
 
@@ -475,6 +485,25 @@ RTN
 RTN
 	&color $1 &state $1 &glyph $2
 
+( theme )
+
+@theme-txt ".theme $1
+
+@load-theme ( -- )
+
+	;theme-txt .File/name DEO2 
+	#0006 .File/length DEO2 
+	#fffa .File/load DEO2
+
+	.File/success DEI2 #0006 !! ,&ignore JCN
+		#fffa LDA2 .System/r DEO2
+		#fffc LDA2 .System/g DEO2
+		#fffe LDA2 .System/b DEO2
+		&ignore
+	;redraw JSR2
+
+RTN
+
 @within-rect ( x* y* rect -- flag )
 	
 	STH
@@ -537,30 +566,24 @@ RTN
 		0101 0102
 		0101 0102
 		0102 0202
-	&notes
-		484a 4c4d
-		4f51 5354
-		5658 595b
-		5d5f 6062
-		6465 6769
 
-@saw-wav
-	0003 0609 0c0f 1215 181b 1e21 2427 2a2d
-	3033 3639 3b3e 4143 4649 4b4e 5052 5557
-	595b 5e60 6264 6667 696b 6c6e 7071 7274
-	7576 7778 797a 7b7b 7c7d 7d7e 7e7e 7e7e
-	7f7e 7e7e 7e7e 7d7d 7c7b 7b7a 7978 7776
-	7574 7271 706e 6c6b 6967 6664 6260 5e5b
-	5957 5552 504e 4b49 4643 413e 3b39 3633
-	302d 2a27 2421 1e1b 1815 120f 0c09 0603
-	00fd faf7 f4f1 eeeb e8e5 e2df dcd9 d6d3
-	d0cd cac7 c5c2 bfbd bab7 b5b2 b0ae aba9
-	a7a5 a2a0 9e9c 9a99 9795 9492 908f 8e8c
-	8b8a 8988 8786 8585 8483 8382 8282 8282
-	8182 8282 8282 8383 8485 8586 8788 898a
-	8b8c 8e8f 9092 9495 9799 9a9c 9ea0 a2a5
-	a7a9 abae b0b2 b5b7 babd bfc2 c5c7 cacd
-	d0d3 d6d9 dcdf e2e5 e8eb eef1 f4f7 fafd 
+@sin-pcm
+	8083 8689 8c8f 9295 989b 9ea1 a4a7 aaad
+	b0b3 b6b9 bbbe c1c3 c6c9 cbce d0d2 d5d7
+	d9db dee0 e2e4 e6e7 e9eb ecee f0f1 f2f4
+	f5f6 f7f8 f9fa fbfb fcfd fdfe fefe fefe
+	fffe fefe fefe fdfd fcfb fbfa f9f8 f7f6
+	f5f4 f2f1 f0ee eceb e9e7 e6e4 e2e0 dedb
+	d9d7 d5d2 d0ce cbc9 c6c3 c1be bbb9 b6b3
+	b0ad aaa7 a4a1 9e9b 9895 928f 8c89 8683
+	807d 7a77 7471 6e6b 6865 625f 5c59 5653
+	504d 4a47 4542 3f3d 3a37 3532 302e 2b29
+	2725 2220 1e1c 1a19 1715 1412 100f 0e0c
+	0b0a 0908 0706 0505 0403 0302 0202 0202
+	0102 0202 0202 0303 0405 0506 0708 090a
+	0b0c 0e0f 1012 1415 1719 1a1c 1e20 2225
+	2729 2b2e 3032 3537 3a3d 3f42 4547 4a4d
+	5053 5659 5c5f 6265 686b 6e71 7477 7a7d
 
 @font-hex
 	007c 8282 8282 827c 0030 1010 1010 1010
