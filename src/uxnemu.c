@@ -24,7 +24,6 @@ WITH REGARD TO THIS SOFTWARE.
 #define WIDTH 64 * 8
 #define HEIGHT 40 * 8
 #define PAD 4
-
 #define FIXED_SIZE 0
 #define POLYPHONY 4
 #define BENCH 0
@@ -34,7 +33,6 @@ static SDL_Texture *gTexture;
 static SDL_Renderer *gRenderer;
 static SDL_AudioDeviceID audio_id;
 static SDL_Rect gRect;
-
 /* devices */
 static Ppu ppu;
 static Apu apu[POLYPHONY];
@@ -110,17 +108,12 @@ stdin_handler(void *p)
 static void
 set_window_size(SDL_Window *window, int w, int h)
 {
-	int win_x, win_y;
-	int win_cent_x, win_cent_y;
-	int old_win_sz_x, old_win_sz_y;
-
-	SDL_GetWindowPosition(window, &win_x, &win_y);
-	SDL_GetWindowSize(window, &old_win_sz_x, &old_win_sz_y);
-
-	win_cent_x = win_x + old_win_sz_x / 2;
-	win_cent_y = win_y + old_win_sz_y / 2;
-
-	SDL_SetWindowPosition(window, win_cent_x - w / 2, win_cent_y - h / 2);
+	SDL_Point win, win_old, win_ratio;
+	SDL_GetWindowPosition(window, &win.x, &win.y);
+	SDL_GetWindowSize(window, &win_old.x, &win_old.y);
+	win_ratio.x = win.x + win_old.x / 2;
+	win_ratio.y = win.y + win_old.y / 2;
+	SDL_SetWindowPosition(window, win_ratio.x - w / 2, win_ratio.y - h / 2);
 	SDL_SetWindowSize(window, w, h);
 }
 
@@ -584,20 +577,14 @@ main(int argc, char **argv)
 	Uxn u;
 	int i;
 
-	if(argc < 2) return error("usage", "uxnemu file.rom");
-	if(!uxn_boot(&u)) return error("Boot", "Failed to start uxn.");
-	if(!load(&u, argv[argc - 1])) return error("Load", "Failed to open rom.");
-	if(!init(&u)) return error("Init", "Failed to initialize emulator.");
-	if(!set_size(WIDTH, HEIGHT, 0)) return error("Window", "Failed to set window size.");
-
-	for(i = 1; i < argc - 1; i++) {
-		if(strcmp(argv[i], "-s") == 0) {
-			if((i + 1) < argc - 1)
-				set_zoom(&u, atoi(argv[++i]));
-			else
-				return error("Opt", "-s No scale provided.");
-		}
-	}
+	if(argc < 2)
+		return error("usage", "uxnemu file.rom");
+	if(!uxn_boot(&u))
+		return error("Boot", "Failed to start uxn.");
+	if(!load(&u, argv[argc - 1]))
+		return error("Load", "Failed to open rom.");
+	if(!init(&u))
+		return error("Init", "Failed to initialize emulator.");
 
 	/* system   */ devsystem = uxn_port(&u, 0x0, system_talk);
 	/* console  */ devconsole = uxn_port(&u, 0x1, console_talk);
@@ -615,6 +602,18 @@ main(int argc, char **argv)
 	/* unused   */ uxn_port(&u, 0xd, nil_talk);
 	/* unused   */ uxn_port(&u, 0xe, nil_talk);
 	/* unused   */ uxn_port(&u, 0xf, nil_talk);
+
+	if(!set_size(WIDTH, HEIGHT, 0))
+		return error("Window", "Failed to set window size.");
+
+	for(i = 1; i < argc - 1; i++) {
+		if(strcmp(argv[i], "-s") == 0) {
+			if((i + 1) < argc - 1)
+				set_zoom(&u, atoi(argv[++i]));
+			else
+				return error("Opt", "-s No scale provided.");
+		}
+	}
 
 	run(&u);
 	quit();
