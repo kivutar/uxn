@@ -30,9 +30,6 @@
 |10 @Console    [ &vector $2 &read     $1 &pad    $5 &write $1 &error  $1 ]
 |20 @Screen     [ &vector $2 &width    $2 &height $2 &auto  $1 &pad    $1 &x      $2 &y      $2 &addr $2 &pixel  $1 &sprite $1 ]
 |30 @Audio0     [ &vector $2 &position $2 &output $1 &pad   $3 &adsr   $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
-|40 @Audio1     [ &vector $2 &position $2 &output $1 &pad   $3 &adsr   $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
-|50 @Audio2     [ &vector $2 &position $2 &output $1 &pad   $3 &adsr   $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
-|60 @Audio3     [ &vector $2 &position $2 &output $1 &pad   $3 &adsr   $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
 |80 @Controller [ &vector $2 &button   $1 &key    $1 ]
 |90 @Mouse      [ &vector $2 &x        $2 &y      $2 &state $1 &wheel  $1 ]
 |a0 @File       [ &vector $2 &success  $2 &offset-hs $2 &offset-ls $2 &name   $2 &length $2 &load $2 &save   $2 ]
@@ -74,6 +71,12 @@
 	( vectors )
 	;on-mouse .Mouse/vector DEO2
 	;on-button .Controller/vector DEO2
+
+	( setup synth )
+	#0208 .Audio0/adsr DEO2
+	;saw-wav .Audio0/addr DEO2
+	#0100 .Audio0/length DEO2
+	#dd .Audio0/volume DEO ( TODO: turn ON )
 
 	( center )
 	.Screen/width DEI2 2// .center/x STZ2
@@ -211,6 +214,7 @@ BRK
 
 @push-input ( key -- )
 
+	DUP TOS ;keypad/notes ++ LDA .Audio0/pitch DEO
 	DUP TOS ;keypad/series ++ LDA ;draw-keypad JSR2
 	TOS .input/value LDZ2 #40 SFT2 ++ .input/value STZ2
 	.input/length LDZ INC .input/length STZ
@@ -533,6 +537,30 @@ RTN
 		0101 0102
 		0101 0102
 		0102 0202
+	&notes
+		484a 4c4d
+		4f51 5354
+		5658 595b
+		5d5f 6062
+		6465 6769
+
+@saw-wav
+	0003 0609 0c0f 1215 181b 1e21 2427 2a2d
+	3033 3639 3b3e 4143 4649 4b4e 5052 5557
+	595b 5e60 6264 6667 696b 6c6e 7071 7274
+	7576 7778 797a 7b7b 7c7d 7d7e 7e7e 7e7e
+	7f7e 7e7e 7e7e 7d7d 7c7b 7b7a 7978 7776
+	7574 7271 706e 6c6b 6967 6664 6260 5e5b
+	5957 5552 504e 4b49 4643 413e 3b39 3633
+	302d 2a27 2421 1e1b 1815 120f 0c09 0603
+	00fd faf7 f4f1 eeeb e8e5 e2df dcd9 d6d3
+	d0cd cac7 c5c2 bfbd bab7 b5b2 b0ae aba9
+	a7a5 a2a0 9e9c 9a99 9795 9492 908f 8e8c
+	8b8a 8988 8786 8585 8483 8382 8282 8282
+	8182 8282 8282 8383 8485 8586 8788 898a
+	8b8c 8e8f 9092 9495 9799 9a9c 9ea0 a2a5
+	a7a9 abae b0b2 b5b7 babd bfc2 c5c7 cacd
+	d0d3 d6d9 dcdf e2e5 e8eb eef1 f4f7 fafd 
 
 @font-hex
 	007c 8282 8282 827c 0030 1010 1010 1010
