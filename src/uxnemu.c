@@ -21,7 +21,10 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
+#define WIDTH 64 * 8
+#define HEIGHT 40 * 8
 #define PAD 4
+
 #define FIXED_SIZE 0
 #define POLYPHONY 4
 #define BENCH 0
@@ -36,10 +39,8 @@ static SDL_Rect gRect;
 static Ppu ppu;
 static Apu apu[POLYPHONY];
 static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0, *devconsole;
+static Uint8 zoom = 1, reqdraw = 0;
 static Uint32 *ppu_screen, stdin_event, audio0_event, palette[16];
-
-static Uint8 zoom = 1;
-static unsigned int reqdraw = 0;
 
 static Uint8 font[][8] = {
 	{0x00, 0x7c, 0x82, 0x82, 0x82, 0x82, 0x82, 0x7c},
@@ -72,6 +73,8 @@ error(char *msg, const char *err)
 	return 0;
 }
 
+#pragma mark - Generics
+
 static void
 audio_callback(void *u, Uint8 *stream, int len)
 {
@@ -83,6 +86,25 @@ audio_callback(void *u, Uint8 *stream, int len)
 	if(!running)
 		SDL_PauseAudioDevice(audio_id, 1);
 	(void)u;
+}
+
+void
+apu_finished_handler(Apu *c)
+{
+	SDL_Event event;
+	event.type = audio0_event + (c - apu);
+	SDL_PushEvent(&event);
+}
+
+static int
+stdin_handler(void *p)
+{
+	SDL_Event event;
+	event.type = stdin_event;
+	while(read(0, &event.cbutton.button, 1) > 0)
+		SDL_PushEvent(&event);
+	return 0;
+	(void)p;
 }
 
 static void
@@ -168,9 +190,11 @@ toggle_debug(Uxn *u)
 }
 
 static void
-toggle_zoom(Uxn *u)
+set_zoom(Uxn *u, Uint8 scale)
 {
-	zoom = zoom == 3 ? 1 : zoom + 1;
+	if(scale == zoom)
+		return;
+	zoom = clamp(scale, 1, 3);
 	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
 	redraw(u);
 }
@@ -190,19 +214,6 @@ capture_screen(void)
 	SDL_SaveBMP(surface, fname);
 	SDL_FreeSurface(surface);
 	fprintf(stderr, "Saved %s\n", fname);
-}
-
-static void
-quit(void)
-{
-	SDL_UnlockAudioDevice(audio_id);
-	SDL_DestroyTexture(gTexture);
-	gTexture = NULL;
-	SDL_DestroyRenderer(gRenderer);
-	gRenderer = NULL;
-	SDL_DestroyWindow(gWindow);
-	SDL_Quit();
-	exit(0);
 }
 
 static int
@@ -227,10 +238,23 @@ set_size(Uint16 width, Uint16 height, int is_resize)
 	return 1;
 }
 
-static int
-init(void)
+static void
+quit(void)
 {
-	const Uint16 width = 64 * 8, height = 40 * 8;
+	SDL_UnlockAudioDevice(audio_id);
+	SDL_DestroyTexture(gTexture);
+	gTexture = NULL;
+	SDL_DestroyRenderer(gRenderer);
+	gRenderer = NULL;
+	SDL_DestroyWindow(gWindow);
+	SDL_Quit();
+	exit(0);
+}
+
+static int
+init(Uxn *u)
+{
+	SDL_DisplayMode DM;
 	SDL_AudioSpec as;
 	SDL_zero(as);
 	as.freq = SAMPLE_FREQUENCY;
@@ -248,16 +272,19 @@ init(void)
 		if(!audio_id)
 			error("sdl_audio", SDL_GetError());
 	}
-	gWindow = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (width + PAD * 2) * zoom, (height + PAD * 2) * zoom, SDL_WINDOW_SHOWN);
+	gWindow = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (WIDTH + PAD * 2) * zoom, (HEIGHT + PAD * 2) * zoom, SDL_WINDOW_SHOWN);
 	if(gWindow == NULL)
 		return error("sdl_window", SDL_GetError());
 	gRenderer = SDL_CreateRenderer(gWindow, -1, 0);
 	if(gRenderer == NULL)
 		return error("sdl_renderer", SDL_GetError());
-	if(!set_size(width, height, 0))
-		return 0;
+	stdin_event = SDL_RegisterEvents(1);
+	audio0_event = SDL_RegisterEvents(POLYPHONY);
+	SDL_CreateThread(stdin_handler, "stdin", NULL);
 	SDL_StartTextInput();
 	SDL_ShowCursor(SDL_DISABLE);
+	SDL_GetCurrentDisplayMode(0, &DM);
+	set_zoom(u, DM.w / 1000);
 	return 1;
 }
 
@@ -299,7 +326,7 @@ doctrl(Uxn *u, SDL_Event *event, int z)
 	case SDLK_DOWN: flag = 0x20; break;
 	case SDLK_LEFT: flag = 0x40; break;
 	case SDLK_RIGHT: flag = 0x80; break;
-	case SDLK_F1: if(z) toggle_zoom(u); break;
+	case SDLK_F1: if(z) set_zoom(u, zoom == 3 ? 1 : zoom + 1); break;
 	case SDLK_F2: if(z) toggle_debug(u); break;
 	case SDLK_F3: if(z) capture_screen(); break;
 	}
@@ -414,10 +441,8 @@ file_talk(Device *d, Uint8 b0, Uint8 w)
 		Uint16 addr = peek16(d->dat, b0 - 1);
 		FILE *f = fopen(name, read ? "rb" : (offset ? "ab" : "wb"));
 		if(f) {
-			/* fprintf(stderr, "%s %s %s #%04x, ", read ? "Loading" : "Saving", name, read ? "to" : "from", addr); */
 			if(fseek(f, offset, SEEK_SET) != -1)
 				result = read ? fread(&d->mem[addr], 1, length, f) : fwrite(&d->mem[addr], 1, length, f);
-			/* fprintf(stderr, "%04x bytes\n", result); */
 			fclose(f);
 		}
 		poke16(d->dat, 0x2, result);
@@ -478,27 +503,6 @@ nil_talk(Device *d, Uint8 b0, Uint8 w)
 	return 1;
 }
 
-#pragma mark - Generics
-
-void
-apu_finished_handler(Apu *c)
-{
-	SDL_Event event;
-	event.type = audio0_event + (c - apu);
-	SDL_PushEvent(&event);
-}
-
-static int
-stdin_handler(void *p)
-{
-	SDL_Event event;
-	event.type = stdin_event;
-	while(read(0, &event.cbutton.button, 1) > 0)
-		SDL_PushEvent(&event);
-	return 0;
-	(void)p;
-}
-
 static const char *errors[] = {"underflow", "overflow", "division by zero"};
 
 int
@@ -508,7 +512,7 @@ uxn_halt(Uxn *u, Uint8 error, char *name, int id)
 	return 0;
 }
 
-static void
+static int
 run(Uxn *u)
 {
 	uxn_eval(u, PAGE_PROGRAM);
@@ -521,7 +525,7 @@ run(Uxn *u)
 		while(SDL_PollEvent(&event) != 0) {
 			switch(event.type) {
 			case SDL_QUIT:
-				return;
+				return error("Run", "Quit.");
 			case SDL_TEXTINPUT:
 				devctrl->dat[3] = event.text.text[0]; /* fall-thru */
 			case SDL_KEYDOWN:
@@ -561,6 +565,7 @@ run(Uxn *u)
 			SDL_Delay(clamp(16.666f - elapsed, 0, 1000));
 		}
 	}
+	return error("Run", "Ended.");
 }
 
 static int
@@ -581,24 +586,18 @@ main(int argc, char **argv)
 
 	if(argc < 2) return error("usage", "uxnemu file.rom");
 	if(!uxn_boot(&u)) return error("Boot", "Failed to start uxn.");
+	if(!load(&u, argv[argc - 1])) return error("Load", "Failed to open rom.");
+	if(!init(&u)) return error("Init", "Failed to initialize emulator.");
+	if(!set_size(WIDTH, HEIGHT, 0)) return error("Window", "Failed to set window size.");
 
 	for(i = 1; i < argc - 1; i++) {
 		if(strcmp(argv[i], "-s") == 0) {
-			if((i + 1) < argc - 1) {
-				zoom = atoi(argv[++i]);
-				if(zoom < 1 || zoom > 3) return error("Opt", "-s Scale must be between 1 and 3.");
-			} else {
+			if((i + 1) < argc - 1)
+				set_zoom(&u, atoi(argv[++i]));
+			else
 				return error("Opt", "-s No scale provided.");
-			}
 		}
 	}
-
-	if(!load(&u, argv[argc - 1])) return error("Load", "Failed to open rom.");
-	if(!init()) return error("Init", "Failed to initialize emulator.");
-
-	stdin_event = SDL_RegisterEvents(1);
-	audio0_event = SDL_RegisterEvents(POLYPHONY);
-	SDL_CreateThread(stdin_handler, "stdin", NULL);
 
 	/* system   */ devsystem = uxn_port(&u, 0x0, system_talk);
 	/* console  */ devconsole = uxn_port(&u, 0x1, console_talk);
