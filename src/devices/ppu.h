@@ -23,8 +23,7 @@ typedef unsigned int Uint32;
 
 typedef struct Ppu {
 	Uint16 width, height;
-	int i0, i1, redraw;
-	unsigned int *dat, stride;
+	unsigned int i0, i1, redraw, *dat, stride;
 } Ppu;
 
 void ppu_frame(Ppu *p);
