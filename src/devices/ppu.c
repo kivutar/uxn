@@ -45,7 +45,7 @@ ppu_pixel(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 color)
 	if(fg) shift += 2;
 	p->dat[i] &= ~(3 << shift);
 	p->dat[i] |= color << shift;
-	if((v ^ p->dat[i]) != 0){
+	if((v ^ p->dat[i]) != 0) {
 		p->redraw = 1;
 		p->i0 = p->i0 < i ? p->i0 : i;
 		p->i1 = p->i1 > i ? p->i1 : i;
