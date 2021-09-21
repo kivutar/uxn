@@ -78,6 +78,10 @@ You can send events from Uxn to another application, or another instance of uxn,
 uxnemu orca.rom | shim
 ```
 
+## Emulator Options
+
+- `-s 1`, `-s 2` or `-s 3` set zoom (default 1)
+
 ## Emulator Controls
 
 - `F1` toggle zoom

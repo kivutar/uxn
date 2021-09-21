@@ -577,15 +577,28 @@ int
 main(int argc, char **argv)
 {
 	Uxn u;
+	int i;
+
+	if(argc < 2) return error("usage", "uxnemu file.rom");
+	if(!uxn_boot(&u)) return error("Boot", "Failed to start uxn.");
+
+	for(i = 1; i < argc - 1; i++) {
+		if(strcmp(argv[i], "-s") == 0) {
+			if((i + 1) < argc - 1) {
+				zoom = atoi(argv[++i]);
+				if(zoom < 1 || zoom > 3) return error("Opt", "-s Scale must be between 1 and 3.");
+			} else {
+				return error("Opt", "-s No scale provided.");
+			}
+		}
+	}
+
+	if(!load(&u, argv[argc - 1])) return error("Load", "Failed to open rom.");
+	if(!init()) return error("Init", "Failed to initialize emulator.");
 
 	stdin_event = SDL_RegisterEvents(1);
 	audio0_event = SDL_RegisterEvents(POLYPHONY);
 	SDL_CreateThread(stdin_handler, "stdin", NULL);
-
-	if(argc < 2) return error("usage", "uxnemu file.rom");
-	if(!uxn_boot(&u)) return error("Boot", "Failed to start uxn.");
-	if(!load(&u, argv[1])) return error("Load", "Failed to open rom.");
-	if(!init()) return error("Init", "Failed to initialize emulator.");
 
 	/* system   */ devsystem = uxn_port(&u, 0x0, system_talk);
 	/* console  */ devconsole = uxn_port(&u, 0x1, console_talk);
