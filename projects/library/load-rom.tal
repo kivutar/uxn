@@ -65,24 +65,24 @@
 	POP POP2r
 
 	( copy the zero-page-loader into f0-ff )
-	;&zero-page-loader LIT2r 00f0
+	;&zero-page-loader LITr f0
 	&copy-loop
-	LDAk STH2kr STA
-	INC2 INC2r
+	LDAk STHkr STZ
+	INC2 INCr
 	STHkr ,&copy-loop JCN
-	POP2 NIPr ( leave 00 on return stack )
+	POP2 ( leave 00 on return stack )
 
 	( prepare the stack for the zero-page-loader )
 	( the more we prepare here in advance, the less we'll have to overwrite )
-	STHkr DUPk #fe ( arguments for STA2 at ff )
-	OVR2 ( argument for JMP at fe (carry on), plus an extra zero )
-	DUP2 #fcfe ( arguments for STA2 at fd and JMP (repeat) )
-	OVR2 STHkr #fafe ( arguments for STA2 at fd and JMP (repeat) )
-	OVR2 STHkr #f8fe ( arguments for STA2 at fd and JMP (repeat) )
-	OVR2 STHkr #f6fe ( arguments for STA2 at fd and JMP (repeat) )
-	OVR2 STHkr #f4fe ( arguments for STA2 at fd and JMP (repeat) )
-	OVR2 STHkr #f2fe ( arguments for STA2 at fd and JMP (repeat) )
-	OVR2 STHkr #f001 ( arguments for STA2 at fd, plus an extra 01 )
+	STHkr #00fe ( arguments for STZ2 at ff )
+	STHkr ( argument for JMP at fe (carry on) )
+	DUPk #fcfe ( arguments for STZ2 at fd and JMP (repeat) )
+	OVR2 #fafe ( arguments for STZ2 at fd and JMP (repeat) )
+	OVR2 #f8fe ( arguments for STZ2 at fd and JMP (repeat) )
+	OVR2 #f6fe ( arguments for STZ2 at fd and JMP (repeat) )
+	OVR2 #f4fe ( arguments for STZ2 at fd and JMP (repeat) )
+	OVR2 #f2fe ( arguments for STZ2 at fd and JMP (repeat) )
+	OVR2 #f001 ( arguments for STZ2 at fd, plus an extra 01 )
 	STHkr ( first argument for ADD2 )
 	.File/success ( argument for DEI2 )
 	#0100 .File/load ( arguments for DEO2 )
@@ -103,9 +103,9 @@
 	( fa ) JCN
 	( fb ) POPr
 	( fc ) POP2
-	( fd ) STA2 ( deletes f0-fd through looping )
+	( fd ) STZ2 ( deletes f0-fd through looping )
 	( fe ) JMP
-	( ff ) STA2 ( deletes fe-ff )
+	( ff ) STZ2 ( deletes fe-ff )
 
 	&tmp $1
 
