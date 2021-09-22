@@ -128,8 +128,9 @@ set_zoom(Uint8 scale)
 	if(scale == zoom)
 		return;
 	zoom = clamp(scale, 1, 3);
-	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
 	reqdraw = 1;
+	if(gWindow)
+		set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
 }
 
 static int
@@ -600,12 +601,12 @@ main(int argc, char **argv)
 
 	/* set default zoom */
 	SDL_GetCurrentDisplayMode(0, &DM);
-	zoom = clamp(DM.w / 1280, 1, 3);
+	set_zoom(DM.w / 1280);
 	/* get default zoom from flags */
 	for(i = 1; i < argc - 1; i++) {
 		if(strcmp(argv[i], "-s") == 0) {
 			if((i + 1) < argc - 1)
-				zoom = clamp(atoi(argv[++i]), 1, 3);
+				set_zoom(clamp(atoi(argv[++i]), 1, 3));
 			else
 				return error("Opt", "-s No scale provided.");
 		}
