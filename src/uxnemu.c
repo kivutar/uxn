@@ -158,7 +158,7 @@ redraw(Uxn *u)
 	SDL_Rect up = gRect;
 	if(devsystem->dat[0xe])
 		inspect(&ppu, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
-	if(ppu.redraw) {
+	if(!reqdraw && ppu.redraw) {
 		y0 = ppu.i0 / ppu.stride;
 		y1 = ppu.i1 / ppu.stride + 1;
 		up.y += y0;
