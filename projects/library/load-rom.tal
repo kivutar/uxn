@@ -1,0 +1,87 @@
+@load-rom ( filename* -- )
+(
+	Attempts to load the ROM from filename* and executes it. If the file exists
+	and has non-zero length, this function does not return, because the new ROM
+	is executing in its place.
+
+	Both stacks are cleared and all the device vectors are written to zero as a
+	convenience, but the screen is not cleared. All ROMs that use the screen
+	define the palette (usually in the reset vector) so that should clear the
+	screen anyway. All other device bytes are left untouched, so they could
+	introduce a device state to the next ROM that it's not expecting.
+)
+
+	.File/name DEO2
+	#0000 .File/offset-hs DEO2
+	#0000 .File/offset-ls DEO2
+
+	( return if file can't be found, or zero length )
+	#0001 .File/length DEO2
+	;&tmp .File/load DEO2
+	.File/success DEI2 ORA JMP JMP2r
+
+	( clear wst )
+	#ab
+	&wst-loop
+	POP
+	.System/wst STH DEIr STHr #01 GTH ,&wst-loop JCN
+
+	( clear rst )
+	LITr ab
+	&rst-loop
+	POPr
+	.System/rst DEI ,&rst-loop JCN
+
+	( reset device vectors )
+	LIT2r 0000 #00
+	&device-vector-loop
+	DUP2r STHk DEO2r
+	#10 ADD
+	DUP ,&device-vector-loop JCN
+	POP POP2r
+
+	( copy the zero-page-loader into f0-ff )
+	;&zero-page-loader LIT2r 00f0
+	&copy-loop
+	LDAk STH2kr STA
+	INC2 INC2r
+	STHkr ,&copy-loop JCN
+	POP2 NIPr ( leave 00 on return stack )
+
+	( prepare the stack for the zero-page-loader )
+	( the more we prepare here in advance, the less we'll have to overwrite )
+	STHkr DUPk #fe ( arguments for STA2 at ff )
+	OVR2 ( argument for JMP at fe (carry on), plus an extra zero )
+	DUP2 #fcfe ( arguments for STA2 at fd and JMP (repeat) )
+	OVR2 STHkr #fafe ( arguments for STA2 at fd and JMP (repeat) )
+	OVR2 STHkr #f8fe ( arguments for STA2 at fd and JMP (repeat) )
+	OVR2 STHkr #f6fe ( arguments for STA2 at fd and JMP (repeat) )
+	OVR2 STHkr #f4fe ( arguments for STA2 at fd and JMP (repeat) )
+	OVR2 STHkr #f2fe ( arguments for STA2 at fd and JMP (repeat) )
+	OVR2 STHkr #f001 ( arguments for STA2 at fd, plus an extra 01 )
+	STHkr ( first argument for ADD2 )
+	.File/success ( argument for DEI2 )
+	#0100 .File/load ( arguments for DEO2 )
+	#ff00 .File/length DEO2
+	#00f0 JMP2
+
+	&zero-page-loader
+	( f0 ) DEO2
+	( f1 ) DEI2
+	( f2 ) ADD2
+	( f3 ) &loop DUPr
+	( f4 ) STH2k
+	( f5 ) STAr
+	( f6 ) INC2
+	( f7 ) NEQ2k
+	( f8 ) ,&loop
+	( f9 )
+	( fa ) JCN
+	( fb ) POPr
+	( fc ) POP2
+	( fd ) STA2 ( deletes f0-fd through looping )
+	( fe ) JMP
+	( ff ) STA2 ( deletes fe-ff )
+
+	&tmp $1
+
