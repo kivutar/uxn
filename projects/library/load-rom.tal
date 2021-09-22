@@ -23,7 +23,7 @@
 	#ab
 	&wst-loop
 	POP
-	.System/wst STH DEIr STHr #01 GTH ,&wst-loop JCN
+	.System/wst STH DEIr STHr ,&wst-loop JCN
 
 	( clear rst )
 	LITr ab
