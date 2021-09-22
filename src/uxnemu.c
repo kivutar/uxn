@@ -598,22 +598,23 @@ main(int argc, char **argv)
 	/* unused   */ uxn_port(&u, 0xe, nil_talk);
 	/* unused   */ uxn_port(&u, 0xf, nil_talk);
 
-	if(!init())
-		return error("Init", "Failed to initialize emulator.");
-	if(!set_size(WIDTH, HEIGHT, 0))
-		return error("Window", "Failed to set window size.");
-	/* default zoom */
+	/* set default zoom */
 	SDL_GetCurrentDisplayMode(0, &DM);
-	set_zoom(DM.w / 1000);
-	/* zoom from flags */
+	zoom = clamp(DM.w / 1280, 1, 3);
+	/* get default zoom from flags */
 	for(i = 1; i < argc - 1; i++) {
 		if(strcmp(argv[i], "-s") == 0) {
 			if((i + 1) < argc - 1)
-				set_zoom(atoi(argv[++i]));
+				zoom = clamp(atoi(argv[++i]), 1, 3);
 			else
 				return error("Opt", "-s No scale provided.");
 		}
 	}
+
+	if(!init())
+		return error("Init", "Failed to initialize emulator.");
+	if(!set_size(WIDTH, HEIGHT, 0))
+		return error("Window", "Failed to set window size.");
 
 	run(&u);
 	quit();
