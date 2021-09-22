@@ -165,7 +165,6 @@ set_size(Uint16 width, Uint16 height, int is_resize)
 	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
 	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
 		return error("sdl_texture", SDL_GetError());
-	SDL_UpdateTexture(gTexture, NULL, ppu_screen, sizeof(Uint32));
 	if(is_resize)
 		set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
 	reqdraw = 1;
