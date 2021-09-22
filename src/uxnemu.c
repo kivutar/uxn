@@ -376,8 +376,12 @@ system_talk(Device *d, Uint8 b0, Uint8 w)
 static int
 console_talk(Device *d, Uint8 b0, Uint8 w)
 {
-	if(w && b0 > 0x7)
-		write(b0 - 0x7, (char *)&d->dat[b0], 1);
+	if(w) {
+		if(b0 == 0x1)
+			d->vector = peek16(d->dat, 0x0);
+		if(b0 > 0x7)
+			write(b0 - 0x7, (char *)&d->dat[b0], 1);
+	}
 	return 1;
 }
 
@@ -392,6 +396,7 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 		}
 	else
 		switch(b0) {
+		case 0x1: d->vector = peek16(d->dat, 0x0); break;
 		case 0x5:
 			if(!FIXED_SIZE) return set_size(peek16(d->dat, 0x2), peek16(d->dat, 0x4), 1);
 			break;
@@ -491,6 +496,8 @@ datetime_talk(Device *d, Uint8 b0, Uint8 w)
 static int
 nil_talk(Device *d, Uint8 b0, Uint8 w)
 {
+	if(w && b0 == 0x1)
+		d->vector = peek16(d->dat, 0x0);
 	(void)d;
 	(void)b0;
 	(void)w;
@@ -525,7 +532,7 @@ run(Uxn *u)
 			case SDL_KEYDOWN:
 			case SDL_KEYUP:
 				doctrl(&event, event.type == SDL_KEYDOWN);
-				uxn_eval(u, peek16(devctrl->dat, 0));
+				uxn_eval(u, devctrl->vector);
 				devctrl->dat[3] = 0;
 				break;
 			case SDL_MOUSEWHEEL:
@@ -533,7 +540,7 @@ run(Uxn *u)
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEMOTION:
 				domouse(&event);
-				uxn_eval(u, peek16(devmouse->dat, 0));
+				uxn_eval(u, devmouse->vector);
 				break;
 			case SDL_WINDOWEVENT:
 				if(event.window.event == SDL_WINDOWEVENT_EXPOSED)
@@ -542,12 +549,12 @@ run(Uxn *u)
 			default:
 				if(event.type == stdin_event) {
 					devconsole->dat[0x2] = event.cbutton.button;
-					uxn_eval(u, peek16(devconsole->dat, 0));
+					uxn_eval(u, devconsole->vector);
 				} else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY)
 					uxn_eval(u, peek16((devaudio0 + (event.type - audio0_event))->dat, 0));
 			}
 		}
-		uxn_eval(u, peek16(devscreen->dat, 0));
+		uxn_eval(u, devscreen->vector);
 		if(reqdraw || ppu.redraw || devsystem->dat[0xe])
 			redraw(u);
 		if(!BENCH) {
