@@ -583,8 +583,6 @@ main(int argc, char **argv)
 		return error("Boot", "Failed to start uxn.");
 	if(!load(&u, argv[argc - 1]))
 		return error("Load", "Failed to open rom.");
-	if(!init(&u))
-		return error("Init", "Failed to initialize emulator.");
 
 	/* system   */ devsystem = uxn_port(&u, 0x0, system_talk);
 	/* console  */ devconsole = uxn_port(&u, 0x1, console_talk);
@@ -603,6 +601,8 @@ main(int argc, char **argv)
 	/* unused   */ uxn_port(&u, 0xe, nil_talk);
 	/* unused   */ uxn_port(&u, 0xf, nil_talk);
 
+	if(!init(&u))
+		return error("Init", "Failed to initialize emulator.");
 	if(!set_size(WIDTH, HEIGHT, 0))
 		return error("Window", "Failed to set window size.");
 
