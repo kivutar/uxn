@@ -245,9 +245,8 @@ quit(void)
 }
 
 static int
-init(Uxn *u)
+init(void)
 {
-	SDL_DisplayMode DM;
 	SDL_AudioSpec as;
 	SDL_zero(as);
 	as.freq = SAMPLE_FREQUENCY;
@@ -276,8 +275,6 @@ init(Uxn *u)
 	SDL_CreateThread(stdin_handler, "stdin", NULL);
 	SDL_StartTextInput();
 	SDL_ShowCursor(SDL_DISABLE);
-	SDL_GetCurrentDisplayMode(0, &DM);
-	set_zoom(u, DM.w / 1000);
 	return 1;
 }
 
@@ -574,6 +571,7 @@ load(Uxn *u, char *filepath)
 int
 main(int argc, char **argv)
 {
+	SDL_DisplayMode DM;
 	Uxn u;
 	int i;
 
@@ -601,11 +599,14 @@ main(int argc, char **argv)
 	/* unused   */ uxn_port(&u, 0xe, nil_talk);
 	/* unused   */ uxn_port(&u, 0xf, nil_talk);
 
-	if(!init(&u))
+	if(!init())
 		return error("Init", "Failed to initialize emulator.");
 	if(!set_size(WIDTH, HEIGHT, 0))
 		return error("Window", "Failed to set window size.");
-
+	/* default zoom */
+	SDL_GetCurrentDisplayMode(0, &DM);
+	set_zoom(&u, DM.w / 1000);
+	/* zoom from flags */
 	for(i = 1; i < argc - 1; i++) {
 		if(strcmp(argv[i], "-s") == 0) {
 			if((i + 1) < argc - 1)
