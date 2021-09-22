@@ -4,11 +4,10 @@
 	and has non-zero length, this function does not return, because the new ROM
 	is executing in its place.
 
-	Both stacks are cleared and all the device vectors are written to zero as a
-	convenience, but the screen is not cleared. All ROMs that use the screen
-	define the palette (usually in the reset vector) so that should clear the
-	screen anyway. All other device bytes are left untouched, so they could
-	introduce a device state to the next ROM that it's not expecting.
+	The screen and both stacks are cleared and all the device vectors are
+	written to zero as a convenience. All other device bytes are left
+	untouched, so they could introduce a device state to the next ROM that
+	it's not expecting.
 )
 
 	.File/name DEO2
@@ -31,6 +30,31 @@
 	&rst-loop
 	POPr
 	.System/rst DEI ,&rst-loop JCN
+
+	( clear screen )
+	#01 .Screen/auto DEO
+	#0000 .Screen/y DEO2
+	.Screen/width DEI2 #0007 ADD2 #03 SFT2 #ffff MUL2 STH2
+	&screen-yloop
+		#0000 .Screen/x DEO2
+		STH2kr
+		&screen-xloop-bg
+			#00 .Screen/sprite DEO
+			INC2
+			ORAk ,&screen-xloop-bg JCN
+		POP2
+		#0000 .Screen/x DEO2
+		STH2kr
+		&screen-xloop-fg
+			#40 .Screen/sprite DEO
+			INC2
+			ORAk ,&screen-xloop-fg JCN
+		POP2
+		.Screen/y DEI2 #0008 ADD2
+		DUP2 .Screen/y DEO2
+		.Screen/height DEI2 LTH2 ,&screen-yloop JCN
+	POP2r
+	#00 .Screen/auto DEO
 
 	( reset device vectors )
 	LIT2r 0000 #00
