@@ -105,6 +105,22 @@ stdin_handler(void *p)
 	(void)p;
 }
 
+void
+set_palette(Uint8 *addr)
+{
+	int i;
+	for(i = 0; i < 4; ++i) {
+		Uint8
+			r = (*(addr + i / 2) >> (!(i % 2) << 2)) & 0x0f,
+			g = (*(addr + 2 + i / 2) >> (!(i % 2) << 2)) & 0x0f,
+			b = (*(addr + 4 + i / 2) >> (!(i % 2) << 2)) & 0x0f;
+		palette[i] = 0xff000000 | (r << 20) | (r << 16) | (g << 12) | (g << 8) | (b << 4) | b;
+	}
+	for(i = 4; i < 16; ++i)
+		palette[i] = palette[i / 4];
+	reqdraw = 1;
+}
+
 static void
 set_inspect(Uint8 flag)
 {
@@ -336,22 +352,6 @@ doctrl(SDL_Event *event, int z)
 		devctrl->dat[2] &= ~flag;
 }
 
-void
-update_palette(Uint8 *addr)
-{
-	int i;
-	for(i = 0; i < 4; ++i) {
-		Uint8
-			r = (*(addr + i / 2) >> (!(i % 2) << 2)) & 0x0f,
-			g = (*(addr + 2 + i / 2) >> (!(i % 2) << 2)) & 0x0f,
-			b = (*(addr + 4 + i / 2) >> (!(i % 2) << 2)) & 0x0f;
-		palette[i] = 0xff000000 | (r << 20) | (r << 16) | (g << 12) | (g << 8) | (b << 4) | b;
-	}
-	for(i = 4; i < 16; ++i)
-		palette[i] = palette[i / 4];
-	reqdraw = 1;
-}
-
 #pragma mark - Devices
 
 static int
@@ -369,7 +369,7 @@ system_talk(Device *d, Uint8 b0, Uint8 w)
 		case 0xf: return 0;
 		}
 		if(b0 > 0x7 && b0 < 0xe)
-			update_palette(&d->dat[0x8]);
+			set_palette(&d->dat[0x8]);
 	}
 	return 1;
 }
