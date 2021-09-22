@@ -106,19 +106,74 @@ stdin_handler(void *p)
 }
 
 static void
+set_inspect(Uint8 flag)
+{
+	devsystem->dat[0xe] = flag;
+	reqdraw = 1;
+}
+
+static void
 set_window_size(SDL_Window *window, int w, int h)
 {
-	SDL_Point win, win_old, win_ratio;
+	SDL_Point win, win_old;
 	SDL_GetWindowPosition(window, &win.x, &win.y);
 	SDL_GetWindowSize(window, &win_old.x, &win_old.y);
-	win_ratio.x = win.x + win_old.x / 2;
-	win_ratio.y = win.y + win_old.y / 2;
-	SDL_SetWindowPosition(window, win_ratio.x - w / 2, win_ratio.y - h / 2);
+	SDL_SetWindowPosition(window, (win.x + win_old.x / 2) - w / 2, (win.y + win_old.y / 2) - h / 2);
 	SDL_SetWindowSize(window, w, h);
 }
 
 static void
-inspect(Ppu *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
+set_zoom(Uint8 scale)
+{
+	if(scale == zoom)
+		return;
+	zoom = clamp(scale, 1, 3);
+	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
+	reqdraw = 1;
+}
+
+static int
+set_size(Uint16 width, Uint16 height, int is_resize)
+{
+	ppu_set_size(&ppu, width, height);
+	gRect.x = PAD;
+	gRect.y = PAD;
+	gRect.w = ppu.width;
+	gRect.h = ppu.height;
+	if(!(ppu_screen = realloc(ppu_screen, ppu.width * ppu.height * sizeof(Uint32))))
+		return error("ppu_screen", "Memory failure");
+	memset(ppu_screen, 0, ppu.width * ppu.height * sizeof(Uint32));
+	if(gTexture != NULL) SDL_DestroyTexture(gTexture);
+	SDL_RenderSetLogicalSize(gRenderer, ppu.width + PAD * 2, ppu.height + PAD * 2);
+	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
+	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
+		return error("sdl_texture", SDL_GetError());
+	SDL_UpdateTexture(gTexture, NULL, ppu_screen, sizeof(Uint32));
+	if(is_resize)
+		set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
+	reqdraw = 1;
+	return 1;
+}
+
+static void
+capture_screen(void)
+{
+	const Uint32 format = SDL_PIXELFORMAT_RGB24;
+	time_t t = time(NULL);
+	char fname[64];
+	int w, h;
+	SDL_Surface *surface;
+	SDL_GetRendererOutputSize(gRenderer, &w, &h);
+	surface = SDL_CreateRGBSurfaceWithFormat(0, w, h, 24, format);
+	SDL_RenderReadPixels(gRenderer, NULL, format, surface->pixels, surface->pitch);
+	strftime(fname, sizeof(fname), "screenshot-%Y%m%d-%H%M%S.bmp", localtime(&t));
+	SDL_SaveBMP(surface, fname);
+	SDL_FreeSurface(surface);
+	fprintf(stderr, "Saved %s\n", fname);
+}
+
+static void
+draw_inspect(Ppu *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
 {
 	Uint8 i, x, y, b;
 	for(i = 0; i < 0x20; ++i) { /* stack */
@@ -157,7 +212,7 @@ redraw(Uxn *u)
 	Uint16 x, y, y0 = 0, y1 = ppu.height;
 	SDL_Rect up = gRect;
 	if(devsystem->dat[0xe])
-		inspect(&ppu, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
+		draw_inspect(&ppu, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
 	if(!reqdraw && ppu.redraw) {
 		y0 = ppu.i0 / ppu.stride;
 		y1 = ppu.i1 / ppu.stride + 1;
@@ -173,62 +228,6 @@ redraw(Uxn *u)
 	SDL_RenderPresent(gRenderer);
 	reqdraw = 0;
 	ppu_frame(&ppu);
-}
-
-static void
-toggle_debug(Uxn *u)
-{
-	devsystem->dat[0xe] = !devsystem->dat[0xe];
-	redraw(u);
-}
-
-static void
-set_zoom(Uxn *u, Uint8 scale)
-{
-	if(scale == zoom)
-		return;
-	zoom = clamp(scale, 1, 3);
-	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
-	redraw(u);
-}
-
-static void
-capture_screen(void)
-{
-	const Uint32 format = SDL_PIXELFORMAT_RGB24;
-	time_t t = time(NULL);
-	char fname[64];
-	int w, h;
-	SDL_Surface *surface;
-	SDL_GetRendererOutputSize(gRenderer, &w, &h);
-	surface = SDL_CreateRGBSurfaceWithFormat(0, w, h, 24, format);
-	SDL_RenderReadPixels(gRenderer, NULL, format, surface->pixels, surface->pitch);
-	strftime(fname, sizeof(fname), "screenshot-%Y%m%d-%H%M%S.bmp", localtime(&t));
-	SDL_SaveBMP(surface, fname);
-	SDL_FreeSurface(surface);
-	fprintf(stderr, "Saved %s\n", fname);
-}
-
-static int
-set_size(Uint16 width, Uint16 height, int is_resize)
-{
-	ppu_set_size(&ppu, width, height);
-	gRect.x = PAD;
-	gRect.y = PAD;
-	gRect.w = ppu.width;
-	gRect.h = ppu.height;
-	if(!(ppu_screen = realloc(ppu_screen, ppu.width * ppu.height * sizeof(Uint32))))
-		return error("ppu_screen", "Memory failure");
-	memset(ppu_screen, 0, ppu.width * ppu.height * sizeof(Uint32));
-	if(gTexture != NULL) SDL_DestroyTexture(gTexture);
-	SDL_RenderSetLogicalSize(gRenderer, ppu.width + PAD * 2, ppu.height + PAD * 2);
-	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
-	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
-		return error("sdl_texture", SDL_GetError());
-	SDL_UpdateTexture(gTexture, NULL, ppu_screen, sizeof(Uint32));
-	if(is_resize) set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
-	reqdraw = 1;
-	return 1;
 }
 
 static void
@@ -301,7 +300,7 @@ domouse(SDL_Event *event)
 }
 
 static void
-doctrl(Uxn *u, SDL_Event *event, int z)
+doctrl(SDL_Event *event, int z)
 {
 	Uint8 flag = 0x00;
 	SDL_Keymod mods = SDL_GetModState();
@@ -316,8 +315,8 @@ doctrl(Uxn *u, SDL_Event *event, int z)
 	case SDLK_DOWN: flag = 0x20; break;
 	case SDLK_LEFT: flag = 0x40; break;
 	case SDLK_RIGHT: flag = 0x80; break;
-	case SDLK_F1: if(z) set_zoom(u, zoom == 3 ? 1 : zoom + 1); break;
-	case SDLK_F2: if(z) toggle_debug(u); break;
+	case SDLK_F1: if(z) set_zoom(zoom == 3 ? 1 : zoom + 1); break;
+	case SDLK_F2: if(z) set_inspect(!devsystem->dat[0xe]); break;
 	case SDLK_F3: if(z) capture_screen(); break;
 	}
 	/* clang-format on */
@@ -520,7 +519,7 @@ run(Uxn *u)
 				devctrl->dat[3] = event.text.text[0]; /* fall-thru */
 			case SDL_KEYDOWN:
 			case SDL_KEYUP:
-				doctrl(u, &event, event.type == SDL_KEYDOWN);
+				doctrl(&event, event.type == SDL_KEYDOWN);
 				uxn_eval(u, peek16(devctrl->dat, 0));
 				devctrl->dat[3] = 0;
 				break;
@@ -605,12 +604,12 @@ main(int argc, char **argv)
 		return error("Window", "Failed to set window size.");
 	/* default zoom */
 	SDL_GetCurrentDisplayMode(0, &DM);
-	set_zoom(&u, DM.w / 1000);
+	set_zoom(DM.w / 1000);
 	/* zoom from flags */
 	for(i = 1; i < argc - 1; i++) {
 		if(strcmp(argv[i], "-s") == 0) {
 			if((i + 1) < argc - 1)
-				set_zoom(&u, atoi(argv[++i]));
+				set_zoom(atoi(argv[++i]));
 			else
 				return error("Opt", "-s No scale provided.");
 		}
