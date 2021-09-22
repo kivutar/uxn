@@ -284,8 +284,13 @@ domouse(SDL_Event *event)
 	Uint8 flag = 0x00;
 	Uint16 x = clamp(event->motion.x - PAD, 0, ppu.width - 1);
 	Uint16 y = clamp(event->motion.y - PAD, 0, ppu.height - 1);
+	if(event->type == SDL_MOUSEWHEEL) {
+		devmouse->dat[7] = event->wheel.y;
+		return;
+	}
 	poke16(devmouse->dat, 0x2, x);
 	poke16(devmouse->dat, 0x4, y);
+	devmouse->dat[7] = 0x00;
 	switch(event->button.button) {
 	case SDL_BUTTON_LEFT: flag = 0x01; break;
 	case SDL_BUTTON_RIGHT: flag = 0x10; break;
@@ -525,10 +530,6 @@ run(Uxn *u)
 				devctrl->dat[3] = 0;
 				break;
 			case SDL_MOUSEWHEEL:
-				devmouse->dat[7] = event.wheel.y;
-				uxn_eval(u, peek16(devmouse->dat, 0));
-				devmouse->dat[7] = 0;
-				break;
 			case SDL_MOUSEBUTTONUP:
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEMOTION:
