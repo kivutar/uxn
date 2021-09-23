@@ -80,9 +80,7 @@
 	OVR2 #fafe ( arguments for STZ2 at fd and JMP (repeat) )
 	OVR2 #f8fe ( arguments for STZ2 at fd and JMP (repeat) )
 	OVR2 #f6fe ( arguments for STZ2 at fd and JMP (repeat) )
-	OVR2 #f4fe ( arguments for STZ2 at fd and JMP (repeat) )
-	OVR2 #f2fe ( arguments for STZ2 at fd and JMP (repeat) )
-	OVR2 #f001 ( arguments for STZ2 at fd, plus an extra 01 )
+	OVR2 #f401 ( arguments for STZ2 at fd, plus an extra 01 )
 	STHkr ( first argument for ADD2 )
 	.File/success ( argument for DEI2 )
 	#0100 .File/load ( arguments for DEO2 )
@@ -103,7 +101,7 @@
 	( fa ) JCN
 	( fb ) POPr
 	( fc ) POP2
-	( fd ) STZ2 ( deletes f0-fd through looping )
+	( fd ) STZ2 ( deletes f4-fd through looping )
 	( fe ) JMP
 	( ff ) STZ2 ( deletes fe-ff )
 
