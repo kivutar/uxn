@@ -7,7 +7,7 @@
 
 %2*   { #10 SFT } 
 %4*   { #20 SFT } %4/ { #02 SFT }
-%8/   { #03 SFT }
+%8*   { #30 SFT } %8/   { #03 SFT }
 %2**  { #10 SFT2 } %2// { #01 SFT2 }
 %4**  { #20 SFT2 }
 %8**  { #30 SFT2 } %8// { #03 SFT2 }
@@ -203,13 +203,26 @@ BRK
 	DUP #03 ! ,&no-div JCN ;do-div JSR2 &no-div
 	POP
 
+	;draw-bitpad JSR2
 	( release mouse ) #00 .Mouse/state DEO
 
 BRK
 
 @click-bitpad ( x* y* -> )
 
-	DEBUG2 DEBUG2
+	.bitpad-frame/y LDZ2 -- 8// NIP 8* STH
+	.bitpad-frame/x LDZ2 -- 8// NIP STHr +
+	STHk
+
+	#30 + .Audio0/pitch DEO
+
+	( toggle bit )
+	.input/value LDZ2 #0001 
+		[ STHr #0f SWP - ] #40 SFT SFT2 EOR2 
+		.input/value STZ2
+
+	( release mouse ) #00 .Mouse/state DEO
+	;draw-bitpad JSR2
 
 BRK
 
@@ -238,6 +251,7 @@ BRK
 	TOS .input/value LDZ2 #40 SFT2 ++ .input/value STZ2
 	.input/length LDZ INC .input/length STZ
 	#ff ;draw-input JSR2
+	;draw-bitpad JSR2
 
 RTN
 
@@ -478,9 +492,9 @@ RTN
 
 	#10 #00
 	&loop
-		( state ) #00 STH
-		( y ) .bitpad-frame/y LDZ2 STH2
-		( x ) DUP TOS 4** .bitpad-frame/x LDZ2 ++
+		( state ) DUP #0f SWP - .input/value LDZ2 ROT SFT2 #0001 AND2 NIP STH
+		( y ) DUP 8/ TOS 8** .bitpad-frame/y LDZ2 ++ STH2
+		( x ) DUP #07 AND TOS 8** .bitpad-frame/x LDZ2 ++
 		STH2r STHr #01 ;draw-bit JSR2
 		INC GTHk ,&loop JCN
 	POP2
@@ -490,7 +504,7 @@ RTN
 @draw-bit ( x* y* state color -- )
 
 	STH
-	( addr ) POP ;bit-icns .Screen/addr DEO2 
+	( addr ) 8* TOS ;bit-icns ++ .Screen/addr DEO2 
 	( y ) .Screen/y DEO2
 	( x ) .Screen/x DEO2
 	STHr .Screen/sprite DEO	
@@ -681,7 +695,10 @@ RTN
 		fefe fefe fe7c 3800
 
 @bit-icns
-	e0e0 e0e0 e0e0 e000
+	&outline
+		3844 8282 8244 3800
+	&full
+		387c fefe fe7c 3800
 
 @stack-icns
 	&push
