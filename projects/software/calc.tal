@@ -7,6 +7,7 @@
 
 %2*   { #10 SFT } 
 %4*   { #20 SFT } %4/ { #02 SFT }
+%8/   { #03 SFT }
 %2**  { #10 SFT2 } %2// { #01 SFT2 }
 %4**  { #20 SFT2 }
 %8**  { #30 SFT2 } %8// { #03 SFT2 }
@@ -52,6 +53,8 @@
 	&x $2 &y $2 &x2 $2 &y2 $2
 @modpad-frame
 	&x $2 &y $2 &x2 $2 &y2 $2
+@bitpad-frame
+	&x $2 &y $2 &x2 $2 &y2 $2
 @input-frame
 	&x $2 &y $2 &x2 $2 &y2 $2
 
@@ -89,16 +92,23 @@
 	DUP2 .keypad-frame/y STZ2
 		#0040 ++ .keypad-frame/y2 STZ2
 
-	.keypad-frame/x LDZ2 #0040 ++ 
+	.keypad-frame/x LDZ2
 	DUP2 .modpad-frame/x STZ2
-		#0010 ++ .modpad-frame/x2 STZ2
-	.keypad-frame/y LDZ2 
+		#0040 ++ .modpad-frame/x2 STZ2
+	.keypad-frame/y LDZ2 #0040 ++
 	DUP2 .modpad-frame/y STZ2
-		#0040 ++ .modpad-frame/y2 STZ2
+		#0010 ++ .modpad-frame/y2 STZ2
+
+	.keypad-frame/x LDZ2
+	DUP2 .bitpad-frame/x STZ2
+		#0040 ++ .bitpad-frame/x2 STZ2
+	.keypad-frame/y LDZ2 #0058 ++
+	DUP2 .bitpad-frame/y STZ2
+		#0010 ++ .bitpad-frame/y2 STZ2
 
 	.center/x LDZ2 #0028 -- 
 	DUP2 .input-frame/x STZ2
-		#0050 ++ .input-frame/x2 STZ2
+		#0040 ++ .input-frame/x2 STZ2
 	.center/y LDZ2 #0030 -- 
 	DUP2 .input-frame/y STZ2
 		#0010 ++ .input-frame/y2 STZ2
@@ -165,6 +175,8 @@ BRK
 		;within-rect JSR2 ;click-input JCN2
 	OVR2 OVR2 .modpad-frame 
 		;within-rect JSR2 ;click-modpad JCN2
+	OVR2 OVR2 .bitpad-frame 
+		;within-rect JSR2 ;click-bitpad JCN2
 	POP2 POP2
 
 BRK
@@ -182,9 +194,9 @@ BRK
 
 @click-modpad ( x* y* -> )
 
-	NIP2
+	POP2
 	( get key )
-	.modpad-frame/y LDZ2 -- 10// NIP
+	.modpad-frame/x LDZ2 -- 10// NIP
 	DUP #00 ! ,&no-add JCN ;do-add JSR2 &no-add
 	DUP #01 ! ,&no-sub JCN ;do-sub JSR2 &no-sub
 	DUP #02 ! ,&no-mul JCN ;do-mul JSR2 &no-mul
@@ -195,16 +207,22 @@ BRK
 
 BRK
 
+@click-bitpad ( x* y* -> )
+
+	DEBUG2 DEBUG2
+
+BRK
+
 @click-input ( x* y* -> )
 
 	POP2
-	.input-frame/x LDZ2 #0008 ++ -- 10// NIP
-	DUP #03 ! ,&no-push JCN
+	.input-frame/x LDZ2 -- 8// NIP
+	DUP #06 ! ,&no-push JCN
 		.input/value LDZ2 #0001 << ,&no-push-empty JCN
 			;do-push JSR2
 			&no-push-empty
 		&no-push
-	DUP #04 ! ,&no-pop JCN
+	DUP #07 ! ,&no-pop JCN
 		;do-pop JSR2
 		&no-pop
 	POP
@@ -341,6 +359,7 @@ RTN
 	#ff ;draw-keypad JSR2
 	#ff ;draw-modpad JSR2
 	#ff ;draw-input JSR2
+	;draw-bitpad JSR2
 	;draw-stack JSR2
 
 RTN
@@ -387,8 +406,7 @@ RTN
 @draw-input ( key -- )
 
 	STH
-
-	.input-frame/y LDZ2 #0002 ++ .Screen/y DEO2
+	.input-frame/y LDZ2 #0003 ++ .Screen/y DEO2
 	#04 #00
 	&loop
 		( x ) DUP TOS 8** .input-frame/x LDZ2 #0018 ++ SWP2 -- .Screen/x DEO2
@@ -402,13 +420,13 @@ RTN
 	( controls )
 	.input-frame/x LDZ2 #0030 ++
 	.input-frame/y LDZ2
-	;stack-icns/push [ STHkr #00 = ] #01
-		;draw-key JSR2
+	;stack-icns/push [ STHkr #00 = ] #02
+		;draw-key-thin JSR2
 
-	.input-frame/x LDZ2 #0040 ++
+	.input-frame/x LDZ2 #0038 ++
 	.input-frame/y LDZ2
-	;stack-icns/pop [ STHkr #01 = ] #02
-		;draw-key JSR2
+	;stack-icns/pop [ STHkr #01 = ] #03
+		;draw-key-thin JSR2
 
 	( line )
 	.input-frame/x LDZ2 
@@ -445,17 +463,37 @@ RTN
 	STH
 	#04 #00
 	&loop
-		( color ) #03 STH
-		( state ) DUP OVRr STHr = STH
-		( layout ) DUP TOS 8** ;mod-icns ++ STH2
-		( x ) #0000 STH2
-		( y ) DUP TOS 10**
-		( origin-x ) STH2r .modpad-frame/x LDZ2 ++ SWP2 
-		( origin-y ) .modpad-frame/y LDZ2 ++
-			STH2r STHr STHr ;draw-key JSR2
+		( state ) DUP STHkr = STH
+		( glyph ) DUP TOS 8** ;mod-icns ++ STH2
+		( y ) .modpad-frame/y LDZ2 STH2
+		( x ) DUP TOS 10** .modpad-frame/x LDZ2 ++ STH2
+		STH2r STH2r STH2r STHr #03 ;draw-key JSR2
 		INC GTHk ,&loop JCN
 	POP2
 	POPr
+
+RTN
+
+@draw-bitpad ( -- )
+
+	#10 #00
+	&loop
+		( state ) #00 STH
+		( y ) .bitpad-frame/y LDZ2 STH2
+		( x ) DUP TOS 4** .bitpad-frame/x LDZ2 ++
+		STH2r STHr #01 ;draw-bit JSR2
+		INC GTHk ,&loop JCN
+	POP2
+
+RTN
+
+@draw-bit ( x* y* state color -- )
+
+	STH
+	( addr ) POP ;bit-icns .Screen/addr DEO2 
+	( y ) .Screen/y DEO2
+	( x ) .Screen/x DEO2
+	STHr .Screen/sprite DEO	
 
 RTN
 
@@ -466,8 +504,8 @@ RTN
 	( state ) ,&state STR
 	( glyph ) ,&glyph STR2
 	( state ) ;button-icns [ #00 ,&state LDR 20** ++ ] .Screen/addr DEO2 
-	( y* ) .Screen/y DEO2
-	( x* ) .Screen/x DEO2
+	( y ) .Screen/y DEO2
+	( x ) .Screen/x DEO2
 	( draw background )
 	,&color LDR .Screen/sprite DEO
 	,&color LDR .Screen/sprite DEO
@@ -480,6 +518,27 @@ RTN
 	.Screen/x DEI2 #000c -- .Screen/x DEO2
 	.Screen/y DEI2 #0005 -- .Screen/y DEO2
 	,&color LDR [ ,&state LDR #09 MUL + ] .Screen/sprite DEO
+	( auto none ) #00 .Screen/auto DEO
+
+RTN
+	&color $1 &state $1 &glyph $2
+
+@draw-key-thin ( x* y* glyph* state color -- )
+
+	( auto y addr ) #06 .Screen/auto DEO
+	( color ) ,&color STR
+	( state ) ,&state STR
+	( glyph ) ,&glyph STR2
+	( state ) ;button-thin-icns [ #00 ,&state LDR 10** ++ ] .Screen/addr DEO2 
+	( y ) .Screen/y DEO2
+	( x ) .Screen/x DEO2
+	( draw background )
+	,&color LDR .Screen/sprite DEO
+	,&color LDR .Screen/sprite DEO
+	( glyph )
+	,&glyph LDR2 .Screen/addr DEO2
+	.Screen/y DEI2 #000c -- .Screen/y DEO2
+	#05 .Screen/sprite DEO
 	( auto none ) #00 .Screen/auto DEO
 
 RTN
@@ -613,11 +672,22 @@ RTN
 		ffff ffff ff7f 3f00
 		fefe fefe fefc f800
 
+@button-thin-icns
+	&outline
+		3844 8282 8282 8282
+		8282 8282 8244 3800
+	&full
+		387c fefe fefe fefe
+		fefe fefe fe7c 3800
+
+@bit-icns
+	e0e0 e0e0 e0e0 e000
+
 @stack-icns
 	&push
-		0000 0010 2844 0000
+		0000 1028 1000 0000
 	&pop
-		0000 1038 7c38 1000
+		0000 2810 2800 0000
 
 @pointer-icn
 	80c0 e0f0 f8e0 1000
