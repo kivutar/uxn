@@ -185,13 +185,15 @@ makelabel(char *name)
 }
 
 static int
-addref(Label *l)
+addref(Label *l, Uint8 rel)
 {
-	int pos = cpos(l->name, '/');
-	if(pos != -1) {
-		char root[64];
-		Label *rl = findlabel(scpy(l->name, root, pos));
-		++rl->refs;
+	if(rel) {
+		int pos = cpos(l->name, '/');
+		if(pos != -1) {
+			char root[64];
+			Label *rl = findlabel(scpy(l->name, root, pos));
+			++rl->refs;
+		}
 	}
 	return ++l->refs;
 }
@@ -244,19 +246,19 @@ parsetoken(char *w)
 		if(l->addr > 0xff)
 			return error("Address is not in zero page", w);
 		pushbyte(l->addr, 1);
-		return addref(l);
+		return addref(l, 1);
 	} else if(w[0] == ',' && (l = findlabel(w + 1))) { /* relative */
 		int off = l->addr - p.ptr - 3;
 		if(off < -126 || off > 126)
 			return error("Address is too far", w);
 		pushbyte((Sint8)off, 1);
-		return addref(l);
+		return addref(l, 0);
 	} else if(w[0] == ':' && (l = findlabel(w + 1))) { /* raw */
 		pushshort(l->addr, 0);
-		return addref(l);
+		return addref(l, 1);
 	} else if(w[0] == ';' && (l = findlabel(w + 1))) { /* absolute */
 		pushshort(l->addr, 1);
-		return addref(l);
+		return addref(l, 1);
 	} else if(findopcode(w) || scmp(w, "BRK", 4)) { /* opcode */
 		pushbyte(findopcode(w), 0);
 		return 1;
