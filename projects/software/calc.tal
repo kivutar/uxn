@@ -63,13 +63,13 @@
 |0100 ( -> )
 
 	( theme ) 
-	#0fef .System/r DEO2 
-	#0fc5 .System/g DEO2 
-	#0f25 .System/b DEO2
+	#6e7d .System/r DEO2 
+	#6ec6 .System/g DEO2 
+	#6e95 .System/b DEO2
 
 	( size )
-	#0120 .Screen/width DEO2
-	#0160 .Screen/height DEO2
+	#0090 .Screen/width DEO2
+	#0100 .Screen/height DEO2
 
 	( vectors )
 	;on-mouse .Mouse/vector DEO2
@@ -85,10 +85,10 @@
 	.Screen/width DEI2 2// .center/x STZ2
 	.Screen/height DEI2 2// .center/y STZ2
 
-	.center/x LDZ2 #0028 -- 
+	.center/x LDZ2 #0020 -- 
 	DUP2 .keypad-frame/x STZ2
 		#0040 ++ .keypad-frame/x2 STZ2
-	.center/y LDZ2 #0020 -- 
+	.center/y LDZ2 #0018 -- 
 	DUP2 .keypad-frame/y STZ2
 		#0040 ++ .keypad-frame/y2 STZ2
 
@@ -106,7 +106,7 @@
 	DUP2 .bitpad-frame/y STZ2
 		#0010 ++ .bitpad-frame/y2 STZ2
 
-	.center/x LDZ2 #0028 -- 
+	.center/x LDZ2 #0020 -- 
 	DUP2 .input-frame/x STZ2
 		#0040 ++ .input-frame/x2 STZ2
 	.center/y LDZ2 #0030 -- 
@@ -385,7 +385,7 @@ RTN
 		( color ) DUP #08 .stack/length LDZ - #01 - > STH
 		( value ) DUP 2* .stack/items + [ #10 .stack/length LDZ 2* - - ] LDZ2 STH2
 		( y ) DUP TOS 8** .input-frame/y LDZ2 ++ #0048 -- STH2
-		( x ) #0088 STH2r STH2r STHr ;draw-short JSR2
+		( x ) .input-frame/x LDZ2 #0020 ++ STH2r STH2r STHr ;draw-short JSR2
 		INC GTHk ,&loop JCN
 	POP2
 
@@ -410,9 +410,9 @@ RTN
 
 @get-length ( short* -- length )
 
-	DUP2 #0fff << ,&no4 JCN POP2 #04 RTN &no4
-	DUP2 #00ff << ,&no3 JCN POP2 #03 RTN &no3
-	DUP2 #000f << ,&no2 JCN POP2 #02 RTN &no2
+	DUP2 #1000 << ,&no4 JCN POP2 #04 RTN &no4
+	DUP2 #0100 << ,&no3 JCN POP2 #03 RTN &no3
+	DUP2 #0010 << ,&no2 JCN POP2 #02 RTN &no2
 	#0000 !!
 
 RTN
@@ -426,7 +426,7 @@ RTN
 		( x ) DUP TOS 8** .input-frame/x LDZ2 #0018 ++ SWP2 -- .Screen/x DEO2
 		( value ) STHk .input/value LDZ2 STHr 4* SFT2 #000f AND2
 		( value glyph ) 8** ;font-hex ++ .Screen/addr DEO2
-		( color ) DUP INC .input/value LDZ2 ;get-length JSR2 >
+		( color ) DUP INC .input/value LDZ2 ,get-length JSR >
 		#01 + .Screen/sprite DEO
 		INC GTHk ,&loop JCN
 	POP2
@@ -495,7 +495,7 @@ RTN
 		( state ) DUP #0f SWP - .input/value LDZ2 ROT SFT2 #0001 AND2 NIP STH
 		( y ) DUP 8/ TOS 8** .bitpad-frame/y LDZ2 ++ STH2
 		( x ) DUP #07 AND TOS 8** .bitpad-frame/x LDZ2 ++
-		STH2r STHr #01 ;draw-bit JSR2
+		STH2r STHr #01 ,draw-bit JSR
 		INC GTHk ,&loop JCN
 	POP2
 
