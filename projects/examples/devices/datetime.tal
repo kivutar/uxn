@@ -1,9 +1,16 @@
 ( Dev/Time )
 
+%+  { ADD } %-   { SUB }              %/   { DIV }  
+%<  { LTH } %>   { GTH }  %=  { EQU } %!   { NEQ } 
+%++ { ADD2 } %-- { SUB2 }              %// { DIV2 } 
+%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 } 
+
+%8* { #30 SFT }
 %2// { #01 SFT2 }
 %4// { #02 SFT2 }
 %2** { #10 SFT2 }
 
+%TOS     { #00 SWP }
 %RTN     { JMP2r }
 %MOD     { DUP2 DIV MUL SUB }
 %ABS2    { DUP2 #0f SFT2 EQU #05 JCN #0000 SWP2 SUB2 }
@@ -12,11 +19,13 @@
 %12HOURS { DUP #0c GTH #0c MUL SUB }
 %LTS2    { #8000 ADD2 SWP2 #8000 ADD2 GTH2 }
 %GTS2    { #8000 ADD2 SWP2 #8000 ADD2 LTH2 }
+%GET-CHAR-SPRITE { 8* TOS ;font-hex ++ }
 
 ( devices )
 
 |00 @System     [ &vector $2 &pad      $6 &r      $2 &g     $2 &b      $2 ]
-|20 @Screen     [ &vector $2 &width    $2 &height $2 &pad   $2 &x      $2 &y      $2 &addr $2 &pixel $1 &sprite $1 ]
+|10 @Console    [ &vector $2 &read     $1 &pad    $5 &write $1 &error  $1 ]
+|20 @Screen     [ &vector $2 &width    $2 &height $2 &auto  $1 &pad    $1 &x      $2 &y      $2 &addr $2 &pixel $1 &sprite $1 ]
 |b0 @DateTime   [ &year   $2 &month    $1 &day    $1 &hour  $1 &minute $1 &second $1 &dotw $1 &doty $2 &isdst $1 ]
 
 ( variables )
@@ -33,9 +42,12 @@
 |0100 ( -> )
 	
 	( theme ) 
-	#0ff8 .System/r DEO2 
-	#0f08 .System/g DEO2 
-	#0f08 .System/b DEO2
+	#e0f8 .System/r DEO2 
+	#e008 .System/g DEO2 
+	#e008 .System/b DEO2
+
+	#00f0 .Screen/width DEO2
+	#00f0 .Screen/height DEO2
 
 	( vectors ) 
 	;on-frame .Screen/vector DEO2
@@ -45,9 +57,16 @@ BRK
 @on-frame ( -> )
 
 	( only draw once per second )
-	( skip ) .DateTime/second DEI .current LDZ NEQ #01 JCN [ BRK ]
+	.DateTime/second DEI .current LDZ = ,&skip JCN
+		;draw-clock JSR2
+		;draw-display JSR2
+		&skip
 
 	.DateTime/second DEI .current STZ
+
+BRK
+
+@draw-clock ( -- )
 
 	( clear )
 	#0080 SCALEX #0080 SCALEY .needles/sx LDZ2 .needles/sy LDZ2 #00 ;draw-line JSR2
@@ -55,15 +74,15 @@ BRK
 	#0080 SCALEX #0080 SCALEY .needles/hx LDZ2 .needles/hy LDZ2 #00 ;draw-line JSR2
 
 	( place )
-	#00 .DateTime/second DEI 2** ;table ADD2 LDA2
-		#00 SWP SCALEY .needles/sy STZ2
-		#00 SWP SCALEX .needles/sx STZ2
-	#00 .DateTime/minute DEI 2** ;table ADD2 LDA2
-		#00 SWP 4// DUP2k ADD2 ADD2 #0020 ADD2 SCALEY .needles/my STZ2
-		#00 SWP 4// DUP2k ADD2 ADD2 #0020 ADD2 SCALEX .needles/mx STZ2
-	#00 .DateTime/hour DEI 12HOURS #20 SFTk NIP ADD 2** ;table ADD2 LDA2
-		#00 SWP 2// #0040 ADD2 SCALEY .needles/hy STZ2
-		#00 SWP 2// #0040 ADD2 SCALEX .needles/hx STZ2
+	#00 .DateTime/second DEI 2** ;table ++ LDA2
+		TOS SCALEY .needles/sy STZ2
+		TOS SCALEX .needles/sx STZ2
+	#00 .DateTime/minute DEI 2** ;table ++ LDA2
+		TOS 4// DUP2k ++ ++ #0020 ++ SCALEY .needles/my STZ2
+		TOS 4// DUP2k ++ ++ #0020 ++ SCALEX .needles/mx STZ2
+	#00 .DateTime/hour DEI 12HOURS #20 SFTk NIP ADD 2** ;table ++ LDA2
+		TOS 2// #0040 ++ SCALEY .needles/hy STZ2
+		TOS 2// #0040 ++ SCALEX .needles/hx STZ2
 
 	( needles )
 	#0080 SCALEX #0080 SCALEY .needles/sx LDZ2 .needles/sy LDZ2 #02 ;draw-line JSR2
@@ -73,40 +92,58 @@ BRK
 	( circle )
 	#3c #00 
 	&loop
-		( load ) DUP #00 SWP 2** ;table ADD2 LDA2
+		( load ) DUP #00 SWP 2** ;table ++ LDA2
 		#00 SWP SCALEY .Screen/y DEO2
 		#00 SWP SCALEX .Screen/x DEO2
 		DUP #0f MOD #00 EQU INC .Screen/pixel DEO
 		INC GTHk ,&loop JCN
 	POP2
 
-	;draw-display JSR2
-
-BRK
+RTN
 
 @draw-display ( -- )
 
-	.Screen/height DEI2 2// #0048 ADD2 .Screen/y DEO2
-	.Screen/width DEI2 2//
-	DUP2 #0020 SUB2 .Screen/x DEO2
-		;font-hex #00 .DateTime/hour DEI #0a DIV #30 SFT ADD2 .Screen/addr DEO2
-		#02 .Screen/sprite DEO
-	DUP2 #0018 SUB2 .Screen/x DEO2
-		;font-hex #00 .DateTime/hour DEI #0a MOD #30 SFT ADD2 .Screen/addr DEO2
-		#02 .Screen/sprite DEO
-	DUP2 #0008 SUB2 .Screen/x DEO2
-		;font-hex #00 .DateTime/minute DEI #0a DIV #30 SFT ADD2 .Screen/addr DEO2
-		#02 .Screen/sprite DEO
-	DUP2 .Screen/x DEO2
-		;font-hex #00 .DateTime/minute DEI #0a MOD #30 SFT ADD2 .Screen/addr DEO2
-		#02 .Screen/sprite DEO
-	DUP2 #0010 ADD2 .Screen/x DEO2
-		;font-hex #00 .DateTime/second DEI #0a DIV #30 SFT ADD2 .Screen/addr DEO2
-		#02 .Screen/sprite DEO
-	DUP2 #0018 ADD2 .Screen/x DEO2
-		;font-hex #00 .DateTime/second DEI #0a MOD #30 SFT ADD2 .Screen/addr DEO2
-		#02 .Screen/sprite DEO
-	POP2
+	( auto x ) #01 .Screen/auto DEO
+
+	( date )
+	.Screen/height DEI2 2// #0058 -- .Screen/y DEO2
+	.Screen/width DEI2 2// #0014 -- .Screen/x DEO2
+		.DateTime/month DEI INC
+		DUP #0a DIV GET-CHAR-SPRITE .Screen/addr DEO2
+			#03 .Screen/sprite DEO
+			#0a MOD GET-CHAR-SPRITE .Screen/addr DEO2
+			#03 .Screen/sprite DEO
+	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
+		.DateTime/day DEI
+		DUP #0a DIV GET-CHAR-SPRITE .Screen/addr DEO2
+			#03 .Screen/sprite DEO
+			#0a MOD GET-CHAR-SPRITE .Screen/addr DEO2
+			#03 .Screen/sprite DEO
+
+	( time )
+	.Screen/height DEI2 2// #0050 ++ .Screen/y DEO2
+	.Screen/width DEI2 2// #0020 -- .Screen/x DEO2
+		.DateTime/hour DEI
+		DUP #0a DIV GET-CHAR-SPRITE .Screen/addr DEO2
+			#01 .Screen/sprite DEO
+			#0a MOD GET-CHAR-SPRITE .Screen/addr DEO2
+			#01 .Screen/sprite DEO
+	;spacer-icn .Screen/addr DEO2
+	.DateTime/second DEI #01 AND .Screen/sprite DEO
+		.DateTime/minute DEI
+		DUP #0a DIV GET-CHAR-SPRITE .Screen/addr DEO2
+			#01 .Screen/sprite DEO
+			#0a MOD GET-CHAR-SPRITE .Screen/addr DEO2
+			#01 .Screen/sprite DEO
+	;spacer-icn .Screen/addr DEO2
+	.DateTime/second DEI #01 AND .Screen/sprite DEO
+		.DateTime/second DEI 
+		DUP #0a DIV GET-CHAR-SPRITE .Screen/addr DEO2
+			#01 .Screen/sprite DEO
+			#0a MOD GET-CHAR-SPRITE .Screen/addr DEO2
+			#01 .Screen/sprite DEO
+
+	( auto none ) #00 .Screen/auto DEO
 
 RTN
 
@@ -115,9 +152,9 @@ RTN
 	( load ) .color STZ .line/y0 STZ2 .line/x0 STZ2 .line/y STZ2 .line/x STZ2
 	.line/x0 LDZ2 .line/x LDZ2 SUB2 ABS2 .line/dx STZ2
 	.line/y0 LDZ2 .line/y LDZ2 SUB2 ABS2 #0000 SWP2 SUB2 .line/dy STZ2
-	#ffff #00 .line/x LDZ2 .line/x0 LDZ2 LTS2 2** ADD2 .line/sx STZ2
-	#ffff #00 .line/y LDZ2 .line/y0 LDZ2 LTS2 2** ADD2 .line/sy STZ2
-	.line/dx LDZ2 .line/dy LDZ2 ADD2 .line/e1 STZ2
+	#ffff #00 .line/x LDZ2 .line/x0 LDZ2 LTS2 2** ++ .line/sx STZ2
+	#ffff #00 .line/y LDZ2 .line/y0 LDZ2 LTS2 2** ++ .line/sy STZ2
+	.line/dx LDZ2 .line/dy LDZ2 ++ .line/e1 STZ2
 	&loop
 		.line/x LDZ2 .Screen/x DEO2 
 		.line/y LDZ2 .Screen/y DEO2 
@@ -126,12 +163,12 @@ RTN
 		[ .line/y LDZ2 .line/y0 LDZ2 EQU2 ] #0101 EQU2 ,&end JCN
 		.line/e1 LDZ2 2** .line/e2 STZ2
 		.line/e2 LDZ2 .line/dy LDZ2 LTS2 ,&skipy JCN
-			.line/e1 LDZ2 .line/dy LDZ2 ADD2 .line/e1 STZ2
-			.line/x LDZ2 .line/sx LDZ2 ADD2 .line/x STZ2
+			.line/e1 LDZ2 .line/dy LDZ2 ++ .line/e1 STZ2
+			.line/x LDZ2 .line/sx LDZ2 ++ .line/x STZ2
 		&skipy
 		.line/e2 LDZ2 .line/dx LDZ2 GTS2 ,&skipx JCN
-			.line/e1 LDZ2 .line/dx LDZ2 ADD2 .line/e1 STZ2
-			.line/y LDZ2 .line/sy LDZ2 ADD2 .line/y STZ2
+			.line/e1 LDZ2 .line/dx LDZ2 ++ .line/e1 STZ2
+			.line/y LDZ2 .line/sy LDZ2 ++ .line/y STZ2
 		&skipx
 		;&loop JMP2
 	&end
@@ -147,6 +184,9 @@ RTN
 	11c0 0bb4 06a7 029a 008d 0080 0072 0265
 	0658 0b4b 113f 1834 202a 2a20 3418 3f11
 	4b0b 5806 6502 7200
+
+@spacer-icn
+	0000 0010 0010 0000
 
 @font-hex ( 0-F )
 	007c 8282 8282 827c 0030 1010 1010 1010
