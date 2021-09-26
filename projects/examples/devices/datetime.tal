@@ -10,15 +10,18 @@
 %4// { #02 SFT2 }
 %2** { #10 SFT2 }
 
+%DIAMETER  { #0080 }
+%RADIUS    { DIAMETER 2// }
+
 %TOS     { #00 SWP }
 %RTN     { JMP2r }
 %MOD     { DUP2 DIV MUL SUB }
-%ABS2    { DUP2 #0f SFT2 EQU #05 JCN #0000 SWP2 SUB2 }
-%SCALEX  { 2// .Screen/width DEI2 2// ADD2 #0040 SUB2 }
-%SCALEY  { 2// .Screen/height DEI2 2// ADD2 #0040 SUB2 }
+%ABS2    { DUP2 #0f SFT2 EQU #05 JCN #0000 SWP2 -- }
+%SCALEX  { 2// .Screen/width DEI2 2// ++ RADIUS -- }
+%SCALEY  { 2// .Screen/height DEI2 2// ++ RADIUS -- }
 %12HOURS { DUP #0c GTH #0c MUL SUB }
-%LTS2    { #8000 ADD2 SWP2 #8000 ADD2 GTH2 }
-%GTS2    { #8000 ADD2 SWP2 #8000 ADD2 LTH2 }
+%LTS2    { #8000 ++ SWP2 #8000 ++ GTH2 }
+%GTS2    { #8000 ++ SWP2 #8000 ++ LTH2 }
 %GET-CHAR-SPRITE { 8* TOS ;font-hex ++ }
 
 ( devices )
@@ -34,6 +37,8 @@
 
 @color   $1
 @current $1
+@center
+	&x $2 &y $2
 @needles [ &hx $2 &hy $2 &mx $2 &my $2 &sx $2 &sy $2 ]
 @line    [ &x0 $2 &y0 $2 &x $2 &y $2 &sx $2 &sy $2 &dx $2 &dy $2 &e1 $2 &e2 $2 ]
 
@@ -52,6 +57,10 @@
 	( vectors ) 
 	;on-frame .Screen/vector DEO2
 
+	DIAMETER SCALEX .center/x STZ2
+	DIAMETER SCALEY .center/y STZ2
+
+
 BRK
 
 @on-frame ( -> )
@@ -69,9 +78,9 @@ BRK
 @draw-clock ( -- )
 
 	( clear )
-	#0080 SCALEX #0080 SCALEY .needles/sx LDZ2 .needles/sy LDZ2 #00 ;draw-line JSR2
-	#0080 SCALEX #0080 SCALEY .needles/mx LDZ2 .needles/my LDZ2 #00 ;draw-line JSR2
-	#0080 SCALEX #0080 SCALEY .needles/hx LDZ2 .needles/hy LDZ2 #00 ;draw-line JSR2
+	.center/x LDZ2 .center/y LDZ2 .needles/sx LDZ2 .needles/sy LDZ2 #00 ;draw-line JSR2
+	.center/x LDZ2 .center/y LDZ2 .needles/mx LDZ2 .needles/my LDZ2 #00 ;draw-line JSR2
+	.center/x LDZ2 .center/y LDZ2 .needles/hx LDZ2 .needles/hy LDZ2 #00 ;draw-line JSR2
 
 	( place )
 	#00 .DateTime/second DEI 2** ;table ++ LDA2
@@ -81,20 +90,20 @@ BRK
 		TOS 4// DUP2k ++ ++ #0020 ++ SCALEY .needles/my STZ2
 		TOS 4// DUP2k ++ ++ #0020 ++ SCALEX .needles/mx STZ2
 	#00 .DateTime/hour DEI 12HOURS #20 SFTk NIP ADD 2** ;table ++ LDA2
-		TOS 2// #0040 ++ SCALEY .needles/hy STZ2
-		TOS 2// #0040 ++ SCALEX .needles/hx STZ2
+		TOS 2// RADIUS ++ SCALEY .needles/hy STZ2
+		TOS 2// RADIUS ++ SCALEX .needles/hx STZ2
 
 	( needles )
-	#0080 SCALEX #0080 SCALEY .needles/sx LDZ2 .needles/sy LDZ2 #02 ;draw-line JSR2
-	#0080 SCALEX #0080 SCALEY .needles/mx LDZ2 .needles/my LDZ2 #01 ;draw-line JSR2
-	#0080 SCALEX #0080 SCALEY .needles/hx LDZ2 .needles/hy LDZ2 #03 ;draw-line JSR2
+	.center/x LDZ2 .center/y LDZ2 .needles/sx LDZ2 .needles/sy LDZ2 #02 ;draw-line JSR2
+	.center/x LDZ2 .center/y LDZ2 .needles/mx LDZ2 .needles/my LDZ2 #01 ;draw-line JSR2
+	.center/x LDZ2 .center/y LDZ2 .needles/hx LDZ2 .needles/hy LDZ2 #03 ;draw-line JSR2
 
 	( circle )
 	#3c #00 
 	&loop
-		( load ) DUP #00 SWP 2** ;table ++ LDA2
-		#00 SWP SCALEY .Screen/y DEO2
-		#00 SWP SCALEX .Screen/x DEO2
+		( load ) DUP TOS 2** ;table ++ LDA2
+		TOS SCALEY .Screen/y DEO2
+		TOS SCALEX .Screen/x DEO2
 		DUP #0f MOD #00 EQU INC .Screen/pixel DEO
 		INC GTHk ,&loop JCN
 	POP2
@@ -150,8 +159,8 @@ RTN
 @draw-line ( x1 y1 x2 y2 color -- )
 	
 	( load ) .color STZ .line/y0 STZ2 .line/x0 STZ2 .line/y STZ2 .line/x STZ2
-	.line/x0 LDZ2 .line/x LDZ2 SUB2 ABS2 .line/dx STZ2
-	.line/y0 LDZ2 .line/y LDZ2 SUB2 ABS2 #0000 SWP2 SUB2 .line/dy STZ2
+	.line/x0 LDZ2 .line/x LDZ2 -- ABS2 .line/dx STZ2
+	.line/y0 LDZ2 .line/y LDZ2 -- ABS2 #0000 SWP2 -- .line/dy STZ2
 	#ffff #00 .line/x LDZ2 .line/x0 LDZ2 LTS2 2** ++ .line/sx STZ2
 	#ffff #00 .line/y LDZ2 .line/y0 LDZ2 LTS2 2** ++ .line/sy STZ2
 	.line/dx LDZ2 .line/dy LDZ2 ++ .line/e1 STZ2
@@ -159,8 +168,8 @@ RTN
 		.line/x LDZ2 .Screen/x DEO2 
 		.line/y LDZ2 .Screen/y DEO2 
 		.color LDZ .Screen/pixel DEO
-		[ .line/x LDZ2 .line/x0 LDZ2 EQU2 ] 
-		[ .line/y LDZ2 .line/y0 LDZ2 EQU2 ] #0101 EQU2 ,&end JCN
+		[ .line/x LDZ2 .line/x0 LDZ2 == ] 
+		[ .line/y LDZ2 .line/y0 LDZ2 == ] #0101 == ,&end JCN
 		.line/e1 LDZ2 2** .line/e2 STZ2
 		.line/e2 LDZ2 .line/dy LDZ2 LTS2 ,&skipy JCN
 			.line/e1 LDZ2 .line/dy LDZ2 ++ .line/e1 STZ2
