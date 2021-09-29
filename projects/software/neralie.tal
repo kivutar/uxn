@@ -5,15 +5,41 @@
 		- use splash screen when FPS calculation is unstable
 )
 
+%+  { ADD } %-   { SUB }              %/   { DIV }  
+%<  { LTH } %>   { GTH }  %=  { EQU } %!   { NEQ } 
+%++ { ADD2 } %-- { SUB2 }              %// { DIV2 } 
+%<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }  
+
+%2*  { #10 SFT } %2/  { #01 SFT }
+%4*  { #20 SFT } %4/  { #02 SFT }
+%8*  { #30 SFT } %8/  { #03 SFT }
+%10* { #40 SFT } %10/ { #04 SFT }
+%20* { #50 SFT } %20/ { #05 SFT }
+
+%2**  { #10 SFT2 } %2//  { #01 SFT2 }
+%4**  { #20 SFT2 } %4//  { #02 SFT2 }
+%8**  { #30 SFT2 } %8//  { #03 SFT2 }
+%10** { #40 SFT2 } %10// { #04 SFT2 }
+%20** { #50 SFT2 } %20// { #05 SFT2 }
+
+%MOD  { DUP2 DIV MUL SUB }
+%MOD2 { DIV2k MUL2 SUB2 }
+%TOS { #00 SWP }
+
 %h { .DateTime/hour   DEI }
 %m { .DateTime/minute DEI }
 %s { .DateTime/second DEI }
-%8** { #30 SFT2 }
+
+%1-- { #0001 -- }
+
+%PAD { #0018 }
+%RTN { JMP2r }
 
 ( devices )
 
 |00 @System [ &vector $2 &pad $6 &r $2 &g $2 &b $2 ]
-|20 @Screen [ &vector $2 &width $2 &height $2 &pad $2 &x $2 &y $2 &addr $2 &pixel $1 &sprite $1 ]
+|10 @Console    [ &vector $2 &read     $1 &pad    $5 &write $1 &error  $1 ]
+|20 @Screen [ &vector $2 &width $2 &height $2 &auto $1 &pad $1 &x $2 &y $2 &addr $2 &pixel $1 &sprite $1 ]
 |b0 @DateTime [ &year $2 &month $1 &day $1 &hour $1 &minute $1 &second $1 &dotw $1 &doty $2 &isdst $1 ]
 
 ( variables )
@@ -22,48 +48,62 @@
 
 @fps [ &current $1 &next $1 &second $1 ]
 @number [ &started $1 &count $1 ]
-@lines [ &x1 $2 &x2 $2 &y1 $2 &y2 $2 &addr $1 ]
+@lines [ &addr $1 ]
 @neralie [ &n0123 $2 &n4 $1 &n5 $1 &n6 $1 &n7 $1 &n8 $1 &n9 $1 &color $1 &x $2 &y $2 &w $2 &h $2 ]
 @mul [ &ahi $1 &alo $1 &bhi $1 &blo $1 ]
+@frame
+	&x1 $2 &x2 $2 &y1 $2 &y2 $2
 
 ( program )
 
 |0100
 
-	( theme )  #0f3d .System/r DEO2 #0fe3 .System/g DEO2 #0fb2 .System/b DEO2
-	( vectors )  ;on-screen .Screen/vector DEO2
+	( theme )  
+	#0f3d .System/r DEO2 
+	#0fe3 .System/g DEO2 
+	#0fb2 .System/b DEO2
+
+	( vectors )  
+	;on-screen .Screen/vector DEO2
+
+	( window )
+	#0160 .Screen/width DEO2
+	#0110 .Screen/height DEO2
+
 	#01 .fps/current STZ
 
-	#000c
-	DUP2 .lines/x1 STZ2
-	DUP2 .lines/y1 STZ2
-	DUP2 .Screen/width DEI2 SWP2 SUB2 #0001 SUB2 .lines/x2 STZ2
-	     .Screen/height DEI2 SWP2 SUB2 .lines/y2 STZ2
+	( set size )
+	PAD
+	DUP2 .frame/x1 STZ2
+	DUP2 .frame/y1 STZ2
+	DUP2 .Screen/width DEI2 SWP2 -- #0001 -- .frame/x2 STZ2
+	     .Screen/height DEI2 SWP2 -- .frame/y2 STZ2
 
 	#01 .neralie/color STZ
-	.lines/x1 LDZ2 .lines/x2 LDZ2
-	OVR2 OVR2 .lines/y1 LDZ2 ;h JSR2
-	          .lines/y2 LDZ2 ;h JSR2
-	.lines/y1 LDZ2 #0001 SUB2 .lines/y2 LDZ2 INC2
-	OVR2 OVR2 .lines/x1 LDZ2 ;v JSR2
-	          .lines/x2 LDZ2 ;v JSR2
 
-@on-screen
+	.frame/x1 LDZ2 .frame/x2 LDZ2
+	OVR2 OVR2 .frame/y1 LDZ2 ;h JSR2
+	          .frame/y2 LDZ2 ;h JSR2
+	.frame/y1 LDZ2 #0001 -- .frame/y2 LDZ2 INC2
+	OVR2 OVR2 .frame/x1 LDZ2 ;v JSR2
+	          .frame/x2 LDZ2 ;v JSR2
+
+@on-screen ( -> )
+
 	;update-fps JSR2
-	#00 .neralie/color STZ
-	;neralie-lines JSR2
-	;neralie-calc JSR2
-	#01 .neralie/color STZ
-	;arvelie-text JSR2
-	;neralie-text JSR2
-	;neralie-lines JSR2
-	BRK
 
-	#01 .Screen/sprite DEO
-	#0000 #00 .number/count LDZ DUP2 ;h JSR2
-	.number/count LDZ INC .number/count STZ
+	#00 .neralie/color STZ
+	;draw-clock JSR2
+	;neralie-calc JSR2
+
+	#01 .neralie/color STZ
+	;draw-date JSR2
+	;draw-clock JSR2
+
+BRK
 
 @neralie-calc ( -- )
+
 	( add up fractions of a pulse, store tenths in n6 )
 	#0120 #00 h MUL2
 	#00c0 #00 m MUL2 ADD2
@@ -82,23 +122,32 @@
 	#01a0 #00 h MUL2 ADD2
 	#0006 #00 m MUL2 ADD2 .neralie/n0123 STZ2
 
-	JMP2r
+RTN
 
-@arvelie-text ( -- )
-	.Screen/width DEI2 #01 SFT2 #0034 SUB2 .Screen/x DEO2
-	.Screen/height DEI2 #0008 SUB2 .Screen/y DEO2
-	.DateTime/year DEI2 #07d6 SUB2
-	#000a ;modf JSR2 ;digit JSR2
-	                 ;digit JSR2
+@draw-date ( -- )
+
+	( auto x ) #01 .Screen/auto DEO
+
+	.Screen/width DEI2 2// #0034 -- .Screen/x DEO2
+	.Screen/height DEI2 #0010 -- .Screen/y DEO2
+
+	( arvelie )
+	.DateTime/year DEI2 #07d6 -- NIP 
+		DUP #0a DIV TOS 8** ;font-numbers ++ .Screen/addr DEO2
+			#01 .Screen/sprite DEO
+		#0a MOD TOS 8** ;font-numbers ++ .Screen/addr DEO2
+			#01 .Screen/sprite DEO
 	.DateTime/doty DEI2
-	#000e ;modf JSR2 ,letter JSR
-	#000a ;modf JSR2 ,digit JSR
-	                 ,digit JSR
-	JMP2r
+		DUP2 #000e DIV2 8** ;font-letters ++ .Screen/addr DEO2
+			#01 .Screen/sprite DEO
+		#000e MOD2
+		DUP2 #000a DIV2 ,digit JSR
+		#000a MOD2 ,digit JSR
 
-@neralie-text ( -- )
-	.Screen/width DEI2 #01 SFT2 #0004 SUB2 .Screen/x DEO2
-	.neralie/n0123 LDZ2
+	.Screen/x DEI2 #0008 ++ .Screen/x DEO2
+
+	( neralie )
+	.neralie/n0123 LDZ2 
 	#03e8 ;modf JSR2 ,digit JSR
 	#0064 ;modf JSR2 ,digit JSR
 	#000a ;modf JSR2 ,digit JSR
@@ -106,33 +155,38 @@
 	                 ,digit JSR
 	#00 .neralie/n4 LDZ  ,digit JSR
 	#00 .neralie/n5 LDZ  ,digit JSR
-	JMP2r
 
-@letter ( index* -- )
-	8** ;font-letters ADD2 .Screen/addr DEO2
-	,digit/middle JMP
+	( auto none ) #00 .Screen/auto DEO
+
+RTN
 
 @digit ( index* -- )
-	8** ;font-numbers ADD2 .Screen/addr DEO2
-	&middle
-	.neralie/color LDZ .Screen/sprite DEO
-	.Screen/x DEI2 #0008 ADD2 .Screen/x DEO2
-	JMP2r
 
-@neralie-lines ( -- )
-	.lines/x2 LDZ2 .lines/x1 LDZ2 DUP2 .neralie/x STZ2 SUB2 .neralie/w STZ2
-	.lines/y2 LDZ2 .lines/y1 LDZ2 DUP2 .neralie/y STZ2 SUB2 .neralie/h STZ2
+	8** ;font-numbers ++ .Screen/addr DEO2
+	.neralie/color LDZ .Screen/sprite DEO
+	
+RTN
+
+@draw-clock ( -- )
+
+	.frame/x2 LDZ2 .frame/x1 LDZ2 
+		DUP2 .neralie/x STZ2 SUB2 .neralie/w STZ2
+	.frame/y2 LDZ2 .frame/y1 LDZ2 
+		DUP2 .neralie/y STZ2 SUB2 .neralie/h STZ2
 
 	;neralie/n4 NIP .neralie/n0123 LDZ2
+
 	DUP2 ;&h JSR2
-	;&next JSR2 #0001 .Screen/x DEO2 .neralie/y LDZ2 #0003 SUB2 .Screen/y DEO2 ,digit JSR
+
+	;&next JSR2 #0008 .Screen/x DEO2 .neralie/y LDZ2 #0003 SUB2 .Screen/y DEO2 ,digit JSR
+
 	DUP2 ;&v JSR2
 	#04 ;v/spacing STA
-	.lines/y1 LDZ2 #0003 SUB2 .neralie/y LDZ2 .neralie/x LDZ2 ;v JSR2
+	.frame/y1 LDZ2 #0003 SUB2 .neralie/y LDZ2 .neralie/x LDZ2 ;v JSR2
 	#01 ;v/spacing STA
-	,&next JSR #0001 .Screen/y DEO2 .neralie/x LDZ2 #0003 SUB2 .Screen/x DEO2 ;digit JSR2
+	,&next JSR #0008 .Screen/y DEO2 .neralie/x LDZ2 #0003 SUB2 .Screen/x DEO2 ;digit JSR2
 	DUP2 ,&h JSR
-	,&next JSR .Screen/width DEI2 #0009 SUB2 .Screen/x DEO2 .neralie/y LDZ2 #0003 SUB2 .Screen/y DEO2 ;digit JSR2
+	,&next JSR .Screen/width DEI2 #0010 SUB2 .Screen/x DEO2 .neralie/y LDZ2 #0003 SUB2 .Screen/y DEO2 ;digit JSR2
 	DUP2 ,&v JSR
 	,&next JSR POP2
 	DUP2 ,&h JSR
@@ -246,15 +300,12 @@
 	JMP2r
 
 @font-numbers
-[
 	7cc6 ced6 e6c6 7c00 1838 1818 1818 7e00 3c66 063c 6066 7e00
 	3c66 061c 0666 3c00 1c3c 6ccc fe0c 1e00 7e62 607c 0666 3c00
 	3c66 607c 6666 3c00 7e66 060c 1818 1800 3c66 663c 6666 3c00
 	3c66 663e 0666 3c00 7cc6 ced6 e6c6 7c00 0018 1800 1818 0000
-]
 
 @font-letters
-[
 	183c 6666 7e66 6600 fc66 667c 6666 fc00 3c66 c0c0 c066 3c00
 	f86c 6666 666c f800 fe62 6878 6862 fe00 fe62 6878 6860 f000
 	3c66 c0c0 ce66 3e00 6666 667e 6666 6600 7e18 1818 1818 7e00
@@ -264,5 +315,3 @@
 	3c66 603c 0666 3c00 7e5a 1818 1818 3c00 6666 6666 6666 3c00
 	6666 6666 663c 1800 c6c6 c6d6 feee c600 c66c 3838 6cc6 c600
 	6666 663c 1818 3c00 fec6 8c18 3266 fe00 0018 187e 1818 0000
-]
-
