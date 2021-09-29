@@ -141,12 +141,10 @@ set_window_size(SDL_Window *window, int w, int h)
 static void
 set_zoom(Uint8 scale)
 {
-	if(scale == zoom)
+	if(scale == zoom || !gWindow)
 		return;
-	zoom = clamp(scale, 1, 3);
+	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
 	reqdraw = 1;
-	if(gWindow)
-		set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
 }
 
 static int
@@ -329,7 +327,7 @@ doctrl(SDL_Event *event, int z)
 	case SDLK_DOWN: flag = 0x20; break;
 	case SDLK_LEFT: flag = 0x40; break;
 	case SDLK_RIGHT: flag = 0x80; break;
-	case SDLK_F1: if(z) set_zoom(zoom == 3 ? 1 : zoom + 1); break;
+	case SDLK_F1: if(z) set_zoom(zoom > 2 ? 1 : zoom + 1); break;
 	case SDLK_F2: if(z) set_inspect(!devsystem->dat[0xe]); break;
 	case SDLK_F3: if(z) capture_screen(); break;
 	}
@@ -601,7 +599,7 @@ main(int argc, char **argv)
 
 	/* set default zoom */
 	SDL_GetCurrentDisplayMode(0, &DM);
-	set_zoom(DM.w / 1280);
+	set_zoom(clamp(DM.w / 1280, 1, 3));
 	/* get default zoom from flags */
 	for(i = 1; i < argc - 1; i++) {
 		if(strcmp(argv[i], "-s") == 0) {
