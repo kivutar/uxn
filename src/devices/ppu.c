@@ -22,7 +22,7 @@ static Uint8 blending[5][16] = {
 void
 ppu_frame(Ppu *p)
 {
-	p->redraw = 0;
+	p->reqdraw = 0;
 	p->i0 = p->width / PPW + p->height * p->stride;
 	p->i1 = 0;
 }
@@ -53,7 +53,7 @@ ppu_write(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 color)
 	p->dat[i] &= ~(3 << shift);
 	p->dat[i] |= color << shift;
 	if((v ^ p->dat[i]) != 0) {
-		p->redraw = 1;
+		p->reqdraw = 1;
 		p->i0 = p->i0 < i ? p->i0 : i;
 		p->i1 = p->i1 > i ? p->i1 : i;
 	}

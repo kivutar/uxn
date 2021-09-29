@@ -220,7 +220,7 @@ redraw(Uxn *u)
 	SDL_Rect up = gRect;
 	if(devsystem->dat[0xe])
 		draw_inspect(&ppu, u->wst.dat, u->wst.ptr, u->rst.ptr, u->ram.dat);
-	if(!reqdraw && ppu.redraw) {
+	if(!reqdraw && ppu.reqdraw) {
 		y0 = ppu.i0 / ppu.stride;
 		y1 = ppu.i1 / ppu.stride + 1;
 		up.y += y0;
@@ -546,7 +546,7 @@ run(Uxn *u)
 			}
 		}
 		uxn_eval(u, devscreen->vector);
-		if(reqdraw || ppu.redraw || devsystem->dat[0xe])
+		if(reqdraw || ppu.reqdraw || devsystem->dat[0xe])
 			redraw(u);
 		if(!BENCH) {
 			elapsed = (SDL_GetPerformanceCounter() - start) / (double)SDL_GetPerformanceFrequency() * 1000.0f;

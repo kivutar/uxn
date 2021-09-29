@@ -22,8 +22,9 @@ typedef unsigned short Uint16;
 typedef unsigned int Uint32;
 
 typedef struct Ppu {
+	Uint8 reqdraw;
 	Uint16 width, height;
-	unsigned int i0, i1, redraw, *dat, stride;
+	unsigned int i0, i1, *dat, stride;
 } Ppu;
 
 Uint8 ppu_read(Ppu *p, Uint16 x, Uint16 y);
