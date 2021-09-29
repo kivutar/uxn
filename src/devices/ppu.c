@@ -35,8 +35,15 @@ ppu_clear(Ppu *p)
 		p->dat[i] = 0;
 }
 
+Uint8
+ppu_read(Ppu *p, Uint16 x, Uint16 y)
+{
+	unsigned int i = x / PPW + y * p->stride, shift = x % PPW * 4;
+	return (p->dat[i] >> shift) & 0xf;
+}
+
 void
-ppu_pixel(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 color)
+ppu_write(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 color)
 {
 	unsigned int v, i = x / PPW + y * p->stride, shift = x % PPW * 4;
 	if(x >= p->width || y >= p->height)
@@ -60,7 +67,7 @@ ppu_1bpp(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 f
 		for(h = 0; h < 8; h++) {
 			Uint8 ch1 = (sprite[v] >> (7 - h)) & 0x1;
 			if(ch1 || blending[4][color])
-				ppu_pixel(p,
+				ppu_write(p,
 					fg,
 					x + (flipx ? 7 - h : h),
 					y + (flipy ? 7 - v : v),
@@ -78,7 +85,7 @@ ppu_2bpp(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 f
 			Uint8 ch2 = ((sprite[v + 8] >> (7 - h)) & 0x1);
 			Uint8 ch = ch1 + ch2 * 2;
 			if(ch || blending[4][color])
-				ppu_pixel(p,
+				ppu_write(p,
 					fg,
 					x + (flipx ? 7 - h : h),
 					y + (flipy ? 7 - v : v),

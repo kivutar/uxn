@@ -206,20 +206,13 @@ draw_inspect(Ppu *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
 		ppu_1bpp(p, 1, x + 8, y, font[b & 0xf], 3, 0, 0);
 	}
 	for(x = 0; x < 0x10; ++x) { /* guides */
-		ppu_pixel(p, 1, x, p->height / 2, 2);
-		ppu_pixel(p, 1, p->width - x, p->height / 2, 2);
-		ppu_pixel(p, 1, p->width / 2, p->height - x, 2);
-		ppu_pixel(p, 1, p->width / 2, x, 2);
-		ppu_pixel(p, 1, p->width / 2 - 0x10 / 2 + x, p->height / 2, 2);
-		ppu_pixel(p, 1, p->width / 2, p->height / 2 - 0x10 / 2 + x, 2);
+		ppu_write(p, 1, x, p->height / 2, 2);
+		ppu_write(p, 1, p->width - x, p->height / 2, 2);
+		ppu_write(p, 1, p->width / 2, p->height - x, 2);
+		ppu_write(p, 1, p->width / 2, x, 2);
+		ppu_write(p, 1, p->width / 2 - 0x10 / 2 + x, p->height / 2, 2);
+		ppu_write(p, 1, p->width / 2, p->height / 2 - 0x10 / 2 + x, 2);
 	}
-}
-
-static Uint8
-get_pixel(int x, int y)
-{
-	unsigned int i = x / PPW + y * ppu.stride, shift = x % PPW * 4;
-	return (ppu.dat[i] >> shift) & 0xf;
 }
 
 static void
@@ -237,7 +230,7 @@ redraw(Uxn *u)
 	}
 	for(y = y0; y < y1; ++y)
 		for(x = 0; x < ppu.width; ++x)
-			ppu_screen[x + y * ppu.width] = palette[get_pixel(x, y)];
+			ppu_screen[x + y * ppu.width] = palette[ppu_read(&ppu, x, y)];
 	SDL_UpdateTexture(gTexture, &up, ppu_screen + y0 * ppu.width, ppu.width * sizeof(Uint32));
 	SDL_RenderClear(gRenderer);
 	SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
@@ -404,7 +397,7 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 			Uint16 x = peek16(d->dat, 0x8);
 			Uint16 y = peek16(d->dat, 0xa);
 			Uint8 layer = d->dat[0xe] & 0x40;
-			ppu_pixel(&ppu, layer, x, y, d->dat[0xe] & 0x3);
+			ppu_write(&ppu, layer, x, y, d->dat[0xe] & 0x3);
 			if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 1); /* auto x+1 */
 			if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 1); /* auto y+1 */
 			break;
