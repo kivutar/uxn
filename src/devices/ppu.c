@@ -65,11 +65,21 @@ ppu_write(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 color)
 	int original = p->pixels[row];
 	Uint8 next = 0x0;
 	if(x % 2) {
-		next |= original & 0xf0;
-		next |= color << (layer * 2);
+		if(layer) {
+			next |= original & 0xf3;
+			next |= color << 0x02;
+		} else {
+			next |= original & 0xfc;
+			next |= color;
+		}
 	} else {
-		next |= original & 0x0f;
-		next |= color << (4 + (layer * 2));
+		if(layer) {
+			next |= original & 0x3f;
+			next |= color << 0x06;
+		} else {
+			next |= original & 0xcf;
+			next |= color << 0x04;
+		}
 	}
 	p->pixels[row] = next;
 	p->reqdraw = 1;
