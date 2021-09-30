@@ -410,7 +410,6 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 			}
 			if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 8); /* auto x+8 */
 			if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 8); /* auto y+8 */
-			ppu.reqdraw = 1;
 			break;
 		}
 		}

@@ -24,12 +24,6 @@ static Uint8 blending[5][16] = {
 	{2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2},
 	{1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0}};
 
-static Uint16
-ppu_row(Ppu *p, Uint16 x, Uint16 y)
-{
-	return (y % 8) + ((x / 8 + y / 8 * p->width / 8) * 16);
-}
-
 static void
 ppu_clear(Ppu *p)
 {
@@ -46,9 +40,22 @@ Uint8
 ppu_read(Ppu *p, Uint16 x, Uint16 y)
 {
 	int row = (x + y * p->width) / 0x2;
-	int shift = (1 - (x & 0x1)) * 0x4;
 
-	return p->pixels[row] & 0x3;
+	if(x % 2) {
+		if(p->pixels[row] & 0x0c) {
+			return (p->pixels[row] >> 0x2) & 0x3;
+		} else {
+			return (p->pixels[row] >> 0x0) & 0x3;
+		}
+	} else {
+		if(p->pixels[row] & 0xc0) {
+			return (p->pixels[row] >> 0x6) & 0x3;
+		} else {
+			return (p->pixels[row] >> 0x4) & 0x3;
+		}
+	}
+
+	return 0;
 }
 
 void
@@ -65,6 +72,7 @@ ppu_write(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 color)
 		next |= color << (4 + (layer * 2));
 	}
 	p->pixels[row] = next;
+	p->reqdraw = 1;
 }
 
 void
