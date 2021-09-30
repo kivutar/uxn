@@ -195,25 +195,25 @@ draw_inspect(Ppu *p, Uint8 *stack, Uint8 wptr, Uint8 rptr, Uint8 *memory)
 	for(i = 0; i < 0x20; ++i) {
 		x = ((i % 8) * 3 + 1) * 8, y = (i / 8 + 1) * 8, b = stack[i];
 		/* working stack */
-		ppu_1bpp(p, ppu.fg, x, y, font[(b >> 4) & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
-		ppu_1bpp(p, ppu.fg, x + 8, y, font[b & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
+		ppu_1bpp(p, 1, x, y, font[(b >> 4) & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
+		ppu_1bpp(p, 1, x + 8, y, font[b & 0xf], 1 + (wptr == i) * 0x7, 0, 0);
 		y = 0x28 + (i / 8 + 1) * 8;
 		b = memory[i];
 		/* return stack */
-		ppu_1bpp(p, ppu.fg, x, y, font[(b >> 4) & 0xf], 3, 0, 0);
-		ppu_1bpp(p, ppu.fg, x + 8, y, font[b & 0xf], 3, 0, 0);
+		ppu_1bpp(p, 1, x, y, font[(b >> 4) & 0xf], 3, 0, 0);
+		ppu_1bpp(p, 1, x + 8, y, font[b & 0xf], 3, 0, 0);
 	}
 	/* return pointer */
-	ppu_1bpp(p, ppu.fg, 0x8, y + 0x10, font[(rptr >> 4) & 0xf], 0x2, 0, 0);
-	ppu_1bpp(p, ppu.fg, 0x10, y + 0x10, font[rptr & 0xf], 0x2, 0, 0);
+	ppu_1bpp(p, 1, 0x8, y + 0x10, font[(rptr >> 4) & 0xf], 0x2, 0, 0);
+	ppu_1bpp(p, 1, 0x10, y + 0x10, font[rptr & 0xf], 0x2, 0, 0);
 	/* guides */
 	for(x = 0; x < 0x10; ++x) {
-		ppu_write(p, ppu.fg, x, p->height / 2, 2);
-		ppu_write(p, ppu.fg, p->width - x, p->height / 2, 2);
-		ppu_write(p, ppu.fg, p->width / 2, p->height - x, 2);
-		ppu_write(p, ppu.fg, p->width / 2, x, 2);
-		ppu_write(p, ppu.fg, p->width / 2 - 0x10 / 2 + x, p->height / 2, 2);
-		ppu_write(p, ppu.fg, p->width / 2, p->height / 2 - 0x10 / 2 + x, 2);
+		ppu_write(p, 1, x, p->height / 2, 2);
+		ppu_write(p, 1, p->width - x, p->height / 2, 2);
+		ppu_write(p, 1, p->width / 2, p->height - x, 2);
+		ppu_write(p, 1, p->width / 2, x, 2);
+		ppu_write(p, 1, p->width / 2 - 0x10 / 2 + x, p->height / 2, 2);
+		ppu_write(p, 1, p->width / 2, p->height / 2 - 0x10 / 2 + x, 2);
 	}
 }
 
@@ -391,7 +391,7 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 			Uint16 x = peek16(d->dat, 0x8);
 			Uint16 y = peek16(d->dat, 0xa);
 			Uint8 layer = d->dat[0xe] & 0x40;
-			ppu_write(&ppu, layer ? ppu.fg : ppu.bg, x, y, d->dat[0xe] & 0x3);
+			ppu_write(&ppu, layer, x, y, d->dat[0xe] & 0x3);
 			if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 1); /* auto x+1 */
 			if(d->dat[0x6] & 0x02) poke16(d->dat, 0xa, y + 1); /* auto y+1 */
 			break;
@@ -402,10 +402,10 @@ screen_talk(Device *d, Uint8 b0, Uint8 w)
 			Uint8 layer = d->dat[0xf] & 0x40;
 			Uint8 *addr = &d->mem[peek16(d->dat, 0xc)];
 			if(d->dat[0xf] & 0x80) {
-				ppu_2bpp(&ppu, layer ? ppu.fg : ppu.bg, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
+				ppu_2bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
 				if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 16); /* auto addr+16 */
 			} else {
-				ppu_1bpp(&ppu, layer ? ppu.fg : ppu.bg, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
+				ppu_1bpp(&ppu, layer, x, y, addr, d->dat[0xf] & 0xf, d->dat[0xf] & 0x10, d->dat[0xf] & 0x20);
 				if(d->dat[0x6] & 0x04) poke16(d->dat, 0xc, peek16(d->dat, 0xc) + 8); /* auto addr+8 */
 			}
 			if(d->dat[0x6] & 0x01) poke16(d->dat, 0x8, x + 8); /* auto x+8 */
