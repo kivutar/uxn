@@ -13,8 +13,9 @@ WITH REGARD TO THIS SOFTWARE.
 */
 
 /*
-      fgbg fgbg
-byte [0000 0000]
+pixel 0001 0002
+layer fgbg fgbg
+byte  1010 1010
 */
 
 static Uint8 blending[5][16] = {
@@ -27,42 +28,25 @@ static Uint8 blending[5][16] = {
 static void
 ppu_clear(Ppu *p)
 {
-	int x, y;
-	for(y = 0; y < p->height; ++y) {
-		for(x = 0; x < p->width; ++x) {
-			ppu_write(p, 0, x, y, 0);
-			ppu_write(p, 1, x, y, 0);
-		}
-	}
+	int row;
+	for(row = 0; row < p->height * p->width / 2; ++row)
+		p->pixels[row] = 0;
 }
 
 Uint8
 ppu_read(Ppu *p, Uint16 x, Uint16 y)
 {
 	int row = (x + y * p->width) / 0x2;
-
-	if(x % 2) {
-		if(p->pixels[row] & 0x0c) {
-			return (p->pixels[row] >> 0x2) & 0x3;
-		} else {
-			return (p->pixels[row] >> 0x0) & 0x3;
-		}
-	} else {
-		if(p->pixels[row] & 0xc0) {
-			return (p->pixels[row] >> 0x6) & 0x3;
-		} else {
-			return (p->pixels[row] >> 0x4) & 0x3;
-		}
-	}
-
-	return 0;
+	Uint8 seg = !(x & 0x1) << 2;
+	Uint8 byte = p->pixels[row] >> seg;
+	return (byte & 0x0c ? (byte >> 2) : byte) & 0x3;
 }
 
 void
 ppu_write(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 color)
 {
 	int row = (x + y * p->width) / 0x2;
-	int original = p->pixels[row];
+	Uint8 original = p->pixels[row];
 	Uint8 next = 0x0;
 	if(x % 2) {
 		if(layer) {
@@ -82,7 +66,8 @@ ppu_write(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 color)
 		}
 	}
 	p->pixels[row] = next;
-	p->reqdraw = 1;
+	if(original != next)
+		p->reqdraw = 1;
 }
 
 void
@@ -127,9 +112,7 @@ ppu_set_size(Ppu *p, Uint16 width, Uint16 height)
 	ppu_clear(p);
 	p->width = width;
 	p->height = height;
-	p->pixels = realloc(p->bg, p->width * p->height * sizeof(Uint8) * 2);
-	p->bg = p->pixels;
-	p->fg = p->pixels + (p->width * p->height * sizeof(Uint8));
+	p->pixels = realloc(p->pixels, p->width * p->height * sizeof(Uint8) / 2);
 	ppu_clear(p);
-	return p->bg && p->fg;
+	return !!p->pixels;
 }

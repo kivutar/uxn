@@ -22,7 +22,7 @@ typedef unsigned short Uint16;
 typedef unsigned int Uint32;
 
 typedef struct Ppu {
-	Uint8 *bg, *fg, *pixels, reqdraw;
+	Uint8 *pixels, reqdraw;
 	Uint16 width, height;
 } Ppu;
 
