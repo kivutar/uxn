@@ -19,6 +19,12 @@ static Uint8 blending[5][16] = {
 	{2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2},
 	{1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0}};
 
+static Uint16
+ppu_row(Ppu *p, Uint16 x, Uint16 y)
+{
+	return (y % 8) + ((x / 8 + y / 8 * p->width / 8) * 16);
+}
+
 static void
 ppu_clear(Ppu *p)
 {
@@ -34,12 +40,12 @@ ppu_clear(Ppu *p)
 Uint8
 ppu_read(Ppu *p, Uint16 x, Uint16 y)
 {
-	int ch1, ch2, r = (y % 8) + ((x / 8 + y / 8 * p->width / 8) * 16);
-	ch1 = (p->fg[r] >> (7 - x % 8)) & 1;
-	ch2 = (p->fg[r + 8] >> (7 - x % 8)) & 1;
+	Uint16 ch1, ch2, row = ppu_row(p, x, y);
+	ch1 = (p->fg[row] >> (7 - x % 8)) & 1;
+	ch2 = (p->fg[row + 8] >> (7 - x % 8)) & 1;
 	if(!ch1 && !ch2) {
-		ch1 = (p->bg[r] >> (7 - x % 8)) & 1;
-		ch2 = (p->bg[r + 8] >> (7 - x % 8)) & 1;
+		ch1 = (p->bg[row] >> (7 - x % 8)) & 1;
+		ch2 = (p->bg[row + 8] >> (7 - x % 8)) & 1;
 	}
 	return ch1 + (ch2 << 1);
 }
@@ -47,17 +53,17 @@ ppu_read(Ppu *p, Uint16 x, Uint16 y)
 void
 ppu_write(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 color)
 {
-	int row = (y % 8) + ((x / 8 + y / 8 * p->width / 8) * 16), col = x % 8;
+	Uint16 row = ppu_row(p, x, y), col = 7 - (x % 8);
 	if(x >= p->width || y >= p->height)
 		return;
 	if(color == 0 || color == 2)
-		layer[row] &= ~(1UL << (7 - col));
+		layer[row] &= ~(1UL << col);
 	else
-		layer[row] |= 1UL << (7 - col);
+		layer[row] |= 1UL << col;
 	if(color == 0 || color == 1)
-		layer[row + 8] &= ~(1UL << (7 - col));
+		layer[row + 8] &= ~(1UL << col);
 	else
-		layer[row + 8] |= 1UL << (7 - col);
+		layer[row + 8] |= 1UL << col;
 }
 
 void
