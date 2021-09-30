@@ -19,48 +19,49 @@ static Uint8 blending[5][16] = {
 	{2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2, 2, 3, 1, 2},
 	{1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0}};
 
-void
-ppu_frame(Ppu *p)
-{
-	p->reqdraw = 0;
-	p->i0 = p->width / PPW + p->height * p->stride;
-	p->i1 = 0;
-}
-
 static void
 ppu_clear(Ppu *p)
 {
-	unsigned int i;
-	for(i = 0; i < p->stride * p->height; ++i)
-		p->dat[i] = 0;
+	int x, y;
+	for(y = 0; y < p->height; ++y) {
+		for(x = 0; x < p->width; ++x) {
+			ppu_write(p, p->bg, x, y, 0);
+			ppu_write(p, p->fg, x, y, 0);
+		}
+	}
 }
 
 Uint8
 ppu_read(Ppu *p, Uint16 x, Uint16 y)
 {
-	unsigned int i = x / PPW + y * p->stride, shift = x % PPW * 4;
-	return (p->dat[i] >> shift) & 0xf;
+	int ch1, ch2, r = (y % 8) + ((x / 8 + y / 8 * p->width / 8) * 16);
+	ch1 = (p->fg[r] >> (7 - x % 8)) & 1;
+	ch2 = (p->fg[r + 8] >> (7 - x % 8)) & 1;
+	if(!ch1 && !ch2) {
+		ch1 = (p->bg[r] >> (7 - x % 8)) & 1;
+		ch2 = (p->bg[r + 8] >> (7 - x % 8)) & 1;
+	}
+	return ch1 + (ch2 << 1);
 }
 
 void
-ppu_write(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 color)
+ppu_write(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 color)
 {
-	unsigned int v, i = x / PPW + y * p->stride, shift = x % PPW * 4;
+	int row = (y % 8) + ((x / 8 + y / 8 * p->width / 8) * 16), col = x % 8;
 	if(x >= p->width || y >= p->height)
 		return;
-	v = p->dat[i];
-	if(fg) shift += 2;
-	p->dat[i] &= ~(3 << shift);
-	p->dat[i] |= color << shift;
-	if((v ^ p->dat[i]) != 0) {
-		p->reqdraw = 1;
-		p->i0 = p->i0 < i ? p->i0 : i;
-		p->i1 = p->i1 > i ? p->i1 : i;
-	}
+	if(color == 0 || color == 2)
+		layer[row] &= ~(1UL << (7 - col));
+	else
+		layer[row] |= 1UL << (7 - col);
+	if(color == 0 || color == 1)
+		layer[row + 8] &= ~(1UL << (7 - col));
+	else
+		layer[row + 8] |= 1UL << (7 - col);
 }
 
 void
-ppu_1bpp(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
+ppu_1bpp(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
 {
 	Uint16 v, h;
 	for(v = 0; v < 8; v++)
@@ -68,7 +69,7 @@ ppu_1bpp(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 f
 			Uint8 ch1 = (sprite[v] >> (7 - h)) & 0x1;
 			if(ch1 || blending[4][color])
 				ppu_write(p,
-					fg,
+					layer,
 					x + (flipx ? 7 - h : h),
 					y + (flipy ? 7 - v : v),
 					blending[ch1][color]);
@@ -76,7 +77,7 @@ ppu_1bpp(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 f
 }
 
 void
-ppu_2bpp(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
+ppu_2bpp(Ppu *p, Uint8 *layer, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 flipx, Uint8 flipy)
 {
 	Uint16 v, h;
 	for(v = 0; v < 8; v++)
@@ -86,7 +87,7 @@ ppu_2bpp(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 f
 			Uint8 ch = ch1 + ch2 * 2;
 			if(ch || blending[4][color])
 				ppu_write(p,
-					fg,
+					layer,
 					x + (flipx ? 7 - h : h),
 					y + (flipy ? 7 - v : v),
 					blending[ch][color]);
@@ -98,12 +99,12 @@ ppu_2bpp(Ppu *p, int fg, Uint16 x, Uint16 y, Uint8 *sprite, Uint8 color, Uint8 f
 int
 ppu_set_size(Ppu *p, Uint16 width, Uint16 height)
 {
-	p->width = width;
-	p->stride = (width + PPW - 1) / PPW;
-	p->height = height;
-	p->dat = realloc(p->dat, p->stride * p->height * sizeof(unsigned int));
-	if(p->dat == NULL) return 0;
 	ppu_clear(p);
-	ppu_frame(p);
-	return 1;
+	p->width = width;
+	p->height = height;
+	p->pixels = realloc(p->bg, p->width / 4 * p->height * sizeof(Uint8) * 2);
+	p->bg = p->pixels;
+	p->fg = p->pixels + (p->width / 4 * p->height * sizeof(Uint8));
+	ppu_clear(p);
+	return p->bg && p->fg;
 }
