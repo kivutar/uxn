@@ -41,26 +41,31 @@ ppu_set_size(Ppu *p, Uint16 width, Uint16 height)
 Uint8
 ppu_read(Ppu *p, Uint16 x, Uint16 y)
 {
-	Uint32 row = (x + y * p->width) / 0x2;
-	Uint8 shift = !(x & 0x1) << 2;
-	Uint8 pix = p->pixels[row] >> shift;
-	if(pix & 0x0c)
-		pix = pix >> 2;
-	return pix & 0x3;
+	if(x < p->width && y < p->height) {
+		Uint32 row = (x + y * p->width) / 0x2;
+		Uint8 shift = !(x & 0x1) << 2;
+		Uint8 pix = p->pixels[row] >> shift;
+		if(pix & 0x0c)
+			pix = pix >> 2;
+		return pix & 0x3;
+	}
+	return 0x0;
 }
 
 void
 ppu_write(Ppu *p, Uint8 layer, Uint16 x, Uint16 y, Uint8 color)
 {
-	Uint32 row = (x + y * p->width) / 0x2;
-	Uint8 shift = (!(x & 0x1) << 2) + (layer << 1);
-	Uint8 pix = p->pixels[row];
-	Uint8 mask = ~(0x3 << shift);
-	Uint8 pixnew = (pix & mask) + (color << shift);
-	if(x < p->width && y < p->height)
-		p->pixels[row] = pixnew;
-	if(pix != pixnew)
-		p->reqdraw = 1;
+	if(x < p->width && y < p->height) {
+		Uint32 row = (x + y * p->width) / 0x2;
+		Uint8 shift = (!(x & 0x1) << 2) + (layer << 1);
+		Uint8 pix = p->pixels[row];
+		Uint8 mask = ~(0x3 << shift);
+		Uint8 pixnew = (pix & mask) + (color << shift);
+		if(x < p->width && y < p->height)
+			p->pixels[row] = pixnew;
+		if(pix != pixnew)
+			p->reqdraw = 1;
+	}
 }
 
 void
