@@ -18,7 +18,7 @@ typedef signed char Sint8;
 typedef unsigned short Uint16;
 
 typedef struct {
-	char name[64], items[256][64];
+	char name[64], items[64][64];
 	Uint8 len;
 } Macro;
 
