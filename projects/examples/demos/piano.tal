@@ -6,6 +6,8 @@
 %<< { LTH2 } %>> { GTH2 } %== { EQU2 } %!! { NEQ2 }
 %!~ { NEQk NIP }
 
+%HALT { #01 #0f DEO }
+
 %RTN  { JMP2r }
 %TOS  { #00 SWP }
 %MOD  { DUP2 / * - }
@@ -130,6 +132,7 @@ BRK
 		#3b .octave LDZ #0c * + ;play JSR2 &no-b
 	[ LIT 'k ] !~ ,&no-c2 JCN
 		#3c .octave LDZ #0c * + ;play JSR2 &no-c2
+	[ #1b ] !~ ,&no-esc JCN HALT &no-esc
 	POP
 
 	( release )

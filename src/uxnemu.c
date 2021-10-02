@@ -497,7 +497,7 @@ run(Uxn *u)
 {
 	uxn_eval(u, PAGE_PROGRAM);
 	redraw(u);
-	while(1) {
+	while(!devsystem->dat[0xf]) {
 		SDL_Event event;
 		double elapsed, start = 0;
 		if(!BENCH)
