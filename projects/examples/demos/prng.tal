@@ -25,7 +25,7 @@
 	#00 .DateTime/hour   DEI #04 SFT2
 	#00 .DateTime/day    DEI #10 SFT2 EOR2
 	#00 .DateTime/month  DEI #60 SFT2 EOR2
-	#00 .DateTime/year   DEI #a0 SFT2 EOR2 ;prng2/y STA2
+	    .DateTime/year  DEI2 #a0 SFT2 EOR2 ;prng2/y STA2
 	;prng2/x LDA2 ;prng2/y LDA2 EOR2
 	ORAk ,&non-zero JCN INC2 &non-zero
 	;prng/seed STA2
