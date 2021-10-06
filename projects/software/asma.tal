@@ -99,6 +99,9 @@
 	;asma/src-filename LDA2 ;asma-assemble-file-pass JSR2
 	asma-IF-ERROR ,&error JCN
 
+	( flush output buffer )
+	;asma-output/ptr LDA2 ;asma-write-buffer SUB2 ;asma/flush-fn LDA2 JSR2
+
 	;asma-trees/labels ;asma-print-labels JSR2 ( DEBUG )
 	;asma-print-line-count JSR2 ( DEBUG )
 	;asma-print-heap-usage JSR2 ( DEBUG )
@@ -270,9 +273,6 @@
 
 	asma-IF-ERROR ,&error JCN
 
-	( flush output buffer )
-	;asma-output/ptr LDA2 ;asma-write-buffer SUB2 ;asma/flush-fn LDA2 JSR2
-
 	&error
 	POP2 POP2 POP2 POP2 POP2
 	JMP2r
@@ -288,45 +288,56 @@ include projects/library/file-read-chunks.tal
 	of the last token in the chunk.
 )
 
-@asma-assemble-chunk ( line^ ptr* len^ -- assembled-up-to-ptr* )
-	ROT2k ( line^ ptr* len^ ptr* len^ line^ )
-	;asma/line STA2 ( line^ ptr* len^ ptr* len^ )
-	ADD2 #0001 SUB2 NIP2 ( line^ ptr* last-ptr* )
-	SWP2 STH2k ( line^ last-ptr* ptr* / ptr* )
-	,&loop JMP
+@asma-assemble-chunk ( line^ chunk* len^ -- line^ assembled-up-to-chunk* )
+	ROT2 STH2 ( chunk* len^ / line^ )
+	OVR2 ADD2 ( chunk* end-chunk* / line^ )
+	OVR2 ;asma-read-buffer EQU2 STH
+	DUP2 ;asma-read-buffer/end NEQ2
+	STHr AND ;asma/eof STA
+	SWP2 STH2k ( end-chunk* chunk* / line^ start-of-token* )
 
-	&next-char-pop ( line^ last-ptr* ptr* char / start-of-token* )
-	POP
-	INC2
-	&loop ( line^ last-ptr* ptr* / start-of-token* )
-	LTH2k ,&end JCN
-	LDAk ( line^ last-ptr* ptr* char / start-of-token* )
-	DUP #20 GTH ,&next-char-pop JCN
+	&loop ( end-chunk* char* / line^ start-of-token* )
+	LDAk #21 LTH ,&whitespace JCN
+	INC2 ,&loop JMP
 
-	#00 OVR2 ( line^ last-ptr* ptr* char 00 ptr* / start-of-token* )
-	STA STH2r ( line^ last-ptr* ptr* char start-of-token* )
-	,asma-assemble-token JSR ( line^ last-ptr* ptr* char )
+	&whitespace ( end-chunk* ws-char* / line^ start-of-token* )
+	GTH2k ,&within-chunk JCN
+	;asma/eof LDA ,&eof JCN
+
+	( reached the end of the chunk, start-of-token* is where we assembled up to )
+	POP2 POP2 STH2r STH2r SWP2 JMP2r
+
+	&within-chunk ( end-chunk* ws-char* / line^ start-of-token* )
+	LDAk #0a NEQ ( end-chunk* ws-char* not-newline / line^ start-of-token* )
+	#00 OVR2 STA
+	STH2r ,asma-assemble-token JSR ( end-chunk* ws-char* not-newline / line^ )
+	JMP INC2r ( end-chunk* ws-char* / line^ )
 	asma-IF-ERROR ,&error JCN
-
-	#0a NEQ ,&not-newline JCN ( line^ last-ptr* ptr* )
-	ROT2 INC2 ( last-ptr* ptr* line+1^ )
-	DUP2 ;asma/line STA2
-	ROT2 ROT2 ( line^ last-ptr* ptr* )
-	&not-newline
-
-	INC2 DUP2 STH2 ( line^ last-ptr* ptr* / start-of-token* )
+	;asma/break LDA ,&break JCN
+	INC2 STH2k ( end-chunk* start-of-token* / line^ start-of-token* )
 	,&loop JMP
 
-	&end
-	POP2 POP2 STH2r
+	&break ( end-chunk* ws-char* / line^ )
+	( the read buffer has been invalidated, ws-char* plus one is where we assembled up to )
+	;asma/break LDA #01 SUB ;asma/break STA
+	INC2 NIP2 ( assembled-up-to-ptr* / line^ )
+	STH2r SWP2 JMP2r
+
+	&error ( end-chunk* ws-char* / line^ )
+	( return no progress with assembly to make file-read-chunks exit )
+	POP2 POP2 STH2r ;asma-read-buffer
 	JMP2r
 
-	&error
-	POP POP2 POP2
-	JMP2r
+	&eof ( end-chunk* ws-char* / line^ start-of-token* )
+	( reached the end of file, end-chunk* is safe to write since the buffer is bigger )
+	( return no progress with assembly to make file-read-chunks exit )
+	POP2 ( end-chunk* / line^ start-of-token* )
+	#00 ROT ROT STA ( / line^ start-of-token* )
+	STH2r ,asma-assemble-token JSR ( / line^ )
+	STH2r ;asma-read-buffer JMP2r
 
 @asma [
-	&pass $1 &state $1 &line $2
+	&pass $1 &state $1 &line $2 &break $1 &eof $1
 	&token $2 &orig-token $2
 	&heap $2 &addr $2 &written-addr $2 &flush-fn $2
 	&src-filename $2 &dest-filename $2
@@ -338,10 +349,11 @@ include projects/library/file-read-chunks.tal
 	The main routine to assemble a single token.
 	asma/state contains several meaningful bits:
 	0x02 we are in a comment,
-	0x04 we are in a macro body, and
-	0x08 we are in a macro body that we are ignoring
+	0x04 we are in a macro body,
+	0x08 we are expecting an include filename, and
+	0x10 we are in a macro body that we are ignoring
 	   (because the macro was already defined in a previous pass).
-	Since 0x08 never appears without 0x04, the lowest bit set in asma/state is
+	Since 0x10 never appears without 0x04, the lowest bit set in asma/state is
 	always 0x00, 0x02, or 0x04, which is very handy for use with jump tables.
 	The lowest bit set can be found easily by #00 (n) SUBk AND.
 )
@@ -384,11 +396,15 @@ include projects/library/file-read-chunks.tal
 		:asma-first-char-normal/_entry
 		:asma-first-char-comment/_entry
 		:asma-first-char-macro/_entry
+		$2 ( invalid position )
+		$2 ( empty tree for include )
 
 	&body-routines
 		:asma-normal-body
 		:asma-ignore
 		:asma-macro-body
+		$2 ( invalid position )
+		:asma-include-filename
 
 @asma-parse-hex-digit ( charcode -- 00-0f if valid hex
                                  OR 10-ff otherwise )
@@ -644,18 +660,18 @@ include projects/library/file-read-chunks.tal
 	JMP2r
 
 	&ignore-macro
-	#0c asma-STATE-SET
+	#14 asma-STATE-SET
 	JMP2r
 
 @asma-macro-body
-	;asma/state LDA #08 AND ,&skip JCN
+	;asma/state LDA #10 AND ,&skip JCN
 	;asma/token LDA2 ;asma-append-heap-string JSR2
 	&skip
 	JMP2r
 
 @asma-macro-end
 	#00 ;asma-append-heap-byte JSR2
-	#0c asma-STATE-CLEAR
+	#14 asma-STATE-CLEAR
 	JMP2r
 
 @asma-label-define
@@ -706,6 +722,7 @@ include projects/library/file-read-chunks.tal
 	,&valid JCN
 
 	;asma-msg-hex ;asma/error STA2
+	POP2
 	JMP2r
 
 	&valid
@@ -860,14 +877,30 @@ include projects/library/file-read-chunks.tal
 	,&macro-loop JMP
 
 	&not-macro
+	POP2
+	;&include-string ;asma-strcmp-tree JSR2 ,&not-include JCN
+	POP2 ( discard dummy after-node-key* )
+	#08 asma-STATE-SET
+	JMP2r
+
+	&not-include
 	;asma-msg-label ;asma/error STA2
 	&error
-	POP2
 	JMP2r
 
 	&too-deep
-	;asma-msg-too-deep ;asma/error STA2
 	POP2
+	;asma-msg-too-deep ;asma/error STA2
+	JMP2r
+
+	&include-string "include 00
+
+@asma-include-filename
+	#08 asma-STATE-CLEAR
+	;asma/heap LDA2
+		;asma/token LDA2 ;asma-append-heap-string JSR2
+		;asma-assemble-file-pass JSR2
+	;asma/break LDAk INC ROT ROT STA
 	JMP2r
 
 ( Error messages )
