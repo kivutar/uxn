@@ -13,8 +13,8 @@ build_asma() {
 	#01 .System/halt DEO
 	BRK
 
-	&source-file "in.tal 00
-	&dest-file "out.rom 00
+	&source-file "asma-test/in.tal 00
+	&dest-file "asma-test/out.rom 00
 
 EOD
 	sed -ne '/%asma-IF-ERROR/,$p' ../projects/software/asma.tal
@@ -22,22 +22,21 @@ EOD
 
 expect_failure() {
 	cat > 'in.tal'
-	../bin/uxncli asma.rom > asma.log 2>/dev/null
+	( cd .. && bin/uxncli asma-test/asma.rom ) > asma.log 2>/dev/null
 	if ! grep -qF "${1}" asma.log; then
 		echo "error: asma didn't report error ${1} in faulty code"
-		tail asma.log
-		exit 1
+		xxd asma.log
 	fi
 }
 
 echo 'Assembling asma with uxnasm'
 build_asma > asma.tal
-../bin/uxnasm asma.tal asma.rom > uxnasm.log
-for F in $(find ../projects -path ../projects/library -prune -false -or -type f -name '*.tal' -not -name 'blank.tal'); do
+( cd .. && bin/uxnasm asma-test/asma.tal asma-test/asma.rom ) > uxnasm.log
+for F in $(find ../projects -path ../projects/library -prune -false -or -type f -name '*.tal' -not -name 'blank.tal' | sort); do
 	echo "Comparing assembly of ${F}"
 	BN="$(basename "${F%.tal}")"
 
-	if ! ../bin/uxnasm "${F}" "uxnasm-${BN}.rom" > uxnasm.log; then
+	if ! ( cd .. && bin/uxnasm "asma-test/${F}" "asma-test/uxnasm-${BN}.rom" ) > uxnasm.log; then
 		echo "error: uxnasm failed to assemble ${F}"
 		tail uxnasm.log
 		exit 1
@@ -46,7 +45,7 @@ for F in $(find ../projects -path ../projects/library -prune -false -or -type f 
 
 	cp "${F}" 'in.tal'
 	rm -f 'out.rom'
-	../bin/uxncli asma.rom > asma.log
+	( cd .. && bin/uxncli asma-test/asma.rom ) > asma.log
 	if [ ! -f 'out.rom' ]; then
 		echo "error: asma failed to assemble ${F}, while uxnasm succeeded"
 		tail asma.log
