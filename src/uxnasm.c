@@ -12,6 +12,7 @@ WITH REGARD TO THIS SOFTWARE.
 */
 
 #define TRIM 0x0100
+#define LENGTH 0x10000 - TRIM
 
 typedef unsigned char Uint8;
 typedef signed char Sint8;
@@ -28,7 +29,7 @@ typedef struct {
 } Label;
 
 typedef struct {
-	Uint8 data[256 * 256], mlen;
+	Uint8 data[LENGTH], mlen;
 	Uint16 ptr, length, llen;
 	Label labels[512];
 	Macro macros[256];
@@ -391,7 +392,12 @@ cleanup(char *filename)
 			continue; /* Ignore capitalized labels(devices) */
 		else if(!p.labels[i].refs)
 			fprintf(stderr, "--- Unused label: %s\n", p.labels[i].name);
-	printf("Assembled %s(%d bytes), %d labels, %d macros.\n", filename, (p.length - TRIM), p.llen, p.mlen);
+	printf("Assembled %s in %.2fkb(%.2f%% used), %d labels, %d macros.\n",
+		filename,
+		(p.length - TRIM) / 1000.0,
+		p.length / 655.360,
+		p.llen,
+		p.mlen);
 }
 
 int
