@@ -423,7 +423,7 @@ include projects/library/file-read-chunks.tal
 @asma-parse-hex-string ( -- value* 06 if valid hex and length > 2
                          OR value* 03 if valid hex and length <= 2
                          OR 00 otherwise )
-	;asma/token LDA2 DUP2 ,asma-strlen JSR #02 GTH ROT ROT
+	;asma/token LDA2 DUP2 ,strlen JSR #0002 GTH2 ROT ROT
 	LIT2r 0000
 
 	&loop
@@ -446,28 +446,22 @@ include projects/library/file-read-chunks.tal
 	DUP EOR
 	JMP2r
 
-@asma-strlen ( string-ptr* -- length )
-	LITr 00
-
-	&loop
-	LDAk
-	,&not-end JCN
-	POP2 STHr
-	JMP2r
-
-	&not-end
-	LITr 01 ADDr
-	INC2
-	,&loop JMP
-
 %asma-SHORT-FLAG { #20 }
 %asma-RETURN-FLAG { #40 }
 %asma-KEEP-FLAG { #80 }
 
+@asma-traverse-tree ( incoming-ptr* -- binary-ptr* 00 if key found
+                                    OR node-incoming-ptr* 01 if key not found )
+	;asma/token LDA2
+	( fall through to traverse-tree )
+
+include projects/library/binary-tree.tal
+include projects/library/string.tal
+
 @asma-parse-opcode ( -- byte 00 if valid opcode
                      OR 01 otherwise )
 	;asma/token LDA2
-	DUP2 ,asma-strlen JSR #03 LTH ,&too-short JCN
+	DUP2 ,strlen JSR #0003 LTH2 ,&too-short JCN
 
 	( truncate to three chars long )
 	#0003 ADD2 ( end* / )
@@ -560,13 +554,6 @@ include projects/library/file-read-chunks.tal
 	JMP2r
 
 include projects/library/heap.tal
-
-@asma-traverse-tree ( incoming-ptr* -- binary-ptr* 00 if key found
-                                    OR node-incoming-ptr* 01 if key not found )
-	;asma/token LDA2
-	( fall through to traverse-tree )
-
-include projects/library/binary-tree.tal
 
 (
 	First character routines.
@@ -817,7 +804,7 @@ include projects/library/binary-tree.tal
 	JMP2r
 
 	&keep-going
-	DUP2k ;asma-strlen JSR2 #00 SWP INC2 ADD2
+	DUP2k ;strlen JSR2 INC2 ADD2
 	SWP2 ;asma-assemble-token JSR2 asma-IF-ERROR ,&error JCN
 	,&macro-loop JMP
 
