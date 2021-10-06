@@ -583,45 +583,10 @@ include projects/library/file-read-chunks.tal
 
 @asma-traverse-tree ( incoming-ptr* -- binary-ptr* 00 if key found
                                     OR node-incoming-ptr* 01 if key not found )
-	&loop ( incoming-ptr* )
-	LDA2k ORA ,&valid-node JCN
-	#01 JMP2r
+	;asma/token LDA2
+	( fall through to traverse-tree )
 
-	&valid-node
-	LDA2 STH2k
-	#0004 ADD2 ,asma-strcmp-tree JSR
-	DUP ,&nomatch JCN
-	POP2r JMP2r
-
-	&nomatch
-	#06 SFT #02 AND #00 SWP
-	STH2r ADD2
-	,&loop JMP
-
-	( &help-str "Looking 20 "up 20 00 )
-
-@asma-strcmp-tree ( node-key* -- order if strings differ
-                              OR after-node-key* 00 if strings match )
-	;asma/token LDA2 STH2
-
-	&loop ( node-key* / token* )
-	DUP2 INC2 SWP2 LDA LDAkr STHr
-	ORAk ,&not-end JCN
-
-	( end of C strings, match found )
-	POP2r POP
-	JMP2r
-
-	&not-end
-	SUB
-	DUP ,&nomatch JCN
-	POP
-	LIT2r 0001 ADD2r
-	,&loop JMP
-
-	&nomatch
-	POP2r ROT ROT POP2
-	JMP2r
+include projects/library/binary-tree.tal
 
 (
 	First character routines.
@@ -878,8 +843,8 @@ include projects/library/file-read-chunks.tal
 
 	&not-macro
 	POP2
-	;&include-string ;asma-strcmp-tree JSR2 ,&not-include JCN
-	POP2 ( discard dummy after-node-key* )
+	;&include-string ;asma/token LDA2
+		;strcmp JSR2 NIP2 NIP2 NIP ,&not-include JCN
 	#08 asma-STATE-SET
 	JMP2r
 
