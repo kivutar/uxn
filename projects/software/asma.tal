@@ -143,9 +143,9 @@
 
 @asma-print-heap-usage ( -- )
 	;asma/log-level LDA #08 AND #00 EQU ,&skip JCN
-	;asma/heap LDA2 ;asma-heap SUB2 ;asma-print-short JSR2
+	;heap LDA2 ;asma-heap SUB2 ;asma-print-short JSR2
 	;&str1 ;asma-print-string JSR2
-	;asma-heap/end ;asma/heap LDA2 SUB2 ;asma-print-short JSR2
+	;asma-heap/end ;heap LDA2 SUB2 ;asma-print-short JSR2
 	;&str2 ;asma-print-string JSR2
 	&skip
 	JMP2r
@@ -242,7 +242,7 @@
 		;asma/error STA2
 		;asma-trees/labels STA2
 		;asma-trees/macros STA2
-	;asma-heap ;asma/heap STA2
+	;asma-heap ;heap STA2
 	;asma-opcodes/_entry ;asma-trees/opcodes STA2
 	( fall through )
 
@@ -339,7 +339,7 @@ include projects/library/file-read-chunks.tal
 @asma [
 	&pass $1 &state $1 &line $2 &break $1 &eof $1
 	&token $2 &orig-token $2
-	&heap $2 &addr $2 &written-addr $2 &flush-fn $2
+	&addr $2 &written-addr $2 &flush-fn $2
 	&src-filename $2 &dest-filename $2
 	&error $2 &log-level $1
 ]
@@ -559,27 +559,7 @@ include projects/library/file-read-chunks.tal
 	;asma-write-buffer .File/save DEO2
 	JMP2r
 
-@asma-append-heap-byte ( dummy byte -- dummy )
-	;asma/heap LDA2
-	OVR2 OVR2 STA POP
-	INC2 ;asma/heap STA2
-	POP
-	JMP2r
-
-@asma-append-heap-short ( dummy short* -- dummy )
-	SWP
-	,asma-append-heap-byte JSR
-	,asma-append-heap-byte JMP ( tail call )
-
-@asma-append-heap-string ( string* -- )
-	LDAk
-	DUP ,asma-append-heap-byte JSR
-	,&keep-going JCN
-	POP2 JMP2r
-
-	&keep-going
-	INC2
-	,asma-append-heap-string JMP
+include projects/library/heap.tal
 
 @asma-traverse-tree ( incoming-ptr* -- binary-ptr* 00 if key found
                                     OR node-incoming-ptr* 01 if key not found )
@@ -615,12 +595,12 @@ include projects/library/binary-tree.tal
 	;asma-msg-macro ;asma/error STA2
 	JMP2r
 
-	&not-exist
+	&not-exist ( incoming-ptr* )
 	( define macro by creating new node )
-	;asma/heap LDA2 SWP2 STA2
-	#0000 ;asma-append-heap-short JSR2 ( less-than pointer )
-	#0000 ;asma-append-heap-short JSR2 ( greater-than pointer )
-	;asma/token LDA2 ;asma-append-heap-string JSR2 ( key )
+	;heap LDA2 SWP2 STA2
+	#0000 ;append-heap-short JSR2 ( less-than pointer )
+	#0000 ;append-heap-short JSR2 ( greater-than pointer )
+	;asma/token LDA2 ;append-heap-string JSR2 ( key )
 	#04 asma-STATE-SET
 	JMP2r
 
@@ -630,12 +610,12 @@ include projects/library/binary-tree.tal
 
 @asma-macro-body
 	;asma/state LDA #10 AND ,&skip JCN
-	;asma/token LDA2 ;asma-append-heap-string JSR2
+	;asma/token LDA2 ;append-heap-string JSR2
 	&skip
 	JMP2r
 
 @asma-macro-end
-	#00 ;asma-append-heap-byte JSR2
+	#00 ;append-heap-byte JSR2
 	#14 asma-STATE-CLEAR
 	JMP2r
 
@@ -643,7 +623,7 @@ include projects/library/binary-tree.tal
 	;asma-trees/labels ,asma-label-helper JSR
 	,&already-existed JCN
 
-	#0000 ;asma-append-heap-short JSR2 ( data2: subtree incoming ptr )
+	#0000 ;append-heap-short JSR2 ( data2: subtree incoming ptr )
 
 	&already-existed
 	#0002 ADD2 ;asma-trees/scope STA2
@@ -665,14 +645,14 @@ include projects/library/binary-tree.tal
 
 	&new-label ( incoming-ptr* )
 	( define label by creating new node )
-	;asma/heap LDA2 SWP2 STA2
-	#0000 ;asma-append-heap-short JSR2 ( less-than pointer )
-	#0000 ;asma-append-heap-short JSR2 ( greater-than pointer )
-	;asma/token LDA2 ;asma-append-heap-string JSR2 ( key )
+	;heap LDA2 SWP2 STA2
+	#0000 ;append-heap-short JSR2 ( less-than pointer )
+	#0000 ;append-heap-short JSR2 ( greater-than pointer )
+	;asma/token LDA2 ;append-heap-string JSR2 ( key )
 
-	;asma/heap LDA2
+	;heap LDA2
 
-	;asma/addr LDA2 ;asma-append-heap-short JSR2 ( data1: address )
+	;asma/addr LDA2 ;append-heap-short JSR2 ( data1: address )
 	#00 JMP2r
 
 @asma-pad-absolute
@@ -862,8 +842,8 @@ include projects/library/binary-tree.tal
 
 @asma-include-filename
 	#08 asma-STATE-CLEAR
-	;asma/heap LDA2
-		;asma/token LDA2 ;asma-append-heap-string JSR2
+	;heap LDA2
+		;asma/token LDA2 ;append-heap-string JSR2
 		;asma-assemble-file-pass JSR2
 	;asma/break LDAk INC ROT ROT STA
 	JMP2r
