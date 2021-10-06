@@ -311,8 +311,8 @@ include projects/library/file-read-chunks.tal
 	LDAk #0a NEQ ( end-chunk* ws-char* not-newline / line^ start-of-token* )
 	#00 OVR2 STA
 	STH2r ,asma-assemble-token JSR ( end-chunk* ws-char* not-newline / line^ )
-	JMP INC2r ( end-chunk* ws-char* / line^ )
 	asma-IF-ERROR ,&error JCN
+	JMP INC2r ( end-chunk* ws-char* / line^ )
 	;asma/break LDA ,&break JCN
 	INC2 STH2k ( end-chunk* start-of-token* / line^ start-of-token* )
 	,&loop JMP
@@ -323,9 +323,11 @@ include projects/library/file-read-chunks.tal
 	INC2 NIP2 ( assembled-up-to-ptr* / line^ )
 	STH2r SWP2 JMP2r
 
-	&error ( end-chunk* ws-char* / line^ )
+	&error ( end-chunk* ws-char* not-newline / line^ )
 	( return no progress with assembly to make file-read-chunks exit )
-	POP2 POP2 STH2r ;asma-read-buffer
+	POP POP2 POP2
+	STH2kr ;asma/line STA2
+	STH2r ;asma-read-buffer
 	JMP2r
 
 	&eof ( end-chunk* ws-char* / line^ start-of-token* )
