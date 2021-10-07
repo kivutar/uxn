@@ -33,6 +33,9 @@
 
 	;asma-init-next-pass JSR2
 	;asma-flush-to-file ;asma/flush-fn STA2
+	;asma/dest-filename LDA2 ORA ,&filename-present JCN
+	;asma-flush-to-console ;asma/flush-fn STA2
+	&filename-present
 	;asma/src-filename LDA2 ;asma-assemble-file-pass JSR2
 	asma-IF-ERROR ,&error JCN
 
@@ -497,6 +500,20 @@ include projects/library/string.tal
 	,asma-output/offset LDR2 DUP2 .File/offset-ls DEO2 ADD2 ,asma-output/offset STR2
 	;asma/dest-filename LDA2 .File/name DEO2
 	;asma-write-buffer .File/save DEO2
+	JMP2r
+
+@asma-flush-to-console ( len* -- )
+	ORAk ,&not-empty JCN
+	POP2 JMP2r
+
+	&not-empty
+	;asma-write-buffer DUP2 ROT2 ADD2 SWP2 ( end* ptr* )
+	&loop ( end* ptr* )
+	LDAk .Console/write DEO
+	INC2
+	GTH2k ,&loop JCN
+
+	POP2 POP2
 	JMP2r
 
 include projects/library/heap.tal
