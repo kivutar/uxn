@@ -128,6 +128,10 @@
 	DUP2 ,asma-print-labels JSR
 	( here )
 	DUP2 #0004 ADD2
+	LDAk LIT 'A LTH ,&loop JCN
+	LDAk LIT 'Z GTH ,&loop JCN
+	POP2
+	,&skip-device-label JMP
 	&loop
 	DUP2 INC2 SWP2 LDA
 	DUP #00 EQU ,&end JCN
@@ -141,6 +145,7 @@
 	( subtree )
 	#0002 ADD2 ;asma-print-sublabels JSR2
 
+	&skip-device-label
 	( right node )
 	#0002 ADD2 ,asma-print-labels JSR
 	JMP2r
