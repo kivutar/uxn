@@ -488,7 +488,7 @@ include projects/library/string.tal
 	NIP2 ( start* )
 	,&after-flush JMP
 
-@asma-output [ &ptr $2 &offset $2 &filename $2 ]
+@asma-output [ &ptr $2 &offset $2 ]
 
 @asma-flush-ignore ( len* -- )
 	POP2
