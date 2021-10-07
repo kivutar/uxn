@@ -759,9 +759,8 @@ include projects/library/heap.tal
 	( hex short   ) ,asma-short-helper/raw JMP
 
 	&not-hex
-	;asma-trees/macros ;asma-traverse-tree JSR2 ,&not-macro JCN
-
 	.System/rst DEI #e0 GTH ,&too-deep JCN
+	;asma-trees/macros ;asma-traverse-tree JSR2 ,&not-macro JCN
 
 	&macro-loop
 	LDAk ,&keep-going JCN
@@ -770,8 +769,12 @@ include projects/library/heap.tal
 
 	&keep-going
 	DUP2k ;strlen JSR2 INC2 ADD2
-	SWP2 ;asma-assemble-token JSR2 asma-IF-ERROR ,&error JCN
+	SWP2 ;asma-assemble-token JSR2 asma-IF-ERROR ,&macro-error JCN
 	,&macro-loop JMP
+
+	&macro-error
+	POP2
+	JMP2r
 
 	&not-macro
 	POP2
@@ -782,11 +785,9 @@ include projects/library/heap.tal
 
 	&not-include
 	;asma-msg-label ;asma/error STA2
-	&error
 	JMP2r
 
 	&too-deep
-	POP2
 	;asma-msg-too-deep ;asma/error STA2
 	JMP2r
 
@@ -808,7 +809,7 @@ include projects/library/heap.tal
 @asma-msg-label     "Label 20 "not 20 "found 00
 @asma-msg-macro     "Macro 20 "already 20 "exists 00
 @asma-msg-rewound   "Memory 20 "overwrite 00
-@asma-msg-too-deep  "Macro 20 "expansion 20 "level 20 "too 20 "deep 00
+@asma-msg-too-deep  "Recursion 20 "level 20 "too 20 "deep 00
 
 ( trees )
 

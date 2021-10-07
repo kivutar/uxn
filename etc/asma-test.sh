@@ -62,6 +62,11 @@ expect_failure 'Memory overwrite: SUB' <<'EOD'
 |2000 ADD
 |1000 SUB
 EOD
+expect_failure 'Recursion level too deep:' <<'EOD'
+%me { you }
+%you { me }
+|1000 me
+EOD
 
 echo 'All OK'
 
