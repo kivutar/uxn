@@ -60,17 +60,20 @@
 )
 
 @asma-print-error ( -- )
+	.File/name DEI2 ;asma-print-string JSR2
+	;&line ;asma-print-string JSR2
+	;asma/line LDA2 ;asma-print-short JSR2
+	#3a .Console/error DEO
+	#20 .Console/error DEO
 	;asma/error LDA2 ;asma-print-string JSR2
 	#3a .Console/error DEO
 	#20 .Console/error DEO
 	;asma/orig-token LDA2 ;asma-print-string JSR2
-	;&line ;asma-print-string JSR2
-	;asma/line LDA2 ;asma-print-short JSR2
 	#2e .Console/error DEO
 	#0a .Console/error DEO
 	JMP2r
 
-	&line 20 "on 20 "line 20 00
+	&line 20 "line 20 00
 
 @asma-print-line-count ( -- )
 	;asma/log-level LDA #01 AND #00 EQU ,&skip JCN
