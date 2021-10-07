@@ -392,10 +392,10 @@ cleanup(char *filename)
 			continue; /* Ignore capitalized labels(devices) */
 		else if(!p.labels[i].refs)
 			fprintf(stderr, "--- Unused label: %s\n", p.labels[i].name);
-	printf("Assembled %s in %.2fkb(%.2f%% used), %d labels, %d macros.\n",
+	fprintf(stderr, "Assembled %s in %.2fkb(%.2f%% used), %d labels, %d macros.\n",
 		filename,
-		(p.length - TRIM) / 1000.0,
-		p.length / 655.360,
+		(p.length - TRIM) / 1024.0,
+		p.length / 652.80,
 		p.llen,
 		p.mlen);
 }
