@@ -266,7 +266,7 @@
 )
 
 @asma-assemble-file-pass ( filename-ptr* -- )
-	;asma-assemble-chunk #0001 ROT2 ( func* line^ filename* )
+	;asma-assemble-chunk #0000 ROT2 ( func* line^ filename* )
 	;asma-read-buffer DUP2 ;asma-read-buffer/end ROT2 SUB2 ( func* line^ filename* buf* size^ )
 	ROT2 ( func* line^ buf* size^ filename* )
 	,file-read-chunks JSR
