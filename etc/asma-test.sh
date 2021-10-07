@@ -54,9 +54,9 @@ EOD
 expect_failure 'Label not found: hello' <<'EOD'
 hello
 EOD
-expect_failure 'Macro already exists: %abc' <<'EOD'
-%abc { def }
-%abc { ghi }
+expect_failure 'Macro already exists: %me' <<'EOD'
+%me { #00 }
+%me { #01 }
 EOD
 expect_failure 'Memory overwrite: SUB' <<'EOD'
 |2000 ADD
