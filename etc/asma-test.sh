@@ -6,7 +6,7 @@ mkdir asma-test
 
 expect_failure() {
 	cat > asma-test/in.tal
-	echo asma-test/in.tal | bin/uxncli asma-test/asma.rom > out.rom 2> asma-test/asma.log
+	echo asma-test/in.tal | bin/uxncli asma-test/asma.rom > asma-test/out.rom 2> asma-test/asma.log
 	if ! grep -qF "${1}" asma-test/asma.log; then
 		echo "error: asma didn't report error ${1} in faulty code"
 		cat asma-test/asma.log
