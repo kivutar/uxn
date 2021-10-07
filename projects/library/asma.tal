@@ -71,7 +71,7 @@
 
 @asma-print-line-count ( -- )
 	;asma/log-level LDA #01 AND #00 EQU ,&skip JCN
-	;asma/line LDA2 ;asma-print-short JSR2
+	;asma/lines LDA2 ;asma-print-short JSR2
 	;&lines ;asma-print-string JSR2
 	&skip
 	JMP2r
@@ -254,7 +254,9 @@ include projects/library/file-read-chunks.tal
 	#00 OVR2 STA
 	STH2r ,asma-assemble-token JSR ( end-chunk* ws-char* not-newline / line^ )
 	asma-IF-ERROR ,&error JCN
-	JMP INC2r ( end-chunk* ws-char* / line^ )
+	,&not-newline JCN
+	,asma/lines LDR2 INC2 ,asma/lines STR2
+	&not-newline ( end-chunk* ws-char* / line^ )
 	;asma/break LDA ,&break JCN
 	INC2 STH2k ( end-chunk* start-of-token* / line^ start-of-token* )
 	,&loop JMP
@@ -281,7 +283,7 @@ include projects/library/file-read-chunks.tal
 	STH2r ;asma-read-buffer JMP2r
 
 @asma [
-	&pass $1 &state $1 &line $2 &break $1 &eof $1
+	&pass $1 &state $1 &line $2 &lines $2 &break $1 &eof $1
 	&token $2 &orig-token $2
 	&addr $2 &written-addr $2 &flush-fn $2
 	&src-filename $2 &dest-filename $2
