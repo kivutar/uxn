@@ -3,42 +3,39 @@ set -e
 cd "$(dirname "${0}")/.."
 rm -rf asma-test
 mkdir asma-test
-cd asma-test
 
 expect_failure() {
-	cat > 'in.tal'
-	echo asma-test/in.tal | ( cd .. && bin/uxncli asma-test/asma.rom ) > out.rom 2> asma.log
-	if ! grep -qF "${1}" asma.log; then
+	cat > asma-test/in.tal
+	echo asma-test/in.tal | bin/uxncli asma-test/asma.rom > out.rom 2> asma-test/asma.log
+	if ! grep -qF "${1}" asma-test/asma.log; then
 		echo "error: asma didn't report error ${1} in faulty code"
-		xxd asma.log
+		cat asma-test/asma.log
 	fi
 }
 
 echo 'Assembling asma with uxnasm'
-( cd .. && bin/uxnasm projects/software/asma.tal asma-test/asma.rom ) > uxnasm.log
-for F in $(find ../projects -path ../projects/library -prune -false -or -type f -name '*.tal' -not -name 'blank.tal' | sort); do
+bin/uxnasm projects/software/asma.tal asma-test/asma.rom > asma-test/uxnasm.log
+for F in $(find projects -path projects/library -prune -false -or -type f -name '*.tal' | sort); do
 	echo "Comparing assembly of ${F}"
-	BN="$(basename "${F%.tal}")"
 
-	if ! ( cd .. && bin/uxnasm "asma-test/${F}" "asma-test/uxnasm-${BN}.rom" ) > uxnasm.log; then
+	UASM_BASE="asma-test/uxnasm-$(basename "${F%.tal}")"
+	if ! bin/uxnasm "${F}" "${UASM_BASE}.rom" 2> "${UASM_BASE}.log"; then
 		echo "error: uxnasm failed to assemble ${F}"
-		tail uxnasm.log
+		cat "${UASM_BASE}.log"
 		exit 1
 	fi
-	xxd "uxnasm-${BN}.rom" > "uxnasm-${BN}.hex"
+	xxd "${UASM_BASE}.rom" > "${UASM_BASE}.hex"
 
-	cp "${F}" 'in.tal'
-	rm -f 'out.rom'
-	echo asma-test/in.tal | ( cd .. && bin/uxncli asma-test/asma.rom ) > out.rom 2> asma.log
-	cat asma.log
-	if ! grep -qF 'bytes of heap used' asma.log; then
+	ASMA_BASE="asma-test/asma-$(basename "${F%.tal}")"
+	echo "${F}" | bin/uxncli asma-test/asma.rom > "${ASMA_BASE}.rom" 2> "${ASMA_BASE}.log"
+	if ! grep -qF 'bytes of heap used' "${ASMA_BASE}.log"; then
 		echo "error: asma failed to assemble ${F}, while uxnasm succeeded"
-		tail asma.log
+		cat "${ASMA_BASE}.log"
 		exit 1
 	fi
-	xxd 'out.rom' > "asma-${BN}.hex"
+	xxd "${ASMA_BASE}.rom" > "${ASMA_BASE}.hex"
 
-	diff -u "uxnasm-${BN}.hex" "asma-${BN}.hex"
+	diff -u "${UASM_BASE}.hex" "${ASMA_BASE}.hex"
 done
 expect_failure 'Invalid hexadecimal: $defg' <<'EOD'
 |1000 $defg
