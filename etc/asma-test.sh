@@ -67,6 +67,8 @@ expect_failure 'Recursion level too deep:' <<'EOD'
 %you { me }
 |1000 me
 EOD
-
+expect_failure 'Recursion level too deep: include' <<'EOD'
+include asma-test/in.tal
+EOD
 echo 'All OK'
 
