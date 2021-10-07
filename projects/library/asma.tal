@@ -58,13 +58,13 @@
 
 @asma-print-error ( -- )
 	;asma/error LDA2 ;asma-print-string JSR2
-	#3a .Console/write DEO
-	#20 .Console/write DEO
+	#3a .Console/error DEO
+	#20 .Console/error DEO
 	;asma/orig-token LDA2 ;asma-print-string JSR2
 	;&line ;asma-print-string JSR2
 	;asma/line LDA2 ;asma-print-short JSR2
-	#2e .Console/write DEO
-	#0a .Console/write DEO
+	#2e .Console/error DEO
+	#0a .Console/error DEO
 	JMP2r
 
 	&line 20 "on 20 "line 20 00
@@ -99,18 +99,18 @@
 	( left node )
 	DUP2 ,asma-print-sublabels JSR
 	( here )
-	#09 .Console/write DEO
+	#09 .Console/error DEO
 	DUP2 #0004 ADD2
 	&loop
 	DUP2 INC2 SWP2 LDA
 	DUP #00 EQU ,&end JCN
-	.Console/write DEO
+	.Console/error DEO
 	,&loop JMP
 	&end
 	POP
-	#09 .Console/write DEO
+	#09 .Console/error DEO
 	LDA2 ;asma-print-short JSR2
-	#0a .Console/write DEO
+	#0a .Console/error DEO
 
 	( right node )
 	#0002 ADD2 ,asma-print-sublabels JSR
@@ -135,13 +135,13 @@
 	&loop
 	DUP2 INC2 SWP2 LDA
 	DUP #00 EQU ,&end JCN
-	.Console/write DEO
+	.Console/error DEO
 	,&loop JMP
 	&end
 	POP
-	#09 .Console/write DEO
+	#09 .Console/error DEO
 	LDA2k ;asma-print-short JSR2
-	#0a .Console/write DEO
+	#0a .Console/error DEO
 	( subtree )
 	#0002 ADD2 ;asma-print-sublabels JSR2
 
@@ -155,13 +155,13 @@
 	POP POP2 JMP2r
 
 	&keep-going
-	.Console/write DEO
+	.Console/error DEO
 	INC2
 	,asma-print-string JMP
 
 @asma-print-short ( short* -- )
-	LIT '0 .Console/write DEO
-	LIT 'x .Console/write DEO
+	LIT '0 .Console/error DEO
+	LIT 'x .Console/error DEO
 	OVR #04 SFT ,&hex JSR
 	SWP #0f AND ,&hex JSR
 	DUP #04 SFT ,&hex JSR
@@ -171,7 +171,7 @@
 	#30 ADD DUP #3a LTH ,&not-alpha JCN
 	#27 ADD
 	&not-alpha
-	.Console/write DEO
+	.Console/error DEO
 	JMP2r
 
 (
