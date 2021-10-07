@@ -16,6 +16,8 @@
 	)
 	#0d ;asma/log-level STA
 
+	;asma-heap ;heap STA2
+
 	(
 		Assemble the source code into an output ROM file.
 

@@ -5,24 +5,9 @@ rm -rf asma-test
 mkdir asma-test
 cd asma-test
 
-build_asma() {
-	sed -ne '/^( devices )/,/^( vectors )/p' ../projects/software/asma.tal
-	cat <<EOD
-|0100 @reset
-	;&source-file ;&dest-file ;asma-assemble-file JSR2
-	#01 .System/halt DEO
-	BRK
-
-	&source-file "asma-test/in.tal 00
-	&dest-file "asma-test/out.rom 00
-
-EOD
-	sed -ne '/%asma-IF-ERROR/,$p' ../projects/software/asma.tal
-}
-
 expect_failure() {
 	cat > 'in.tal'
-	( cd .. && bin/uxncli asma-test/asma.rom ) > asma.log 2>/dev/null
+	echo asma-test/in.tal | ( cd .. && bin/uxncli asma-test/asma.rom ) > out.rom 2> asma.log
 	if ! grep -qF "${1}" asma.log; then
 		echo "error: asma didn't report error ${1} in faulty code"
 		xxd asma.log
@@ -30,8 +15,7 @@ expect_failure() {
 }
 
 echo 'Assembling asma with uxnasm'
-build_asma > asma.tal
-( cd .. && bin/uxnasm asma-test/asma.tal asma-test/asma.rom ) > uxnasm.log
+( cd .. && bin/uxnasm projects/software/asma.tal asma-test/asma.rom ) > uxnasm.log
 for F in $(find ../projects -path ../projects/library -prune -false -or -type f -name '*.tal' -not -name 'blank.tal' | sort); do
 	echo "Comparing assembly of ${F}"
 	BN="$(basename "${F%.tal}")"
@@ -45,8 +29,9 @@ for F in $(find ../projects -path ../projects/library -prune -false -or -type f 
 
 	cp "${F}" 'in.tal'
 	rm -f 'out.rom'
-	( cd .. && bin/uxncli asma-test/asma.rom ) > asma.log
-	if [ ! -f 'out.rom' ]; then
+	echo asma-test/in.tal | ( cd .. && bin/uxncli asma-test/asma.rom ) > out.rom 2> asma.log
+	cat asma.log
+	if ! grep -qF 'bytes of heap used' asma.log; then
 		echo "error: asma failed to assemble ${F}, while uxnasm succeeded"
 		tail asma.log
 		exit 1

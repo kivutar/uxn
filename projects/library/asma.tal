@@ -187,7 +187,6 @@
 		;asma/error STA2
 		;asma-trees/labels STA2
 		;asma-trees/macros STA2
-	;asma-heap ;heap STA2
 	;asma-opcodes/_entry ;asma-trees/opcodes STA2
 	( fall through )
 
