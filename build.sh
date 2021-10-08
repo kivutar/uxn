@@ -51,8 +51,14 @@ then
 	cp bin/uxnemu bin/uxnasm bin/uxncli $HOME/bin/
 fi
 
-echo "Assembling.."
-./bin/uxnasm projects/examples/demos/piano.tal bin/piano.rom
+# echo "Assembling(uxnasm).."
+# ./bin/uxnasm projects/examples/demos/piano.tal bin/piano.rom
+
+echo "Assembling(asma).."
+./bin/uxnasm projects/software/asma.tal bin/asma.rom
+
+echo "Assembling(piano).."
+echo projects/examples/demos/piano.tal | bin/uxncli bin/asma.rom > bin/piano.rom 2> bin/piano.log
 
 echo "Running.."
 ./bin/uxnemu bin/piano.rom
