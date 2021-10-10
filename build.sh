@@ -24,11 +24,18 @@ fi
 
 mkdir -p bin
 CFLAGS="-std=c89 -Wall -Wno-unknown-pragmas"
-if [ -n "${MSYSTEM}" ]; then
+case "$(uname -s 2>/dev/null)" in
+MSYS_NT*) # MSYS2 on Windows
 	UXNEMU_LDFLAGS="-static $(sdl2-config --cflags --static-libs)"
-else
+	;;
+Darwin) # macOS
+	CFLAGS="${CFLAGS} -Wno-typedef-redefinition"
+	UXNEMU_LDFLAGS="/usr/local/lib/libSDL2.a $(sdl2-config --cflags --static-libs | sed -e 's/-lSDL2 //')"
+	;;
+Linux|*)
 	UXNEMU_LDFLAGS="-L/usr/local/lib $(sdl2-config --cflags --libs)"
-fi
+	;;
+esac
 
 if [ "${1}" = '--debug' ]; 
 then
