@@ -9,6 +9,7 @@ environment:
     SITE: rabbits.srht.site
     SSH_HOST_KEYS: |
         [w1.uxn-build.ald.nu]:2222 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP+IYCB4JrKklFjWSMRkPBTqUjBqUuhlDQy6/X3l8xj5
+        [m1.uxn-build.ald.nu]:2223 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDvWVqlHh3XQ5ziEbT55K896/mW2BVDdkU6hWgIfU9md
 secrets:
     - 138ad607-a4ec-4d74-88a1-8f3be2ba2d03
 tasks:
@@ -18,7 +19,7 @@ tasks:
         umask 077
         mkdir -p ~/.ssh
         printf '%s\n' "${SSH_HOST_KEYS}" > ~/.ssh/known_hosts
-        printf 'Host win\nHostName w1.uxn-build.ald.nu\nPort 2222\nUser build\nStrictHostKeyChecking yes\nCheckHostIP no\n' > ~/.ssh/config
+        printf 'User build\nStrictHostKeyChecking yes\nCheckHostIP no\nHost win\nHostName w1.uxn-build.ald.nu\nPort 2222\nHost mac\nHostName m1.uxn-build.ald.nu\nPort 2223\n' > ~/.ssh/config
     - build-linux: |
         cd uxn
         sed -i -e 's/.*Running.*/exit/' build.sh
@@ -29,9 +30,12 @@ tasks:
     - build-windows: |
         ssh win "rm -f uxn-windows-64bit.zip; export PATH=\"\${PATH}:/mingw64/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); sed -i -e 's/.*Running.*/exit/' build.sh; MSYSTEM=MSYS ./build.sh; mv bin uxn; zip -qr ../uxn-windows-64bit.zip uxn"
         rsync win:uxn-windows-64bit.zip out/
+    - build-macos: |
+        ssh mac "rm -f uxn-macos.tar.gz; export PATH=\"\${PATH}:/usr/local/bin\"; set -ex; cd uxn; git fetch; git checkout .; git clean -xfd; git checkout $(cd uxn && git rev-parse HEAD); sed -i -e 's/.*Running.*/exit/' build.sh; ./build.sh; mv bin uxn; tar -zcf ../uxn-macos.tar.gz uxn"
+        rsync mac:uxn-macos.tar.gz out/
     - upload: |
         ls -l out
-        tar -czf out.tar.gz -C out uxn-linux-amd64.tar.gz uxn-windows-64bit.zip
+        tar -czf out.tar.gz -C out uxn-linux-amd64.tar.gz uxn-windows-64bit.zip uxn-macos.tar.gz
         acurl() {
             set +x
             curl -H "Authorization: Bearer ${OAUTH2_TOKEN}" "${@}"
