@@ -238,7 +238,7 @@ walktoken(char *w)
 	if(sihx(w) && slen(w) == 2)
 		return 1;
 	else if(sihx(w) && slen(w) == 4)
-		return 1;
+		return 2;
 	return error("Invalid token", w);
 }
 
