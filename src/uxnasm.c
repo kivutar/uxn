@@ -235,6 +235,10 @@ walktoken(char *w)
 			res += walktoken(m->items[i]);
 		return res;
 	}
+	if(sihx(w) && slen(w) == 2)
+		return 1;
+	else if(sihx(w) && slen(w) == 4)
+		return 1;
 	return error("Invalid token", w);
 }
 
@@ -392,12 +396,7 @@ cleanup(char *filename)
 			continue; /* Ignore capitalized labels(devices) */
 		else if(!p.labels[i].refs)
 			fprintf(stderr, "--- Unused label: %s\n", p.labels[i].name);
-	fprintf(stderr, "Assembled %s in %.2fkb(%.2f%% used), %d labels, %d macros.\n",
-		filename,
-		(p.length - TRIM) / 1024.0,
-		p.length / 652.80,
-		p.llen,
-		p.mlen);
+	fprintf(stderr, "Assembled %s in %.2fkb(%.2f%% used), %d labels, %d macros.\n", filename, (p.length - TRIM) / 1024.0, p.length / 652.80, p.llen, p.mlen);
 }
 
 int
