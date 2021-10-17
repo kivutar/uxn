@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
+#include <string.h>
 #include "uxn.h"
+#include "libretro.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-#include <SDL.h>
 #include "devices/ppu.h"
 #include "devices/apu.h"
 #pragma GCC diagnostic pop
@@ -21,6 +22,14 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 WITH REGARD TO THIS SOFTWARE.
 */
 
+static Uxn u;
+
+static retro_input_state_t input_state_cb;
+static retro_input_poll_t input_poll_cb;
+static retro_video_refresh_t video_cb;
+static retro_environment_t environ_cb;
+static retro_audio_sample_batch_t audio_cb;
+
 #define WIDTH 64 * 8
 #define HEIGHT 40 * 8
 #define PAD 4
@@ -28,11 +37,6 @@ WITH REGARD TO THIS SOFTWARE.
 #define POLYPHONY 4
 #define BENCH 0
 
-static SDL_Window *gWindow;
-static SDL_Texture *gTexture;
-static SDL_Renderer *gRenderer;
-static SDL_AudioDeviceID audio_id;
-static SDL_Rect gRect;
 /* devices */
 static Ppu ppu;
 static Apu apu[POLYPHONY];
@@ -76,33 +80,33 @@ error(char *msg, const char *err)
 static void
 audio_callback(void *u, Uint8 *stream, int len)
 {
-	int i, running = 0;
-	Sint16 *samples = (Sint16 *)stream;
-	SDL_memset(stream, 0, len);
-	for(i = 0; i < POLYPHONY; ++i)
-		running += apu_render(&apu[i], samples, samples + len / 2);
-	if(!running)
-		SDL_PauseAudioDevice(audio_id, 1);
-	(void)u;
+	// int i, running = 0;
+	// Sint16 *samples = (Sint16 *)stream;
+	// SDL_memset(stream, 0, len);
+	// for(i = 0; i < POLYPHONY; ++i)
+	// 	running += apu_render(&apu[i], samples, samples + len / 2);
+	// if(!running)
+	// 	SDL_PauseAudioDevice(audio_id, 1);
+	// (void)u;
 }
 
 void
 apu_finished_handler(Apu *c)
 {
-	SDL_Event event;
-	event.type = audio0_event + (c - apu);
-	SDL_PushEvent(&event);
+	// SDL_Event event;
+	// event.type = audio0_event + (c - apu);
+	// SDL_PushEvent(&event);
 }
 
 static int
 stdin_handler(void *p)
 {
-	SDL_Event event;
-	event.type = stdin_event;
-	while(read(0, &event.cbutton.button, 1) > 0)
-		SDL_PushEvent(&event);
-	return 0;
-	(void)p;
+	// SDL_Event event;
+	// event.type = stdin_event;
+	// while(read(0, &event.cbutton.button, 1) > 0)
+	// 	SDL_PushEvent(&event);
+	// return 0;
+	// (void)p;
 }
 
 void
@@ -121,23 +125,23 @@ set_palette(Uint8 *addr)
 	ppu.reqdraw = 1;
 }
 
-static void
-set_window_size(SDL_Window *window, int w, int h)
-{
-	SDL_Point win, win_old;
-	SDL_GetWindowPosition(window, &win.x, &win.y);
-	SDL_GetWindowSize(window, &win_old.x, &win_old.y);
-	SDL_SetWindowPosition(window, (win.x + win_old.x / 2) - w / 2, (win.y + win_old.y / 2) - h / 2);
-	SDL_SetWindowSize(window, w, h);
-}
+// static void
+// set_window_size(SDL_Window *window, int w, int h)
+// {
+// 	SDL_Point win, win_old;
+// 	SDL_GetWindowPosition(window, &win.x, &win.y);
+// 	SDL_GetWindowSize(window, &win_old.x, &win_old.y);
+// 	SDL_SetWindowPosition(window, (win.x + win_old.x / 2) - w / 2, (win.y + win_old.y / 2) - h / 2);
+// 	SDL_SetWindowSize(window, w, h);
+// }
 
 static void
 set_zoom(Uint8 scale)
 {
 	zoom = clamp(scale, 1, 3);
-	if(!gWindow)
-		return;
-	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
+	// if(!gWindow)
+	// 	return;
+	// set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
 	ppu.reqdraw = 1;
 }
 
@@ -145,21 +149,21 @@ static int
 set_size(Uint16 width, Uint16 height, int is_resize)
 {
 	ppu_set_size(&ppu, width, height);
-	gRect.x = PAD;
-	gRect.y = PAD;
-	gRect.w = ppu.width;
-	gRect.h = ppu.height;
+	// gRect.x = PAD;
+	// gRect.y = PAD;
+	// gRect.w = ppu.width;
+	// gRect.h = ppu.height;
 	if(!(ppu_screen = realloc(ppu_screen, ppu.width * ppu.height * sizeof(Uint32))))
 		return error("ppu_screen", "Memory failure");
 	memset(ppu_screen, 0, ppu.width * ppu.height * sizeof(Uint32));
-	if(gTexture != NULL) SDL_DestroyTexture(gTexture);
-	SDL_RenderSetLogicalSize(gRenderer, ppu.width + PAD * 2, ppu.height + PAD * 2);
-	gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
-	if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
-		return error("sdl_texture", SDL_GetError());
-	SDL_UpdateTexture(gTexture, NULL, ppu_screen, sizeof(Uint32));
-	if(is_resize)
-		set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
+	// if(gTexture != NULL) SDL_DestroyTexture(gTexture);
+	// SDL_RenderSetLogicalSize(gRenderer, ppu.width + PAD * 2, ppu.height + PAD * 2);
+	// gTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, ppu.width + PAD * 2, ppu.height + PAD * 2);
+	// if(gTexture == NULL || SDL_SetTextureBlendMode(gTexture, SDL_BLENDMODE_NONE))
+	// 	return error("sdl_texture", SDL_GetError());
+	// SDL_UpdateTexture(gTexture, NULL, ppu_screen, sizeof(Uint32));
+	// if(is_resize)
+	// 	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
 	ppu.reqdraw = 1;
 	return 1;
 }
@@ -167,18 +171,18 @@ set_size(Uint16 width, Uint16 height, int is_resize)
 static void
 capture_screen(void)
 {
-	const Uint32 format = SDL_PIXELFORMAT_RGB24;
-	time_t t = time(NULL);
-	char fname[64];
-	int w, h;
-	SDL_Surface *surface;
-	SDL_GetRendererOutputSize(gRenderer, &w, &h);
-	surface = SDL_CreateRGBSurfaceWithFormat(0, w, h, 24, format);
-	SDL_RenderReadPixels(gRenderer, NULL, format, surface->pixels, surface->pitch);
-	strftime(fname, sizeof(fname), "screenshot-%Y%m%d-%H%M%S.bmp", localtime(&t));
-	SDL_SaveBMP(surface, fname);
-	SDL_FreeSurface(surface);
-	fprintf(stderr, "Saved %s\n", fname);
+	// const Uint32 format = SDL_PIXELFORMAT_RGB24;
+	// time_t t = time(NULL);
+	// char fname[64];
+	// int w, h;
+	// SDL_Surface *surface;
+	// SDL_GetRendererOutputSize(gRenderer, &w, &h);
+	// surface = SDL_CreateRGBSurfaceWithFormat(0, w, h, 24, format);
+	// SDL_RenderReadPixels(gRenderer, NULL, format, surface->pixels, surface->pitch);
+	// strftime(fname, sizeof(fname), "screenshot-%Y%m%d-%H%M%S.bmp", localtime(&t));
+	// SDL_SaveBMP(surface, fname);
+	// SDL_FreeSurface(surface);
+	// fprintf(stderr, "Saved %s\n", fname);
 }
 
 static void
@@ -219,117 +223,80 @@ redraw(Uxn *u)
 	for(y = 0; y < ppu.height; ++y)
 		for(x = 0; x < ppu.width; ++x)
 			ppu_screen[x + y * ppu.width] = palette[ppu_read(&ppu, x, y)];
-	SDL_UpdateTexture(gTexture, &gRect, ppu_screen, ppu.width * sizeof(Uint32));
-	SDL_RenderClear(gRenderer);
-	SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
-	SDL_RenderPresent(gRenderer);
+	video_cb(ppu_screen, ppu.width, ppu.height, ppu.width * sizeof(Uint32));
 	ppu.reqdraw = 0;
 }
 
 static void
 quit(void)
 {
-	SDL_UnlockAudioDevice(audio_id);
-	SDL_DestroyTexture(gTexture);
-	gTexture = NULL;
-	SDL_DestroyRenderer(gRenderer);
-	gRenderer = NULL;
-	SDL_DestroyWindow(gWindow);
-	SDL_Quit();
+	// SDL_UnlockAudioDevice(audio_id);
+	// SDL_DestroyTexture(gTexture);
+	// gTexture = NULL;
+	// SDL_DestroyRenderer(gRenderer);
+	// gRenderer = NULL;
+	// SDL_DestroyWindow(gWindow);
+	// SDL_Quit();
 	exit(0);
 }
 
-static int
-init(void)
-{
-	SDL_AudioSpec as;
-	SDL_zero(as);
-	as.freq = SAMPLE_FREQUENCY;
-	as.format = AUDIO_S16;
-	as.channels = 2;
-	as.callback = audio_callback;
-	as.samples = 512;
-	as.userdata = NULL;
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
-		error("sdl", SDL_GetError());
-		if(SDL_Init(SDL_INIT_VIDEO) < 0)
-			return error("sdl", SDL_GetError());
-	} else {
-		audio_id = SDL_OpenAudioDevice(NULL, 0, &as, NULL, 0);
-		if(!audio_id)
-			error("sdl_audio", SDL_GetError());
-	}
-	gWindow = SDL_CreateWindow("Uxn", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (WIDTH + PAD * 2) * zoom, (HEIGHT + PAD * 2) * zoom, SDL_WINDOW_SHOWN);
-	if(gWindow == NULL)
-		return error("sdl_window", SDL_GetError());
-	gRenderer = SDL_CreateRenderer(gWindow, -1, 0);
-	if(gRenderer == NULL)
-		return error("sdl_renderer", SDL_GetError());
-	stdin_event = SDL_RegisterEvents(1);
-	audio0_event = SDL_RegisterEvents(POLYPHONY);
-	SDL_CreateThread(stdin_handler, "stdin", NULL);
-	SDL_StartTextInput();
-	SDL_ShowCursor(SDL_DISABLE);
-	return 1;
-}
+// static void
+// domouse(SDL_Event *event)
+// {
+// 	Uint8 flag = 0x00;
+// 	Uint16 x = clamp(event->motion.x - PAD, 0, ppu.width - 1);
+// 	Uint16 y = clamp(event->motion.y - PAD, 0, ppu.height - 1);
+// 	if(event->type == SDL_MOUSEWHEEL) {
+// 		devmouse->dat[7] = event->wheel.y;
+// 		return;
+// 	}
+// 	poke16(devmouse->dat, 0x2, x);
+// 	poke16(devmouse->dat, 0x4, y);
+// 	devmouse->dat[7] = 0x00;
+// 	switch(event->button.button) {
+// 	case SDL_BUTTON_LEFT: flag = 0x01; break;
+// 	case SDL_BUTTON_RIGHT: flag = 0x10; break;
+// 	}
+// 	switch(event->type) {
+// 	case SDL_MOUSEBUTTONDOWN:
+// 		devmouse->dat[6] |= flag;
+// 		break;
+// 	case SDL_MOUSEBUTTONUP:
+// 		devmouse->dat[6] &= (~flag);
+// 		break;
+// 	}
+// }
 
-static void
-domouse(SDL_Event *event)
-{
-	Uint8 flag = 0x00;
-	Uint16 x = clamp(event->motion.x - PAD, 0, ppu.width - 1);
-	Uint16 y = clamp(event->motion.y - PAD, 0, ppu.height - 1);
-	if(event->type == SDL_MOUSEWHEEL) {
-		devmouse->dat[7] = event->wheel.y;
-		return;
-	}
-	poke16(devmouse->dat, 0x2, x);
-	poke16(devmouse->dat, 0x4, y);
-	devmouse->dat[7] = 0x00;
-	switch(event->button.button) {
-	case SDL_BUTTON_LEFT: flag = 0x01; break;
-	case SDL_BUTTON_RIGHT: flag = 0x10; break;
-	}
-	switch(event->type) {
-	case SDL_MOUSEBUTTONDOWN:
-		devmouse->dat[6] |= flag;
-		break;
-	case SDL_MOUSEBUTTONUP:
-		devmouse->dat[6] &= (~flag);
-		break;
-	}
-}
-
-static void
-doctrl(SDL_Event *event, int z)
-{
-	Uint8 flag = 0x00;
-	SDL_Keymod mods = SDL_GetModState();
-	devctrl->dat[2] &= 0xf8;
-	if(mods & KMOD_CTRL) devctrl->dat[2] |= 0x01;
-	if(mods & KMOD_ALT) devctrl->dat[2] |= 0x02;
-	if(mods & KMOD_SHIFT) devctrl->dat[2] |= 0x04;
-	/* clang-format off */
-	switch(event->key.keysym.sym) {
-	case SDLK_ESCAPE: flag = 0x08; break;
-	case SDLK_UP: flag = 0x10; break;
-	case SDLK_DOWN: flag = 0x20; break;
-	case SDLK_LEFT: flag = 0x40; break;
-	case SDLK_RIGHT: flag = 0x80; break;
-	case SDLK_F1: if(z) set_zoom(zoom > 2 ? 1 : zoom + 1); break;
-	case SDLK_F2: if(z) devsystem->dat[0xe] = !devsystem->dat[0xe]; break;
-	case SDLK_F3: if(z) capture_screen(); break;
-	}
-	/* clang-format on */
-	if(z) {
-		devctrl->dat[2] |= flag;
-		if(event->key.keysym.sym < 0x20 || event->key.keysym.sym == SDLK_DELETE)
-			devctrl->dat[3] = event->key.keysym.sym;
-		else if((mods & KMOD_CTRL) && event->key.keysym.sym >= SDLK_a && event->key.keysym.sym <= SDLK_z)
-			devctrl->dat[3] = event->key.keysym.sym - (mods & KMOD_SHIFT) * 0x20;
-	} else
-		devctrl->dat[2] &= ~flag;
-}
+// static void
+// doctrl(SDL_Event *event, int z)
+// {
+// 	Uint8 flag = 0x00;
+// 	SDL_Keymod mods = SDL_GetModState();
+// 	devctrl->dat[2] &= 0xf8;
+// 	if(mods & KMOD_CTRL) devctrl->dat[2] |= 0x01;
+// 	if(mods & KMOD_ALT) devctrl->dat[2] |= 0x02;
+// 	if(mods & KMOD_SHIFT) devctrl->dat[2] |= 0x04;
+// 	/* clang-format off */
+// 	switch(event->key.keysym.sym) {
+// 	case SDLK_ESCAPE: flag = 0x08; break;
+// 	case SDLK_UP: flag = 0x10; break;
+// 	case SDLK_DOWN: flag = 0x20; break;
+// 	case SDLK_LEFT: flag = 0x40; break;
+// 	case SDLK_RIGHT: flag = 0x80; break;
+// 	case SDLK_F1: if(z) set_zoom(zoom > 2 ? 1 : zoom + 1); break;
+// 	case SDLK_F2: if(z) devsystem->dat[0xe] = !devsystem->dat[0xe]; break;
+// 	case SDLK_F3: if(z) capture_screen(); break;
+// 	}
+// 	/* clang-format on */
+// 	if(z) {
+// 		devctrl->dat[2] |= flag;
+// 		if(event->key.keysym.sym < 0x20 || event->key.keysym.sym == SDLK_DELETE)
+// 			devctrl->dat[3] = event->key.keysym.sym;
+// 		else if((mods & KMOD_CTRL) && event->key.keysym.sym >= SDLK_a && event->key.keysym.sym <= SDLK_z)
+// 			devctrl->dat[3] = event->key.keysym.sym - (mods & KMOD_SHIFT) * 0x20;
+// 	} else
+// 		devctrl->dat[2] &= ~flag;
+// }
 
 #pragma mark - Devices
 
@@ -433,22 +400,22 @@ static int
 audio_talk(Device *d, Uint8 b0, Uint8 w)
 {
 	Apu *c = &apu[d - devaudio0];
-	if(!audio_id) return 1;
+	// if(!audio_id) return 1;
 	if(!w) {
 		if(b0 == 0x2)
 			poke16(d->dat, 0x2, c->i);
 		else if(b0 == 0x4)
 			d->dat[0x4] = apu_get_vu(c);
 	} else if(b0 == 0xf) {
-		SDL_LockAudioDevice(audio_id);
+		// SDL_LockAudioDevice(audio_id);
 		c->len = peek16(d->dat, 0xa);
 		c->addr = &d->mem[peek16(d->dat, 0xc)];
 		c->volume[0] = d->dat[0xe] >> 4;
 		c->volume[1] = d->dat[0xe] & 0xf;
 		c->repeat = !(d->dat[0xf] & 0x80);
 		apu_start(c, peek16(d->dat, 0x8), d->dat[0xf] & 0x7f);
-		SDL_UnlockAudioDevice(audio_id);
-		SDL_PauseAudioDevice(audio_id, 0);
+		// SDL_UnlockAudioDevice(audio_id);
+		// SDL_PauseAudioDevice(audio_id, 0);
 	}
 	return 1;
 }
@@ -494,58 +461,6 @@ uxn_halt(Uxn *u, Uint8 error, char *name, int id)
 }
 
 static int
-run(Uxn *u)
-{
-	uxn_eval(u, PAGE_PROGRAM);
-	redraw(u);
-	while(!devsystem->dat[0xf]) {
-		SDL_Event event;
-		double elapsed, start = 0;
-		if(!BENCH)
-			start = SDL_GetPerformanceCounter();
-		while(SDL_PollEvent(&event) != 0) {
-			switch(event.type) {
-			case SDL_QUIT:
-				return error("Run", "Quit.");
-			case SDL_TEXTINPUT:
-				devctrl->dat[3] = event.text.text[0]; /* fall-thru */
-			case SDL_KEYDOWN:
-			case SDL_KEYUP:
-				doctrl(&event, event.type == SDL_KEYDOWN);
-				uxn_eval(u, devctrl->vector);
-				devctrl->dat[3] = 0;
-				break;
-			case SDL_MOUSEWHEEL:
-			case SDL_MOUSEBUTTONUP:
-			case SDL_MOUSEBUTTONDOWN:
-			case SDL_MOUSEMOTION:
-				domouse(&event);
-				uxn_eval(u, devmouse->vector);
-				break;
-			case SDL_WINDOWEVENT:
-				if(event.window.event == SDL_WINDOWEVENT_EXPOSED)
-					redraw(u);
-				break;
-			default:
-				if(event.type == stdin_event) {
-					devconsole->dat[0x2] = event.cbutton.button;
-					uxn_eval(u, devconsole->vector);
-				} else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY)
-					uxn_eval(u, peek16((devaudio0 + (event.type - audio0_event))->dat, 0));
-			}
-		}
-		uxn_eval(u, devscreen->vector);
-		if(ppu.reqdraw || devsystem->dat[0xe])
-			redraw(u);
-		if(!BENCH) {
-			elapsed = (SDL_GetPerformanceCounter() - start) / (double)SDL_GetPerformanceFrequency() * 1000.0f;
-			SDL_Delay(clamp(16.666f - elapsed, 0, 1000));
-		}
-	}
-	return error("Run", "Ended.");
-}
-
-static int
 load(Uxn *u, char *filepath)
 {
 	FILE *f;
@@ -555,19 +470,49 @@ load(Uxn *u, char *filepath)
 	return 1;
 }
 
-int
-main(int argc, char **argv)
+void
+retro_get_system_info(struct retro_system_info *info)
 {
-	SDL_DisplayMode DM;
-	Uxn u;
-	int i;
+	memset(info, 0, sizeof(*info));
+	info->library_name = "uxn";
+	info->library_version = "1.0";
+	info->need_fullpath = true;
+	info->valid_extensions = "rom";
+}
 
-	if(argc < 2)
-		return error("usage", "uxnemu file.rom");
-	if(!uxn_boot(&u))
-		return error("Boot", "Failed to start uxn.");
-	if(!load(&u, argv[argc - 1]))
-		return error("Load", "Failed to open rom.");
+void
+retro_get_system_av_info(struct retro_system_av_info *info)
+{
+	info->timing.fps = 60.0;
+	info->timing.sample_rate = SAMPLE_FREQUENCY;
+
+	info->geometry.base_width = WIDTH;
+	info->geometry.base_height = HEIGHT;
+	info->geometry.max_width = WIDTH;
+	info->geometry.max_height = HEIGHT;
+	info->geometry.aspect_ratio = 1.6;
+}
+
+unsigned
+retro_api_version(void)
+{
+	return RETRO_API_VERSION;
+}
+
+void
+retro_init()
+{
+	uxn_boot(&u);
+}
+
+bool
+retro_load_game(const struct retro_game_info *game)
+{
+	enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
+	if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
+		return false;
+
+	load(&u, game->path);
 
 	/* system   */ devsystem = uxn_port(&u, 0x0, system_talk);
 	/* console  */ devconsole = uxn_port(&u, 0x1, console_talk);
@@ -586,25 +531,105 @@ main(int argc, char **argv)
 	/* unused   */ uxn_port(&u, 0xe, nil_talk);
 	/* unused   */ uxn_port(&u, 0xf, nil_talk);
 
-	/* set default zoom */
-	SDL_GetCurrentDisplayMode(0, &DM);
-	set_zoom(DM.w / 1280);
-	/* get default zoom from flags */
-	for(i = 1; i < argc - 1; i++) {
-		if(strcmp(argv[i], "-s") == 0) {
-			if((i + 1) < argc - 1)
-				set_zoom(atoi(argv[++i]));
-			else
-				return error("Opt", "-s No scale provided.");
-		}
-	}
+	set_zoom(1);
+	// init();
+	set_size(WIDTH, HEIGHT, 0);
 
-	if(!init())
-		return error("Init", "Failed to initialize emulator.");
-	if(!set_size(WIDTH, HEIGHT, 0))
-		return error("Window", "Failed to set window size.");
+	uxn_eval(&u, PAGE_PROGRAM);
+	redraw(&u);
 
-	run(&u);
-	quit();
-	return 0;
+	return true;
 }
+
+void
+retro_run(void)
+{
+	// SDL_Event event;
+	double elapsed, start = 0;
+	// if(!BENCH)
+	// 	start = SDL_GetPerformanceCounter();
+	// while(SDL_PollEvent(&event) != 0) {
+	// 	switch(event.type) {
+	// 	case SDL_QUIT:
+	// 		return error("Run", "Quit.");
+	// 	case SDL_TEXTINPUT:
+	// 		devctrl->dat[3] = event.text.text[0]; /* fall-thru */
+	// 	case SDL_KEYDOWN:
+	// 	case SDL_KEYUP:
+	// 		doctrl(&event, event.type == SDL_KEYDOWN);
+	// 		uxn_eval(u, devctrl->vector);
+	// 		devctrl->dat[3] = 0;
+	// 		break;
+	// 	case SDL_MOUSEWHEEL:
+	// 	case SDL_MOUSEBUTTONUP:
+	// 	case SDL_MOUSEBUTTONDOWN:
+	// 	case SDL_MOUSEMOTION:
+	// 		domouse(&event);
+	// 		uxn_eval(u, devmouse->vector);
+	// 		break;
+	// 	case SDL_WINDOWEVENT:
+	// 		if(event.window.event == SDL_WINDOWEVENT_EXPOSED)
+	// 			redraw(u);
+	// 		break;
+	// 	default:
+	// 		if(event.type == stdin_event) {
+	// 			devconsole->dat[0x2] = event.cbutton.button;
+	// 			uxn_eval(u, devconsole->vector);
+	// 		} else if(event.type >= audio0_event && event.type < audio0_event + POLYPHONY)
+	// 			uxn_eval(u, peek16((devaudio0 + (event.type - audio0_event))->dat, 0));
+	// 	}
+	// }
+	uxn_eval(&u, devscreen->vector);
+	if(ppu.reqdraw || devsystem->dat[0xe])
+		redraw(&u);
+	// if(!BENCH) {
+	// 	elapsed = (SDL_GetPerformanceCounter() - start) / (double)SDL_GetPerformanceFrequency() * 1000.0f;
+	// 	SDL_Delay(clamp(16.666f - elapsed, 0, 1000));
+	// }
+}
+
+void
+retro_set_input_poll(retro_input_poll_t cb)
+{
+	input_poll_cb = cb;
+}
+
+void
+retro_set_input_state(retro_input_state_t cb)
+{
+	input_state_cb = cb;
+}
+
+void
+retro_set_video_refresh(retro_video_refresh_t cb)
+{
+	video_cb = cb;
+}
+
+void
+retro_set_environment(retro_environment_t cb)
+{
+	environ_cb = cb;
+}
+
+void
+retro_set_audio_sample_batch(retro_audio_sample_batch_t cb)
+{
+	audio_cb = cb;
+}
+
+void retro_set_controller_port_device(unsigned port, unsigned device) {}
+size_t retro_get_memory_size(unsigned id) { return 0; }
+void * retro_get_memory_data(unsigned id) { return NULL; }
+void retro_reset(void) {}
+void retro_unload_game(void) {}
+void retro_deinit(void) {}
+void retro_set_audio_sample(retro_audio_sample_t cb) {}
+size_t retro_serialize_size(void) { return 0; }
+bool retro_serialize(void *data, size_t size) { return false; }
+bool retro_unserialize(const void *data, size_t size) { return false; }
+void retro_cheat_reset(void) {}
+void retro_cheat_set(unsigned index, bool enabled, const char *code) {}
+bool retro_load_game_special(unsigned game_type, const struct retro_game_info *info, size_t num_info) { return false; }
+unsigned retro_get_region(void) { return 0; }
+
