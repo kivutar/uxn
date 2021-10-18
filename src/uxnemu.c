@@ -35,13 +35,11 @@ static retro_audio_sample_batch_t audio_cb;
 #define PAD 4
 #define FIXED_SIZE 0
 #define POLYPHONY 4
-#define BENCH 0
 
 /* devices */
 static Ppu ppu;
 static Apu apu[POLYPHONY];
 static Device *devsystem, *devscreen, *devmouse, *devctrl, *devaudio0, *devconsole;
-static Uint8 zoom = 1;
 static Uint32 *ppu_screen, stdin_event, audio0_event, palette[16];
 
 static Uint8 font[][8] = {
@@ -61,12 +59,6 @@ static Uint8 font[][8] = {
 	{0x00, 0xfc, 0x82, 0x82, 0x82, 0x82, 0x82, 0xfc},
 	{0x00, 0x7c, 0x82, 0x80, 0xf0, 0x80, 0x82, 0x7c},
 	{0x00, 0x7c, 0x82, 0x80, 0xf0, 0x80, 0x80, 0x80}};
-
-static int
-clamp(int val, int min, int max)
-{
-	return (val >= min) ? (val <= max) ? val : max : min;
-}
 
 static int
 error(char *msg, const char *err)
@@ -105,8 +97,8 @@ stdin_handler(void *p)
 	// event.type = stdin_event;
 	// while(read(0, &event.cbutton.button, 1) > 0)
 	// 	SDL_PushEvent(&event);
-	// return 0;
-	// (void)p;
+	return 0;
+	(void)p;
 }
 
 void
@@ -135,16 +127,6 @@ set_palette(Uint8 *addr)
 // 	SDL_SetWindowSize(window, w, h);
 // }
 
-static void
-set_zoom(Uint8 scale)
-{
-	zoom = clamp(scale, 1, 3);
-	// if(!gWindow)
-	// 	return;
-	// set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
-	ppu.reqdraw = 1;
-}
-
 static int
 set_size(Uint16 width, Uint16 height, int is_resize)
 {
@@ -166,23 +148,6 @@ set_size(Uint16 width, Uint16 height, int is_resize)
 	// 	set_window_size(gWindow, (ppu.width + PAD * 2) * zoom, (ppu.height + PAD * 2) * zoom);
 	ppu.reqdraw = 1;
 	return 1;
-}
-
-static void
-capture_screen(void)
-{
-	// const Uint32 format = SDL_PIXELFORMAT_RGB24;
-	// time_t t = time(NULL);
-	// char fname[64];
-	// int w, h;
-	// SDL_Surface *surface;
-	// SDL_GetRendererOutputSize(gRenderer, &w, &h);
-	// surface = SDL_CreateRGBSurfaceWithFormat(0, w, h, 24, format);
-	// SDL_RenderReadPixels(gRenderer, NULL, format, surface->pixels, surface->pitch);
-	// strftime(fname, sizeof(fname), "screenshot-%Y%m%d-%H%M%S.bmp", localtime(&t));
-	// SDL_SaveBMP(surface, fname);
-	// SDL_FreeSurface(surface);
-	// fprintf(stderr, "Saved %s\n", fname);
 }
 
 static void
@@ -225,19 +190,6 @@ redraw(Uxn *u)
 			ppu_screen[x + y * ppu.width] = palette[ppu_read(&ppu, x, y)];
 	video_cb(ppu_screen, ppu.width, ppu.height, ppu.width * sizeof(Uint32));
 	ppu.reqdraw = 0;
-}
-
-static void
-quit(void)
-{
-	// SDL_UnlockAudioDevice(audio_id);
-	// SDL_DestroyTexture(gTexture);
-	// gTexture = NULL;
-	// SDL_DestroyRenderer(gRenderer);
-	// gRenderer = NULL;
-	// SDL_DestroyWindow(gWindow);
-	// SDL_Quit();
-	exit(0);
 }
 
 // static void
@@ -461,7 +413,7 @@ uxn_halt(Uxn *u, Uint8 error, char *name, int id)
 }
 
 static int
-load(Uxn *u, char *filepath)
+load(Uxn *u, const char *filepath)
 {
 	FILE *f;
 	if(!(f = fopen(filepath, "rb"))) return 0;
@@ -531,8 +483,6 @@ retro_load_game(const struct retro_game_info *game)
 	/* unused   */ uxn_port(&u, 0xe, nil_talk);
 	/* unused   */ uxn_port(&u, 0xf, nil_talk);
 
-	set_zoom(1);
-	// init();
 	set_size(WIDTH, HEIGHT, 0);
 
 	uxn_eval(&u, PAGE_PROGRAM);
@@ -545,9 +495,6 @@ void
 retro_run(void)
 {
 	// SDL_Event event;
-	double elapsed, start = 0;
-	// if(!BENCH)
-	// 	start = SDL_GetPerformanceCounter();
 	// while(SDL_PollEvent(&event) != 0) {
 	// 	switch(event.type) {
 	// 	case SDL_QUIT:
@@ -582,10 +529,6 @@ retro_run(void)
 	uxn_eval(&u, devscreen->vector);
 	if(ppu.reqdraw || devsystem->dat[0xe])
 		redraw(&u);
-	// if(!BENCH) {
-	// 	elapsed = (SDL_GetPerformanceCounter() - start) / (double)SDL_GetPerformanceFrequency() * 1000.0f;
-	// 	SDL_Delay(clamp(16.666f - elapsed, 0, 1000));
-	// }
 }
 
 void
