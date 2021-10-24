@@ -78,14 +78,14 @@ error(char *msg, const char *err)
 static void
 audio_callback(void *u, Uint8 *stream, int len)
 {
-	// int i, running = 0;
-	// Sint16 *samples = (Sint16 *)stream;
-	// SDL_memset(stream, 0, len);
-	// for(i = 0; i < POLYPHONY; ++i)
-	// 	running += apu_render(&apu[i], samples, samples + len / 2);
+	int i, running = 0;
+	Sint16 *samples = (Sint16 *)stream;
+	memset(stream, 0, len);
+	for(i = 0; i < POLYPHONY; ++i)
+		running += apu_render(&apu[i], samples, samples + len / 2);
 	// if(!running)
 	// 	SDL_PauseAudioDevice(audio_id, 1);
-	// (void)u;
+	(void)u;
 }
 
 void
@@ -505,7 +505,7 @@ retro_load_game(const struct retro_game_info *game)
 	set_size(WIDTH, HEIGHT, 0);
 
 	uxn_eval(&u, PAGE_PROGRAM);
-	redraw(&u);
+	// redraw(&u);
 
 	return true;
 }
@@ -525,13 +525,6 @@ retro_run(void)
 	// 		doctrl(&event, event.type == SDL_KEYDOWN);
 	// 		uxn_eval(u, devctrl->vector);
 	// 		devctrl->dat[3] = 0;
-	// 		break;
-	// 	case SDL_MOUSEWHEEL:
-	// 	case SDL_MOUSEBUTTONUP:
-	// 	case SDL_MOUSEBUTTONDOWN:
-	// 	case SDL_MOUSEMOTION:
-	// 		domouse(&event);
-	// 		uxn_eval(u, devmouse->vector);
 	// 		break;
 	// 	case SDL_WINDOWEVENT:
 	// 		if(event.window.event == SDL_WINDOWEVENT_EXPOSED)
