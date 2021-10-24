@@ -32,7 +32,7 @@ static retro_audio_sample_batch_t audio_cb;
 
 #define WIDTH 64 * 8
 #define HEIGHT 40 * 8
-#define PAD 4
+#define PAD 0
 #define FIXED_SIZE 0
 #define POLYPHONY 4
 
@@ -59,6 +59,12 @@ static Uint8 font[][8] = {
 	{0x00, 0xfc, 0x82, 0x82, 0x82, 0x82, 0x82, 0xfc},
 	{0x00, 0x7c, 0x82, 0x80, 0xf0, 0x80, 0x82, 0x7c},
 	{0x00, 0x7c, 0x82, 0x80, 0xf0, 0x80, 0x80, 0x80}};
+
+static int
+clamp(int val, int min, int max)
+{
+       return (val >= min) ? (val <= max) ? val : max : min;
+}
 
 static int
 error(char *msg, const char *err)
@@ -192,32 +198,45 @@ redraw(Uxn *u)
 	ppu.reqdraw = 0;
 }
 
-// static void
-// domouse(SDL_Event *event)
-// {
-// 	Uint8 flag = 0x00;
-// 	Uint16 x = clamp(event->motion.x - PAD, 0, ppu.width - 1);
-// 	Uint16 y = clamp(event->motion.y - PAD, 0, ppu.height - 1);
-// 	if(event->type == SDL_MOUSEWHEEL) {
-// 		devmouse->dat[7] = event->wheel.y;
-// 		return;
-// 	}
-// 	poke16(devmouse->dat, 0x2, x);
-// 	poke16(devmouse->dat, 0x4, y);
-// 	devmouse->dat[7] = 0x00;
-// 	switch(event->button.button) {
-// 	case SDL_BUTTON_LEFT: flag = 0x01; break;
-// 	case SDL_BUTTON_RIGHT: flag = 0x10; break;
-// 	}
-// 	switch(event->type) {
-// 	case SDL_MOUSEBUTTONDOWN:
-// 		devmouse->dat[6] |= flag;
-// 		break;
-// 	case SDL_MOUSEBUTTONUP:
-// 		devmouse->dat[6] &= (~flag);
-// 		break;
-// 	}
-// }
+static Sint16 mouse_x = 0;
+static Sint16 mouse_y = 0;
+static Sint16 mouse_left = 0;
+static Sint16 mouse_right = 0;
+
+static void
+domouse()
+{
+	Sint16 motion_x = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_X);
+	Sint16 motion_y = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_Y);
+	Sint16 left = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_LEFT);
+	Sint16 right = input_state_cb(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_RIGHT);
+
+	mouse_x += motion_x;
+	mouse_y += motion_y;
+
+	Uint8 flag = 0x00;
+	mouse_x = clamp(mouse_x, 0, ppu.width - 1);
+	mouse_y = clamp(mouse_y, 0, ppu.height - 1);
+	// if(event->type == SDL_MOUSEWHEEL) {
+	// 	devmouse->dat[7] = event->wheel.y;
+	// 	return;
+	// }
+	poke16(devmouse->dat, 0x2, mouse_x);
+	poke16(devmouse->dat, 0x4, mouse_y);
+	devmouse->dat[7] = 0x00;
+
+	if (left && !mouse_left)
+		devmouse->dat[6] |= 0x01;
+	else if (!left && mouse_left)
+		devmouse->dat[6] &= (~0x01);
+	if (right && !mouse_right)
+		devmouse->dat[6] |= 0x10;
+	else if (!right && mouse_right)
+		devmouse->dat[6] &= (~0x10);
+
+	mouse_left = left;
+	mouse_right = right;
+}
 
 // static void
 // doctrl(SDL_Event *event, int z)
@@ -526,6 +545,11 @@ retro_run(void)
 	// 			uxn_eval(u, peek16((devaudio0 + (event.type - audio0_event))->dat, 0));
 	// 	}
 	// }
+
+	input_poll_cb();
+	domouse();
+	uxn_eval(&u, devmouse->vector);
+
 	uxn_eval(&u, devscreen->vector);
 	if(ppu.reqdraw || devsystem->dat[0xe])
 		redraw(&u);
