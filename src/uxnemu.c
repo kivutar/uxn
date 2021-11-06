@@ -91,6 +91,7 @@ audio_callback(void *u, Uint8 *stream, int len)
 void
 apu_finished_handler(Apu *c)
 {
+	printf("apu_finished_handler %ld\n", audio0_event + (c - apu));
 	// SDL_Event event;
 	// event.type = audio0_event + (c - apu);
 	// SDL_PushEvent(&event);
@@ -546,6 +547,19 @@ retro_run(void)
 	uxn_eval(&u, devscreen->vector);
 	if(ppu.reqdraw || devsystem->dat[0xe])
 		redraw(&u);
+
+	const int len = 4096;
+	Sint16 stream[len*POLYPHONY] = {0};
+	int i, running = 0;
+	Sint16 *samples = (Sint16 *)stream;
+	memset(stream, 0, len);
+	for(i = 0; i < POLYPHONY; ++i)
+		running += apu_render(&apu[i], samples, samples + len / 2);
+
+	// printf("running %d\n", running);
+
+	if(running)
+		audio_cb(stream, len);
 }
 
 void
