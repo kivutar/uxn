@@ -548,7 +548,7 @@ retro_run(void)
 	if(ppu.reqdraw || devsystem->dat[0xe])
 		redraw(&u);
 
-	const int len = 4096;
+	const int len = 44100/60;
 	Sint16 stream[len*POLYPHONY] = {0};
 	int i, running = 0;
 	Sint16 *samples = (Sint16 *)stream;
