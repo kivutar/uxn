@@ -14,7 +14,7 @@ endif
 
 CFLAGS += -O3 -fPIC -flto
 
-OBJ = src/devices/ppu.o src/devices/apu.o src/uxn.o src/uxnemu.o
+OBJ = src/devices/ppu.o src/devices/apu.o src/uxn-fast.o src/uxnemu.o
 
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)
