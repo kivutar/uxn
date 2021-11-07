@@ -75,26 +75,10 @@ error(char *msg, const char *err)
 
 #pragma mark - Generics
 
-static void
-audio_callback(void *u, Uint8 *stream, int len)
-{
-	int i, running = 0;
-	Sint16 *samples = (Sint16 *)stream;
-	memset(stream, 0, len);
-	for(i = 0; i < POLYPHONY; ++i)
-		running += apu_render(&apu[i], samples, samples + len / 2);
-	// if(!running)
-	// 	SDL_PauseAudioDevice(audio_id, 1);
-	(void)u;
-}
-
 void
 apu_finished_handler(Apu *c)
 {
 	printf("apu_finished_handler %ld\n", audio0_event + (c - apu));
-	// SDL_Event event;
-	// event.type = audio0_event + (c - apu);
-	// SDL_PushEvent(&event);
 }
 
 static int
@@ -506,7 +490,6 @@ retro_load_game(const struct retro_game_info *game)
 	set_size(WIDTH, HEIGHT, 0);
 
 	uxn_eval(&u, PAGE_PROGRAM);
-	// redraw(&u);
 
 	return true;
 }
@@ -549,17 +532,11 @@ retro_run(void)
 		redraw(&u);
 
 	const int len = 44100/60;
-	Sint16 stream[len*POLYPHONY] = {0};
-	int i, running = 0;
-	Sint16 *samples = (Sint16 *)stream;
-	memset(stream, 0, len);
+	int i = 0;
+	Sint16 samples[len] = {0};
 	for(i = 0; i < POLYPHONY; ++i)
-		running += apu_render(&apu[i], samples, samples + len / 2);
-
-	// printf("running %d\n", running);
-
-	if(running)
-		audio_cb(stream, len);
+		if(apu_render(&apu[i], samples, samples + len))
+			audio_cb(samples, len);
 }
 
 void
